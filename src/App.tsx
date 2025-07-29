@@ -11,6 +11,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MainLayout from "./components/MainLayout";
 import MusicLibraryPage from "./pages/MusicLibraryPage";
+import GroupsPage from "./pages/GroupsPage";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/songs" element={<MusicLibraryPage />} />
+            <Route path="/groups" element={<GroupsPage />} />
           </Route>
         </Route>
 

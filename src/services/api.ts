@@ -157,3 +157,26 @@ export const createSong = (songData: Omit<Song, "id">): Promise<Song> => {
     }, networkDelay);
   });
 };
+
+/**
+ * @description Cria um novo grupo de louvor.
+ * @param groupData Os dados do novo grupo (apenas o nome).
+ * @returns {Promise<WorshipGroup>} A promessa resolve com o objeto do grupo criado.
+ */
+export const createGroup = (groupData: {
+  name: string;
+}): Promise<WorshipGroup> => {
+  console.log("Criando objeto de grupo...", groupData);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const newGroup: WorshipGroup = {
+        id: `group-${Date.now()}`,
+        name: groupData.name,
+        members: [], // O grupo começa sem membros.
+      };
+      // Esta função não modifica o array original (mockGroups).
+      // Ela apenas retorna o novo objeto para o componente gerenciar.
+      resolve(newGroup);
+    }, networkDelay);
+  });
+};
