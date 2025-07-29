@@ -10,6 +10,7 @@ import DashboardPage from "./pages/DashboardPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import MainLayout from "./components/MainLayout";
+import MusicLibraryPage from "./pages/MusicLibraryPage";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/songs" element={<MusicLibraryPage />} />
           </Route>
         </Route>
 
