@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Typography,
   Button,
   TextField,
-  CircularProgress,
-  Alert,
   Modal,
   Paper,
   Table,
@@ -19,37 +17,13 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import LinkIcon from "@mui/icons-material/Link";
-import type { Song } from "../types";
-import { fetchSongs, createSong } from "../services/api";
 import NewSongForm from "../components/library/NewSongForm";
+import { useData } from "../contexts/DataContext";
 
 const MusicLibraryPage: React.FC = () => {
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { songs, createSong } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const fetchInitiated = useRef(false);
-
-  useEffect(() => {
-    if (fetchInitiated.current === true) {
-      return;
-    }
-    fetchInitiated.current = true;
-    const loadSongs = async () => {
-      try {
-        setLoading(true);
-        const songsData = await fetchSongs();
-        setSongs(songsData);
-      } catch (err) {
-        setError("Falha ao carregar as músicas.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadSongs();
-  }, []);
 
   const handleCreateSong = async (formData: {
     title: string;
@@ -57,8 +31,7 @@ const MusicLibraryPage: React.FC = () => {
     link: string;
   }) => {
     try {
-      const newSong = await createSong(formData);
-      setSongs((prevSongs) => [newSong, ...prevSongs]);
+      await createSong(formData);
       setIsModalOpen(false);
     } catch (err) {
       alert("Falha ao salvar a música.");
@@ -72,19 +45,6 @@ const MusicLibraryPage: React.FC = () => {
       ),
     [songs, searchTerm]
   );
-
-  if (loading)
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="50vh"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
     <Box>

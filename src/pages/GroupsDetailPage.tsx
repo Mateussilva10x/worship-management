@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect, useCallback } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
-  CircularProgress,
   Alert,
   Paper,
   Button,
@@ -12,55 +11,32 @@ import {
   TextField,
   Snackbar,
 } from "@mui/material";
-import type { WorshipGroup, User } from "../types";
-import {
-  fetchGroupById,
-  fetchUsers,
-  updateGroupMembers,
-} from "../services/api";
+import type { User } from "../types";
+import { useData } from "../contexts/DataContext";
 
 const GroupDetailPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
-  const [group, setGroup] = useState<WorshipGroup | null>(null);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+
+  const { groups, users, updateGroupMembers } = useData();
+
+  const group = useMemo(
+    () => groups.find((g) => g.id === groupId),
+    [groups, groupId]
+  );
+
   const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  const loadData = useCallback(async () => {
-    if (!groupId) return;
-    try {
-      setLoading(true);
-      const [groupData, usersData] = await Promise.all([
-        fetchGroupById(groupId),
-        fetchUsers(),
-      ]);
-
-      if (groupData) {
-        setGroup(groupData);
-
-        const currentMembers = usersData.filter((user) =>
-          groupData.members.includes(user.id)
-        );
-        setSelectedMembers(currentMembers);
-      } else {
-        setError("Grupo não encontrado.");
-      }
-
-      setAllUsers(usersData.filter((u) => u.role === "member"));
-    } catch (err) {
-      setError("Falha ao carregar dados.");
-    } finally {
-      setLoading(false);
-    }
-  }, [groupId]);
-
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (group) {
+      const currentMembers = users.filter((user) =>
+        group.members.includes(user.id)
+      );
+      setSelectedMembers(currentMembers);
+    }
+  }, [group, users]);
 
   const handleSave = async () => {
     if (!groupId) return;
@@ -69,32 +45,27 @@ const GroupDetailPage: React.FC = () => {
     try {
       await updateGroupMembers(groupId, memberIds);
       setSnackbarOpen(true);
-
-      loadData();
-    } catch (err) {
-      alert("Falha ao salvar as alterações.");
+    } catch (err: any) {
+      alert(`Falha ao salvar: ${err.message}`);
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading)
+  if (!group) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="50vh"
-      >
-        <CircularProgress />
-      </Box>
+      <Alert severity="error">
+        Grupo não encontrado. Verifique o endereço e tente novamente.
+      </Alert>
     );
-  if (error) return <Alert severity="error">{error}</Alert>;
+  }
+
+  const memberOptions = users.filter((u) => u.role === "member");
 
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        Editando Grupo: {group?.name}
+        Editando Grupo: {group.name}
       </Typography>
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
@@ -102,10 +73,10 @@ const GroupDetailPage: React.FC = () => {
         </Typography>
         <Autocomplete
           multiple
-          options={allUsers}
+          options={memberOptions}
           getOptionLabel={(option) => option.name}
           value={selectedMembers}
-          onChange={(_event, newValue) => {
+          onChange={(_, newValue) => {
             setSelectedMembers(newValue);
           }}
           renderInput={(params) => (
@@ -122,7 +93,7 @@ const GroupDetailPage: React.FC = () => {
           <Button variant="contained" onClick={handleSave} disabled={saving}>
             {saving ? "Salvando..." : "Salvar Alterações"}
           </Button>
-          <Button variant="outlined" onClick={() => navigate("/groups")}>
+          <Button variant="outlined" onClick={() => navigate("/grupos")}>
             Voltar
           </Button>
         </Box>

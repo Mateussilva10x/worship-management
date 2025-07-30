@@ -1,43 +1,21 @@
-import React, { useEffect, useState } from "react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import {
-  Typography,
-  Box,
-  CircularProgress,
-  Alert,
-  Button,
-  Modal,
-} from "@mui/material";
+import { Typography, Box, Button, Modal } from "@mui/material";
 import ScheduleCard from "../components/dashboard/ScheduleCard";
 import AddIcon from "@mui/icons-material/Add";
 
-import type {
-  Schedule,
-  WorshipGroup,
-  User,
-  Song,
-  ParticipationStatus,
-} from "../types";
-import {
-  fetchSchedules,
-  fetchGroups,
-  fetchUsers,
-  createSchedule,
-  fetchSongs,
-  updateMemberStatus,
-} from "../services/api";
+import type { Schedule, ParticipationStatus } from "../types";
+
 import NewScheduleForm from "../components/dashboard/NewScheduleForm";
 import ScheduleDetailView from "../components/dashboard/ScheduleDetailView";
 import MemberScheduleCard from "../components/dashboard/MemberScheduleCard";
+import { useData } from "../contexts/DataContext";
 
 const AdminDashboard = () => {
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [groups, setGroups] = useState<WorshipGroup[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // Renomeado para clareza
+  const { schedules, groups, users, songs, createSchedule } = useData();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [viewingSchedule, setViewingSchedule] = useState<Schedule | null>(null);
 
   const handleOpenCreateModal = () => setIsCreateModalOpen(true);
@@ -53,63 +31,12 @@ const AdminDashboard = () => {
     songs: string[];
   }) => {
     try {
-      const { date, worshipGroupId, songs } = formData;
-      const newSchedule = await createSchedule({
-        date,
-        worshipGroupId,
-        songIds: songs,
-      });
-      setSchedules((prevSchedules) => [newSchedule, ...prevSchedules]);
-      handleCloseCreateModal();
-    } catch (err) {
-      console.error("Falha ao criar escala:", err);
-      alert("Não foi possível criar a escala. Tente novamente.");
+      await createSchedule(formData);
+      setIsCreateModalOpen(false);
+    } catch (err: any) {
+      alert(`Erro: ${err.message}`);
     }
   };
-
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true);
-
-        const [schedulesData, groupsData, usersData, songsData] =
-          await Promise.all([
-            fetchSchedules(),
-            fetchGroups(),
-            fetchUsers(),
-            fetchSongs(),
-          ]);
-        setSchedules(schedulesData);
-        setGroups(groupsData);
-        setUsers(usersData);
-        setSongs(songsData);
-      } catch (err) {
-        setError("Falha ao carregar os dados do painel.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDashboardData();
-  }, []);
-
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="50vh"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return <Alert severity="error">{error}</Alert>;
-  }
 
   return (
     <Box>
@@ -183,41 +110,15 @@ const AdminDashboard = () => {
 
 const MemberDashboard = () => {
   const { user } = useAuth();
-  const [mySchedules, setMySchedules] = useState<Schedule[]>([]);
-  const [groups, setGroups] = useState<WorshipGroup[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState<string | null>(null); // Para controlar o estado de "carregando" por card
-  const [error, setError] = useState<string | null>(null);
+  const { schedules, groups, updateMemberStatus } = useData();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-
-    const loadMemberData = async () => {
-      try {
-        setLoading(true);
-        const [schedulesData, groupsData] = await Promise.all([
-          fetchSchedules(),
-          fetchGroups(),
-        ]);
-
-        // Filtra para mostrar apenas as escalas do usuário logado
-        const userSchedules = schedulesData.filter((s) =>
-          s.membersStatus.some((ms) => ms.memberId === user.id)
-        );
-
-        setMySchedules(userSchedules);
-        setGroups(groupsData);
-      } catch (err) {
-        setError("Falha ao carregar suas escalas.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMemberData();
-  }, [user]);
-
+  const mySchedules = useMemo(() => {
+    if (!user) return [];
+    return schedules.filter((s) =>
+      s.membersStatus.some((ms) => ms.memberId === user.id)
+    );
+  }, [schedules, user]);
   const handleStatusUpdate = async (
     scheduleId: string,
     newStatus: ParticipationStatus
@@ -225,39 +126,13 @@ const MemberDashboard = () => {
     if (!user) return;
     setUpdatingId(scheduleId);
     try {
-      const updatedSchedule = await updateMemberStatus(
-        scheduleId,
-        user.id,
-        newStatus
-      );
-      // Atualiza a lista de escalas na tela com a nova informação
-      setMySchedules((prev) =>
-        prev.map((s) => (s.id === updatedSchedule.id ? updatedSchedule : s))
-      );
+      await updateMemberStatus(scheduleId, user.id, newStatus);
     } catch (err) {
       alert("Falha ao atualizar seu status. Tente novamente.");
-      console.error(err);
     } finally {
       setUpdatingId(null);
     }
   };
-
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="50vh"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return <Alert severity="error">{error}</Alert>;
-  }
 
   return (
     <Box>
@@ -293,12 +168,7 @@ const MemberDashboard = () => {
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-
-  return (
-    <Box>
-      {user?.role === "admin" ? <AdminDashboard /> : <MemberDashboard />}
-    </Box>
-  );
+  return user?.role === "admin" ? <AdminDashboard /> : <MemberDashboard />;
 };
 
 const modalStyle = {

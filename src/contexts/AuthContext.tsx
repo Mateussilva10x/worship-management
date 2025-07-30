@@ -15,6 +15,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  refreshAuthUser: (updatedUser: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,19 +38,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const login = async (email: string, password: string): Promise<void> => {
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const foundUser = users.find((u) => u.email === email);
 
       let isPasswordValid = false;
       if (foundUser) {
-        if (foundUser.mustChangePassword) {
+        if (foundUser.mustChangePassword)
           isPasswordValid = password === "senha123";
-        } else if (foundUser.role === "admin") {
+        else if (foundUser.role === "admin")
           isPasswordValid = password === "admin123";
-        } else {
-          isPasswordValid = password === "membro123";
-        }
+        else isPasswordValid = password === "membro123";
       }
 
       if (foundUser && isPasswordValid) {
@@ -68,9 +67,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     localStorage.removeItem("user");
   };
 
+  const refreshAuthUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated: !!user, user, login, logout, loading }}
+      value={{
+        isAuthenticated: !!user,
+        user,
+        login,
+        logout,
+        loading,
+        refreshAuthUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

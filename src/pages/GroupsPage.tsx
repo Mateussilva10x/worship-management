@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
   Button,
-  CircularProgress,
-  Alert,
   Modal,
   Paper,
   List,
@@ -16,59 +14,23 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import GroupIcon from "@mui/icons-material/Group";
-import type { WorshipGroup } from "../types";
-import { fetchGroups, createGroup } from "../services/api";
 import NewGroupForm from "../components/groups/NewGroupForm";
 import { useNavigate } from "react-router-dom";
+import { useData } from "../contexts/DataContext";
 
 const GroupsPage: React.FC = () => {
-  const [groups, setGroups] = useState<WorshipGroup[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { groups, createGroup } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const fetchInitiated = useRef(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (fetchInitiated.current) return;
-    fetchInitiated.current = true;
-
-    const loadGroups = async () => {
-      try {
-        setLoading(true);
-        const groupsData = await fetchGroups();
-        setGroups(groupsData);
-      } catch (err) {
-        setError("Falha ao carregar os grupos.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadGroups();
-  }, []);
 
   const handleCreateGroup = async (formData: { name: string }) => {
     try {
-      const newGroup = await createGroup(formData);
-      setGroups((prev) => [newGroup, ...prev]);
+      await createGroup(formData);
       setIsModalOpen(false);
     } catch (err) {
-      alert("Falha ao salvar o grupo.");
+      alert("Falha ao salvar grupo.");
     }
   };
-
-  if (loading)
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="50vh"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
     <Box>

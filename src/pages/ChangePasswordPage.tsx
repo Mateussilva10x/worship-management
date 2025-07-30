@@ -11,10 +11,11 @@ import {
   Paper,
   Alert,
 } from "@mui/material";
-import { updateUserPassword } from "../services/api";
+import { useData } from "../contexts/DataContext";
 
 const ChangePasswordPage: React.FC = () => {
-  const { user, login } = useAuth();
+  const { updateUserPassword } = useData();
+  const { user, refreshAuthUser } = useAuth();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -43,7 +44,7 @@ const ChangePasswordPage: React.FC = () => {
     try {
       const updatedUser = await updateUserPassword(user.id, password);
 
-      await login(updatedUser.email, password);
+      refreshAuthUser(updatedUser);
 
       navigate("/dashboard");
     } catch (err: any) {

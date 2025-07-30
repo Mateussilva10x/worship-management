@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect, useRef } from "react";
+
+import React, { useState } from "react";
 import {
   Box,
   Typography,
   Button,
-  CircularProgress,
-  Alert,
   Modal,
   Paper,
   Table,
@@ -17,8 +15,7 @@ import {
   TableRow,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import type { User } from "../types";
-import { fetchUsers, createUser } from "../services/api";
+
 import NewUserForm from "../components/users/NewUserForm";
 import { useData } from "../contexts/DataContext";
 
