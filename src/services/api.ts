@@ -92,8 +92,6 @@ export const createSchedule = (data: {
         })),
       };
 
-      mockSchedules.unshift(newSchedule);
-      console.log("Escala salva:", newSchedule);
       resolve(newSchedule);
     }, networkDelay);
   });
@@ -130,7 +128,6 @@ export const updateMemberStatus = (
         return reject(new Error("Membro não encontrado nesta escala."));
       }
 
-      // Atualiza o status
       mockSchedules[scheduleIndex].membersStatus[memberStatusIndex].status =
         newStatus;
 
@@ -172,11 +169,103 @@ export const createGroup = (groupData: {
       const newGroup: WorshipGroup = {
         id: `group-${Date.now()}`,
         name: groupData.name,
-        members: [], // O grupo começa sem membros.
+        members: [],
       };
-      // Esta função não modifica o array original (mockGroups).
-      // Ela apenas retorna o novo objeto para o componente gerenciar.
+
       resolve(newGroup);
+    }, networkDelay);
+  });
+};
+
+/**
+ * @description Busca um grupo específico pelo seu ID.
+ * @param groupId O ID do grupo a ser buscado.
+ * @returns {Promise<WorshipGroup | undefined>} A promessa resolve com o grupo encontrado ou undefined.
+ */
+export const fetchGroupById = (
+  groupId: string
+): Promise<WorshipGroup | undefined> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const group = mockGroups.find((g) => g.id === groupId);
+      resolve(group);
+    }, networkDelay / 2);
+  });
+};
+
+/**
+ * @description Atualiza a lista de membros de um grupo.
+ * @param groupId O ID do grupo a ser atualizado.
+ * @param memberIds Um array com os IDs dos novos membros.
+ * @returns {Promise<WorshipGroup>} A promessa resolve com o grupo atualizado.
+ */
+export const updateGroupMembers = (
+  groupId: string,
+  memberIds: string[]
+): Promise<WorshipGroup> => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const groupIndex = mockGroups.findIndex((g) => g.id === groupId);
+      if (groupIndex === -1) {
+        return reject(new Error("Grupo não encontrado."));
+      }
+
+      mockGroups[groupIndex].members = memberIds;
+      resolve(mockGroups[groupIndex]);
+    }, networkDelay);
+  });
+};
+
+/**
+ * @description Cria um novo usuário (membro).
+ * @param userData Dados do novo usuário (nome e email).
+ * @returns {Promise<User>} O objeto do usuário criado.
+ */
+export const createUser = (userData: {
+  name: string;
+  email: string;
+}): Promise<User> => {
+  return new Promise((resolve, reject) => {
+    if (mockUsers.some((u) => u.email === userData.email)) {
+      return reject(new Error("Este e-mail já está em uso."));
+    }
+
+    setTimeout(() => {
+      const newUser: User = {
+        id: `user-${Date.now()}`,
+        name: userData.name,
+        email: userData.email,
+        role: "member",
+        mustChangePassword: true,
+      };
+      resolve(newUser);
+    }, networkDelay);
+  });
+};
+
+/**
+ * @description Atualiza a senha de um usuário (simulação).
+ * @param userId O ID do usuário.
+ * @param newPassword A nova senha (não será armazenada, apenas para simulação).
+ * @returns {Promise<User>} O objeto do usuário atualizado.
+ */
+export const updateUserPassword = (
+  userId: string,
+  newPassword: string
+): Promise<User> => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      console.log(
+        `Simulando atualização de senha para o usuário ${userId} para "${newPassword}"`
+      );
+      const userIndex = mockUsers.findIndex((u) => u.id === userId);
+      if (userIndex === -1) {
+        return reject(new Error("Usuário não encontrado."));
+      }
+
+      mockUsers[userIndex].mustChangePassword = false;
+
+      resolve(mockUsers[userIndex]);
     }, networkDelay);
   });
 };

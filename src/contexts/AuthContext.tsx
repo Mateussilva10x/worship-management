@@ -7,7 +7,7 @@ import React, {
   type ReactNode,
 } from "react";
 import type { User } from "../types";
-import { mockUsers } from "../data/users";
+import { useData } from "./DataContext";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -22,6 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const { users } = useData();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -38,10 +39,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const foundUser = mockUsers.find((u) => u.email === email);
+      const foundUser = users.find((u) => u.email === email);
 
-      const isPasswordValid =
-        foundUser && (password === "admin123" || password === "membro123");
+      let isPasswordValid = false;
+      if (foundUser) {
+        if (foundUser.mustChangePassword) {
+          isPasswordValid = password === "senha123";
+        } else if (foundUser.role === "admin") {
+          isPasswordValid = password === "admin123";
+        } else {
+          isPasswordValid = password === "membro123";
+        }
+      }
 
       if (foundUser && isPasswordValid) {
         setUser(foundUser);

@@ -19,6 +19,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import type { WorshipGroup } from "../types";
 import { fetchGroups, createGroup } from "../services/api";
 import NewGroupForm from "../components/groups/NewGroupForm";
+import { useNavigate } from "react-router-dom";
 
 const GroupsPage: React.FC = () => {
   const [groups, setGroups] = useState<WorshipGroup[]>([]);
@@ -26,6 +27,7 @@ const GroupsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fetchInitiated = useRef(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (fetchInitiated.current) return;
@@ -55,7 +57,17 @@ const GroupsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <CircularProgress />;
+  if (loading)
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="50vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
   if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
@@ -81,7 +93,14 @@ const GroupsPage: React.FC = () => {
       <Paper>
         <List>
           {groups.map((group) => (
-            <ListItem key={group.id}>
+            <ListItem
+              key={group.id}
+              onClick={() => navigate(`/groups/${group.id}`)}
+              sx={{
+                cursor: "pointer",
+                "&:hover": { backgroundColor: "action.hover" },
+              }}
+            >
               <ListItemAvatar>
                 <Avatar sx={{ bgcolor: "secondary.main" }}>
                   <GroupIcon />

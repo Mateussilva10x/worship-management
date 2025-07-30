@@ -17,6 +17,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import PeopleIcon from "@mui/icons-material/People";
 import LogoutIcon from "@mui/icons-material/Logout";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import { useAuth } from "../contexts/AuthContext";
 
 const drawerWidth = 240;
@@ -34,6 +35,7 @@ const MainLayout: React.FC = () => {
     { text: "Painel", icon: <DashboardIcon />, path: "/dashboard" },
     { text: "Músicas", icon: <MusicNoteIcon />, path: "/songs" },
     { text: "Grupos", icon: <PeopleIcon />, path: "/groups", adminOnly: true },
+    { text: "Usuários", icon: <VpnKeyIcon />, path: "/users", adminOnly: true },
   ];
 
   return (

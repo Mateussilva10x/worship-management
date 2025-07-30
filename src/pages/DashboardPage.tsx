@@ -95,7 +95,16 @@ const AdminDashboard = () => {
   }, []);
 
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="50vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (error) {
@@ -104,16 +113,25 @@ const AdminDashboard = () => {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Próximas Escalas
-      </Typography>
-      <Button
-        variant="contained"
-        startIcon={<AddIcon />}
-        onClick={handleOpenCreateModal}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
       >
-        Nova Escala
-      </Button>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Próximas Escalas
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleOpenCreateModal}
+        >
+          Nova Escala
+        </Button>
+      </Box>
       {schedules.length > 0 ? (
         schedules.map((schedule) => (
           <ScheduleCard
@@ -225,7 +243,16 @@ const MemberDashboard = () => {
   };
 
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="50vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (error) {
