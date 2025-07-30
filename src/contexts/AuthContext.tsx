@@ -7,14 +7,14 @@ import React, {
   type ReactNode,
 } from "react";
 import type { User } from "../types";
-import { useData } from "./DataContext";
+import { supabase } from "../supabaseClient";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
   loading: boolean;
+  logout: () => Promise<void>;
   refreshAuthUser: (updatedUser: User) => void;
 }
 
@@ -23,48 +23,76 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { users } = useData();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
-
-  const login = async (email: string, password: string): Promise<void> => {
     setLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+    console.log(
+      "AuthProvider montado. Configurando listener onAuthStateChange..."
+    );
 
-      const foundUser = users.find((u) => u.email === email);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, session: Session | null) => {
+        console.log(
+          `%cAuth State Mudou! Evento: ${event}`,
+          "color: orange; font-weight: bold;",
+          session
+        );
 
-      let isPasswordValid = false;
-      if (foundUser) {
-        if (foundUser.mustChangePassword)
-          isPasswordValid = password === "senha123";
-        else if (foundUser.role === "admin")
-          isPasswordValid = password === "admin123";
-        else isPasswordValid = password === "membro123";
+        if (session?.user) {
+          console.log(
+            "Sessão encontrada. Buscando perfil para o usuário ID:",
+            session.user.id
+          );
+
+          const { data: profile, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+
+          if (error) {
+            console.error(
+              "%cERRO DE BANCO DE DADOS AO BUSCAR PERFIL:",
+              "color: red; font-weight: bold;",
+              error
+            );
+            setUser(null);
+          } else if (profile) {
+            console.log(
+              "%cPerfil encontrado com sucesso:",
+              "color: green;",
+              profile
+            );
+            setUser(profile);
+          } else {
+            console.warn(
+              "%cAVISO: Perfil não encontrado para o usuário logado.",
+              "color: yellow;"
+            );
+            setUser(null);
+          }
+        } else {
+          console.log("Nenhuma sessão encontrada. Deslogando usuário.");
+          setUser(null);
+        }
+        setLoading(false);
       }
+    );
 
-      if (foundUser && isPasswordValid) {
-        setUser(foundUser);
-        localStorage.setItem("user", JSON.stringify(foundUser));
-      } else {
-        throw new Error("E-mail ou senha inválidos");
-      }
-    } finally {
-      setLoading(false);
+    return () => {
+      console.log("AuthProvider desmontado. Removendo listener.");
+      subscription.unsubscribe();
+    };
+  }, []);
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Erro ao fazer logout:", error);
     }
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
   };
 
   const refreshAuthUser = (updatedUser: User) => {
@@ -72,20 +100,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated: !!user,
-        user,
-        login,
-        logout,
-        loading,
-        refreshAuthUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    isAuthenticated: !!user,
+    user,
+    loading,
+    logout,
+    refreshAuthUser,
+  };
+
+  if (loading) {
+    return null;
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): AuthContextType => {

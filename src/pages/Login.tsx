@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Container,
   Box,
@@ -11,26 +10,32 @@ import {
   Alert,
 } from "@mui/material";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
-import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "../supabaseClient";
 
 const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { login, loading } = useAuth();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setLoading(true);
     setError("");
 
     try {
-      await login(email, password);
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
 
-      navigate("/dashboard");
+      if (error) {
+        throw error;
+      }
     } catch (err: any) {
-      setError(err.message || "Ocorreu um erro ao fazer login.");
+      setError(err.message || "E-mail ou senha inválidos.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,9 +51,13 @@ const LoginPage: React.FC = () => {
       >
         <MusicNoteIcon color="primary" sx={{ fontSize: 40, mb: 2 }} />
         <Typography component="h1" variant="h5">
-          Escalas Louvor IPC
+          Louvor na Escala
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{ mt: 3, width: "100%" }}
+        >
           <TextField
             margin="normal"
             required

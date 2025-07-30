@@ -16,18 +16,20 @@ import GroupDetailPage from "./pages/GroupsDetailPage";
 import AuthGate from "./components/auth/AuthGate";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import UsersPage from "./pages/UsersPage";
+import RedirectIfAuth from "./components/auth/RedirectIfAuth";
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route element={<RedirectIfAuth />}>
+          <Route path="/login" element={<LoginPage />} />
+        </Route>
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AuthGate />}>
             <Route path="/reset-password" element={<ChangePasswordPage />} />
             <Route element={<MainLayout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/songs" element={<MusicLibraryPage />} />
               <Route path="/groups" element={<GroupsPage />} />
