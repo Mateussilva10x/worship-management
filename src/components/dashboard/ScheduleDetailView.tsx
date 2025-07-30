@@ -17,9 +17,12 @@ import {
   Avatar,
   Chip,
   IconButton,
+  Button,
 } from "@mui/material";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import CloseIcon from "@mui/icons-material/Close";
+import DownloadIcon from "@mui/icons-material/Download";
+import { generateSchedulePdf } from "../../utils/pdfGenerator";
 
 const statusMap: Record<
   ParticipationStatus,
@@ -57,15 +60,35 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
     };
   });
 
+  const handleExportPdf = () => {
+    if (group && schedule) {
+      const scheduleSongs = schedule.songs
+        .map((songId) => songs.find((s) => s.id === songId))
+        .filter(Boolean) as Song[];
+      generateSchedulePdf(schedule, group, scheduleSongs, users);
+    }
+  };
+
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h6" id="schedule-detail-title">
           Detalhes da Escala
         </Typography>
-        <IconButton onClick={onClose} aria-label="Fechar">
-          <CloseIcon />
-        </IconButton>
+        <Box>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<DownloadIcon />}
+            onClick={handleExportPdf}
+            sx={{ mr: 1 }}
+          >
+            PDF
+          </Button>
+          <IconButton onClick={onClose} aria-label="Fechar">
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </Box>
       <Typography variant="body1" color="text.secondary" gutterBottom>
         {new Date(schedule.date).toLocaleString("pt-BR", {
