@@ -27,72 +27,47 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    setLoading(true);
-    console.log(
-      "AuthProvider montado. Configurando listener onAuthStateChange..."
-    );
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
-        console.log(
-          `%cAuth State Mudou! Evento: ${event}`,
-          "color: orange; font-weight: bold;",
-          session
-        );
-
+    const updateUserAndProfile = async (session: Session | null) => {
+      try {
         if (session?.user) {
-          console.log(
-            "Sessão encontrada. Buscando perfil para o usuário ID:",
-            session.user.id
-          );
-
           const { data: profile, error } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", session.user.id)
             .single();
 
-          if (error) {
-            console.error(
-              "%cERRO DE BANCO DE DADOS AO BUSCAR PERFIL:",
-              "color: red; font-weight: bold;",
-              error
-            );
-            setUser(null);
-          } else if (profile) {
-            console.log(
-              "%cPerfil encontrado com sucesso:",
-              "color: green;",
-              profile
-            );
-            setUser(profile);
-          } else {
-            console.warn(
-              "%cAVISO: Perfil não encontrado para o usuário logado.",
-              "color: yellow;"
-            );
-            setUser(null);
-          }
+          if (error) throw error;
+          setUser(profile || null);
         } else {
-          console.log("Nenhuma sessão encontrada. Deslogando usuário.");
           setUser(null);
         }
+      } catch (error) {
+        console.error("Erro ao processar a sessão:", error);
+        setUser(null);
+      }
+    };
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      await updateUserAndProfile(session);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      async (_event: AuthChangeEvent, session: Session | null) => {
+        await updateUserAndProfile(session);
         setLoading(false);
       }
     );
 
     return () => {
-      console.log("AuthProvider desmontado. Removendo listener.");
       subscription.unsubscribe();
     };
   }, []);
+
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Erro ao fazer logout:", error);
-    }
+    await supabase.auth.signOut();
   };
 
   const refreshAuthUser = (updatedUser: User) => {
@@ -118,7 +93,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
+    throw new Error("useAuth deve ser usado dentro de um DataProvider");
   }
   return context;
 };
