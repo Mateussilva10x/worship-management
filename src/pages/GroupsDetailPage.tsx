@@ -10,6 +10,10 @@ import {
   Autocomplete,
   TextField,
   Snackbar,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from "@mui/material";
 import type { User } from "../types";
 import { useData } from "../contexts/DataContext";
@@ -18,7 +22,7 @@ const GroupDetailPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
 
-  const { groups, users, updateGroupMembers } = useData();
+  const { groups, users, updateGroupDetails } = useData();
 
   const group = useMemo(
     () => groups.find((g) => g.id === groupId),
@@ -27,6 +31,7 @@ const GroupDetailPage: React.FC = () => {
 
   const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
   const [saving, setSaving] = useState(false);
+  const [leaderId, setLeaderId] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   useEffect(() => {
@@ -35,6 +40,7 @@ const GroupDetailPage: React.FC = () => {
         group.members.includes(user.id)
       );
       setSelectedMembers(currentMembers);
+      setLeaderId(group.leaderId || "");
     }
   }, [group, users]);
 
@@ -43,7 +49,7 @@ const GroupDetailPage: React.FC = () => {
     setSaving(true);
     const memberIds = selectedMembers.map((member) => member.id);
     try {
-      await updateGroupMembers(groupId, memberIds);
+      await updateGroupDetails(groupId, { memberIds, leaderId });
       setSnackbarOpen(true);
     } catch (err: any) {
       alert(`Falha ao salvar: ${err.message}`);
@@ -89,11 +95,30 @@ const GroupDetailPage: React.FC = () => {
           )}
           isOptionEqualToValue={(option, value) => option.id === value.id}
         />
+        <FormControl fullWidth sx={{ mt: 3 }}>
+          <InputLabel id="leader-select-label">Líder da Equipe</InputLabel>
+          <Select
+            labelId="leader-select-label"
+            value={leaderId}
+            label="Líder da Equipe"
+            onChange={(e) => setLeaderId(e.target.value)}
+            disabled={selectedMembers.length === 0}
+          >
+            <MenuItem value="">
+              <em>Nenhum</em>
+            </MenuItem>
+            {selectedMembers.map((member) => (
+              <MenuItem key={member.id} value={member.id}>
+                {member.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
             {saving ? "Salvando..." : "Salvar Alterações"}
           </Button>
-          <Button variant="outlined" onClick={() => navigate("/grupos")}>
+          <Button variant="outlined" onClick={() => navigate("/groups")}>
             Voltar
           </Button>
         </Box>

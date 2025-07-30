@@ -9,6 +9,7 @@ import {
   Chip,
 } from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
+import EditIcon from "@mui/icons-material/Edit";
 
 interface MemberScheduleCardProps {
   schedule: Schedule;
@@ -16,13 +17,15 @@ interface MemberScheduleCardProps {
   myStatus: ParticipationStatus;
   onStatusUpdate: (newStatus: ParticipationStatus) => void;
   isUpdating: boolean;
+  isLeader: boolean;
+  onEditSongs: () => void;
 }
 
 const statusMap: Record<
   ParticipationStatus,
   { label: string; color: "success" | "error" | "warning" }
 > = {
-  confirmed: { label: "Você confirmou", color: "success" },
+  confirmed: { label: "Confirmado", color: "success" },
   declined: { label: "Você recusou", color: "error" },
   pending: { label: "Pendente", color: "warning" },
 };
@@ -33,6 +36,8 @@ const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
   myStatus,
   onStatusUpdate,
   isUpdating,
+  isLeader,
+  onEditSongs,
 }) => {
   const eventDate = new Date(schedule.date);
   const formattedDate = eventDate.toLocaleDateString("pt-BR", {
@@ -64,6 +69,17 @@ const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
           alignItems="center"
           mt={3}
         >
+          {isLeader && (
+            <Button
+              size="small"
+              variant="text"
+              startIcon={<EditIcon />}
+              onClick={onEditSongs}
+              sx={{ ml: 1 }}
+            >
+              Músicas
+            </Button>
+          )}
           <Chip
             label={statusMap[myStatus].label}
             color={statusMap[myStatus].color}

@@ -33,6 +33,7 @@ export interface WorshipGroup {
   id: string;
   name: string;
   members: User["id"][];
+  leaderId?: User["id"];
 }
 
 /**

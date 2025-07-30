@@ -12,6 +12,7 @@ import NewScheduleForm from "../components/dashboard/NewScheduleForm";
 import ScheduleDetailView from "../components/dashboard/ScheduleDetailView";
 import MemberScheduleCard from "../components/dashboard/MemberScheduleCard";
 import { useData } from "../contexts/DataContext";
+import EditScheduleSongs from "../components/dashboard/EditScheduleSongs";
 
 const AdminDashboard = () => {
   const { schedules, groups, users, songs, createSchedule } = useData();
@@ -91,7 +92,6 @@ const AdminDashboard = () => {
         <Modal open={!!viewingSchedule} onClose={handleCloseDetailsModal}>
           <Box sx={modalStyle}>
             {" "}
-            {/* Usando o mesmo estilo */}
             <ScheduleDetailView
               schedule={viewingSchedule}
               group={groups.find(
@@ -110,8 +110,16 @@ const AdminDashboard = () => {
 
 const MemberDashboard = () => {
   const { user } = useAuth();
-  const { schedules, groups, updateMemberStatus } = useData();
+  const {
+    schedules,
+    groups,
+    songs,
+    users,
+    updateMemberStatus,
+    updateScheduleSongs,
+  } = useData();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
 
   const mySchedules = useMemo(() => {
     if (!user) return [];
@@ -119,6 +127,7 @@ const MemberDashboard = () => {
       s.membersStatus.some((ms) => ms.memberId === user.id)
     );
   }, [schedules, user]);
+
   const handleStatusUpdate = async (
     scheduleId: string,
     newStatus: ParticipationStatus
@@ -134,6 +143,15 @@ const MemberDashboard = () => {
     }
   };
 
+  const handleSaveSongs = async (scheduleId: string, newSongIds: string[]) => {
+    try {
+      await updateScheduleSongs(scheduleId, newSongIds);
+      setEditingSchedule(null);
+    } catch (err) {
+      alert("Falha ao salvar as músicas. Tente novamente.");
+    }
+  };
+
   return (
     <Box>
       <Typography variant="h5" sx={{ mb: 2 }}>
@@ -144,23 +162,44 @@ const MemberDashboard = () => {
           const myStatus =
             schedule.membersStatus.find((ms) => ms.memberId === user?.id)
               ?.status || "pending";
-          const groupName =
-            groups.find((g) => g.id === schedule.worshipGroupId)?.name || "N/A";
+          const group = groups.find((g) => g.id === schedule.worshipGroupId);
+          const isLeader = group?.leaderId === user?.id;
           return (
             <MemberScheduleCard
               key={schedule.id}
               schedule={schedule}
-              groupName={groupName}
+              groupName={group?.name || "Grupo Desconhecido"}
+              isLeader={isLeader}
               myStatus={myStatus}
               onStatusUpdate={(newStatus) =>
                 handleStatusUpdate(schedule.id, newStatus)
               }
               isUpdating={updatingId === schedule.id}
+              onEditSongs={() => setEditingSchedule(schedule)}
             />
           );
         })
       ) : (
         <Typography>Você não está em nenhuma escala futura.</Typography>
+      )}
+      {editingSchedule && (
+        <Modal
+          open={!!editingSchedule}
+          onClose={() => setEditingSchedule(null)}
+        >
+          <Box sx={modalStyle}>
+            <EditScheduleSongs
+              schedule={editingSchedule}
+              allSongs={songs}
+              group={groups.find(
+                (g) => g.id === editingSchedule.worshipGroupId
+              )}
+              users={users}
+              onSave={handleSaveSongs}
+              onClose={() => setEditingSchedule(null)}
+            />
+          </Box>
+        </Modal>
       )}
     </Box>
   );

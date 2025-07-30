@@ -36,10 +36,6 @@ interface DataContextType {
     link: string;
   }) => Promise<Song>;
   createGroup: (groupData: { name: string }) => Promise<WorshipGroup>;
-  updateGroupMembers: (
-    groupId: string,
-    memberIds: string[]
-  ) => Promise<WorshipGroup>;
   createSchedule: (scheduleData: {
     date: string;
     worshipGroupId: string;
@@ -49,6 +45,15 @@ interface DataContextType {
     scheduleId: string,
     memberId: string,
     newStatus: ParticipationStatus
+  ) => Promise<Schedule>;
+  updateGroupDetails: (
+    groupId: string,
+    details: { memberIds: string[]; leaderId: string }
+  ) => Promise<WorshipGroup>;
+
+  updateScheduleSongs: (
+    scheduleId: string,
+    songIds: string[]
   ) => Promise<Schedule>;
 }
 
@@ -139,24 +144,64 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const updateGroupMembers = (
+  const updateGroupDetails = (
     groupId: string,
-    memberIds: string[]
+    details: { memberIds: string[]; leaderId: string }
   ): Promise<WorshipGroup> => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
+        const { memberIds, leaderId } = details;
+
+        if (leaderId && !memberIds.includes(leaderId)) {
+          return reject(
+            new Error("O líder selecionado deve ser um membro do grupo.")
+          );
+        }
+
         let updatedGroup: WorshipGroup | undefined;
-        setGroups((prev) =>
-          prev.map((g) => {
+
+        setGroups((prevGroups) => {
+          const newGroups = prevGroups.map((g) => {
             if (g.id === groupId) {
-              updatedGroup = { ...g, members: memberIds };
+              updatedGroup = {
+                ...g,
+                members: memberIds,
+                leaderId: leaderId || undefined,
+              };
               return updatedGroup;
             }
             return g;
+          });
+          return newGroups;
+        });
+
+        if (updatedGroup) {
+          resolve(updatedGroup);
+        } else {
+          reject(new Error("Grupo não encontrado para atualização."));
+        }
+      }, networkDelay);
+    });
+  };
+
+  const updateScheduleSongs = (
+    scheduleId: string,
+    songIds: string[]
+  ): Promise<Schedule> => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        let updatedSchedule: Schedule | undefined;
+        setSchedules((prev) =>
+          prev.map((s) => {
+            if (s.id === scheduleId) {
+              updatedSchedule = { ...s, songs: songIds };
+              return updatedSchedule;
+            }
+            return s;
           })
         );
-        if (updatedGroup) resolve(updatedGroup);
-        else reject(new Error("Grupo não encontrado."));
+        if (updatedSchedule) resolve(updatedSchedule);
+        else reject(new Error("Escala não encontrada."));
       }, networkDelay);
     });
   };
@@ -220,9 +265,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     updateUserPassword,
     createSong,
     createGroup,
-    updateGroupMembers,
     createSchedule,
     updateMemberStatus,
+    updateScheduleSongs,
+    updateGroupDetails,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

@@ -46,7 +46,7 @@ const LoginPage: React.FC = () => {
       >
         <MusicNoteIcon color="primary" sx={{ fontSize: 40, mb: 2 }} />
         <Typography component="h1" variant="h5">
-          Louvor na Escala
+          Escalas Louvor IPC
         </Typography>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
           <TextField
