@@ -76,3 +76,75 @@ The system features 3 access levels with specific functionalities for each role:
 ## 📂 Project Structure
 
 The project follows a modular architecture to facilitate maintainability and scalability:
+
+/src
+|-- /components # Reusable components (forms, cards, layout)
+|-- /contexts # Global state providers (AuthContext, DataContext)
+|-- /data # Mock data for initialization
+|-- /pages # Full page components (Dashboard, Groups, etc.)
+|-- /types # TypeScript type definitions
+|-- /utils # Utility functions (e.g., PDF generator)
+|-- App.tsx # Main application router
+|-- main.tsx # Application entry point
+
+---
+
+## 🛠️ Getting Started / Local Setup
+
+Follow the steps below to set up and run the application in your local development environment.
+
+### **Prerequisites**
+
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/)
+
+### **Installation**
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone [https://github.com/your-username/praise-schedule.git](https://github.com/your-username/praise-schedule.git)
+    ```
+
+2.  **Navigate to the project folder:**
+
+    ```bash
+    cd praise-schedule
+    ```
+
+3.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+### **Running the Application**
+
+1.  **Start the development server:**
+    ```bash
+    npm run dev
+    ```
+2.  Open your browser and navigate to `http://localhost:5173` (or the address shown in your terminal).
+
+### **Mock Login Credentials**
+
+To test the application, use the following credentials:
+
+- **Administrator:**
+  - **Email:** `admin@email.com`
+  - **Password:** `admin123`
+- **Standard Member:**
+  - **Email:** `membro@email.com`
+  - **Password:** `membro123`
+- **New User (created by Admin):**
+  - **Temporary Password:** `senha123` (will be prompted to change on first login).
+
+---
+
+## 🗺️ Roadmap (Potential Next Steps - v2)
+
+- [ ] Implement unit and integration tests with **Vitest** and **React Testing Library**.
+- [ ] Notification system (in-app or by email) for new schedules and declined RSVPs.
+- [ ] Integration with a real backend (Firebase, Supabase) for data persistence.
+- [ ] File uploads (chord chart PDFs, rehearsal audio files).
+- [ ] A visual calendar view for schedules.
+- [ ] Deployment of the application to a platform like Vercel or Netlify.
