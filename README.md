@@ -1,78 +1,78 @@
-# 🎵 Louvor na Escala (v1.0)
+# 🎵 Praise Schedule (v1.0)
 
-**Sistema de Gestão de Escalas de Louvor para Igrejas**
+**A Worship Schedule Management System for Churches**
 
 [![React](https://img.shields.io/badge/React-18-blue?logo=react)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-5-purple?logo=vite)](https://vitejs.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Material-UI](https://img.shields.io/badge/Material--UI-5-blue?logo=mui)](https://mui.com/)
-[![Status](https://img.shields.io/badge/status-V1.0%20Concluída-green)](https://shields.io/)
+[![Status](https://img.shields.io/badge/status-V1.0%20Completed-green)](https://shields.io/)
 
 ---
 
-## 📖 Descrição do Projeto
+## 📖 Project Description
 
-O **Louvor na Escala** é uma aplicação web moderna projetada para simplificar a organização e comunicação das escalas de ministérios de louvor em igrejas. Inspirado em sistemas como o Planning Center, o objetivo é fornecer uma ferramenta intuitiva e centralizada para administradores, líderes e membros das equipes, otimizando o processo de escalação, confirmação de participação e definição de repertórios.
+**Praise Schedule** is a modern web application designed to streamline the organization and communication of church worship team schedules. Inspired by systems like Planning Center, the goal is to provide an intuitive and centralized tool for administrators, leaders, and team members, optimizing the process of creating schedules, managing RSVPs, and setting song lists.
 
-Esta aplicação foi construída do zero, com foco em uma arquitetura robusta, responsividade para dispositivos móveis e uma experiência de usuário limpa e agradável, utilizando o modo escuro como padrão.
+This application was built from the ground up with a focus on a robust architecture, mobile-first responsiveness, and a clean, pleasant user experience, using dark mode by default.
 
-## ✨ Funcionalidades (v1.0)
+## ✨ Features (v1.0)
 
-O sistema possui 3 níveis de acesso com funcionalidades específicas para cada papel:
+The system features 3 access levels with specific functionalities for each role:
 
-### 👤 **Administrador**
+### 👤 **Administrator**
 
-- **Dashboard Central:** Visualização completa de todas as escalas futuras.
-- **Gestão de Usuários:**
-  - Cadastro de novos membros no sistema.
-  - O sistema gera uma senha temporária e força a alteração no primeiro login.
-- **Gestão de Grupos:**
-  - Criação de múltiplos grupos de louvor (ex: "Equipe de Domingo", "Equipe Jovem").
-  - Edição de grupos para adicionar ou remover membros.
-  - Designação de um **Líder** para cada grupo.
-- **Criação de Escalas:**
-  - Criação de escalas associando um grupo a uma data e hora específicas.
-  - A adição de músicas ao repertório no momento da criação é opcional.
-- **Biblioteca de Músicas:**
-  - Visualização e busca de todas as músicas cadastradas.
-  - Cadastro de novas músicas com título, tom e link para cifra/vídeo.
-- **Visualização Detalhada:** Acesso aos detalhes de qualquer escala, incluindo a lista de músicas e o status de participação de cada membro.
+- **Centralized Dashboard:** A complete overview of all upcoming schedules.
+- **User Management:**
+  - Register new members in the system.
+  - The system generates a temporary password and requires a password change on the first login.
+- **Group Management:**
+  - Create multiple worship groups (e.g., "Sunday Team," "Youth Team").
+  - Edit groups to add or remove members.
+  - Assign a **Leader** for each group.
+- **Schedule Creation:**
+  - Create schedules by assigning a group to a specific date and time.
+  - Adding songs to the setlist at the time of creation is optional for flexibility.
+- **Song Library:**
+  - View and search all registered songs.
+  - Add new songs with a title, key, and a link to a chord chart or video.
+- **Detailed View:** Access the details of any schedule, including the song list and the participation status (RSVP) of each member.
 
-### 🎸 **Líder de Grupo**
+### 🎸 **Group Leader**
 
-- Herda todas as funcionalidades de um Membro comum.
-- **Permissões Especiais:** Possui um botão "Editar Músicas" em seu painel para as escalas do grupo que lidera.
-- **Gestão de Repertório:** Pode adicionar ou remover músicas das escalas de sua equipe a qualquer momento.
-- Visualiza o status de confirmação dos membros de sua equipe.
+- Inherits all the functionalities of a standard Member.
+- **Special Permissions:** Has access to an "Edit Songs" button on their dashboard for the schedules of the group they lead.
+- **Setlist Management:** Can add or remove songs from their team's schedules at any time.
+- Can view the confirmation status of their team members.
 
-### 🎤 **Membro**
+### 🎤 **Member**
 
-- **Painel Personalizado:** Visualiza uma lista contendo apenas as escalas em que foi convocado.
-- **Interação com a Escala:**
-  - Botões para **Confirmar** ou **Recusar** a participação em uma escala.
-  - O status é atualizado em tempo real.
-- **Primeiro Acesso Seguro:** É forçado a criar uma senha pessoal no primeiro login.
+- **Personalized Dashboard:** Views a list containing only the schedules they have been assigned to.
+- **Schedule Interaction:**
+  - Buttons to **Confirm** or **Decline** participation in a schedule.
+  - The status is updated in real-time.
+- **Secure First Login:** Is required to create a new personal password on their first login.
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+## 🚀 Tech Stack
 
 - **Frontend:**
-  - **React 18:** Biblioteca principal para a construção da interface.
-  - **Vite:** Ferramenta de build extremamente rápida para o ambiente de desenvolvimento.
-  - **TypeScript:** Para um código mais seguro, escalável e fácil de manter.
-- **UI & Estilização:**
-  - **Material-UI (MUI) v5:** Biblioteca de componentes robusta para uma UI consistente e profissional.
-  - **Modo Escuro** como padrão, configurado via `ThemeProvider` do MUI.
-- **Roteamento:**
-  - **React Router DOM v6:** Para navegação entre as páginas da aplicação.
-- **Estado Global:**
-  - **React Context API:** Utilizado para criar um `DataContext` centralizado (fonte única da verdade para os dados da aplicação) e um `AuthContext` para o gerenciamento de autenticação.
-- **Geração de PDF:**
-  - **jsPDF** & **jspdf-autotable:** Para a funcionalidade de exportar os detalhes da escala para um arquivo PDF.
+  - **React 18:** The core library for building the UI.
+  - **Vite:** A modern and fast build tool for the development environment.
+  - **TypeScript:** For safer, scalable, and more maintainable code.
+- **UI & Styling:**
+  - **Material-UI (MUI) v5:** A robust component library for a consistent and professional UI.
+  - **Dark Mode** by default, configured via MUI's `ThemeProvider`.
+- **Routing:**
+  - **React Router DOM v6:** For client-side navigation between application pages.
+- **Global State Management:**
+  - **React Context API:** Used to create a centralized `DataContext` (a single source of truth for the app's data) and an `AuthContext` for authentication management.
+- **PDF Generation:**
+  - **jsPDF** & **jspdf-autotable:** For the feature of exporting schedule details to a PDF file.
 
 ---
 
-## 📂 Estrutura do Projeto
+## 📂 Project Structure
 
-O projeto segue uma arquitetura modular para facilitar a manutenção e escalabilidade:
+The project follows a modular architecture to facilitate maintainability and scalability:
