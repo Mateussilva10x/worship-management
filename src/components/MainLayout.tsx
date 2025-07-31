@@ -100,7 +100,7 @@ const MainLayout: React.FC = () => {
             {open && !isMobile ? <ChevronLeftIcon /> : <MenuIcon />}
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Louvor na Escala
+            Escalas Louvor IPC
           </Typography>
           <Typography sx={{ mr: 2, display: { xs: "none", sm: "block" } }}>
             Olá, {user?.name.split(" ")[0]}

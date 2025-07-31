@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, {
   createContext,
   useState,
@@ -8,7 +9,7 @@ import React, {
 } from "react";
 import type { User } from "../types";
 import { supabase } from "../supabaseClient";
-import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import type { AuthChangeEvent } from "@supabase/supabase-js";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -27,41 +28,47 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const updateUserAndProfile = async (session: Session | null) => {
+    let isMounted = true;
+
+    const resolveSession = async () => {
       try {
-        if (session?.user) {
-          const { data: profile, error } = await supabase
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        if (isMounted && session?.user) {
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", session.user.id)
             .single();
 
-          if (error) throw error;
-          setUser(profile || null);
-        } else {
+          if (profileError) throw profileError;
+
+          if (isMounted) setUser(profile || null);
+        } else if (isMounted) {
           setUser(null);
         }
       } catch (error) {
-        console.error("Erro ao processar a sessão:", error);
-        setUser(null);
+        console.error("Erro ao resolver a sessão:", error);
+        if (isMounted) setUser(null);
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      await updateUserAndProfile(session);
-      setLoading(false);
-    });
+    resolveSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (_event: AuthChangeEvent, session: Session | null) => {
-        await updateUserAndProfile(session);
-        setLoading(false);
-      }
-    );
+    } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent) => {
+      resolveSession();
+    });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -72,7 +79,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const refreshAuthUser = (updatedUser: User) => {
     setUser(updatedUser);
-    localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
   const value = {
@@ -93,7 +99,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth deve ser usado dentro de um DataProvider");
+    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
   return context;
 };

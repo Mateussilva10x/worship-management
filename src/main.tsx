@@ -12,12 +12,12 @@ import { DataProvider } from "./contexts/DataContext.tsx";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
-      <DataProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <DataProvider>
           <CssBaseline />
           <App />
-        </AuthProvider>
-      </DataProvider>
+        </DataProvider>
+      </AuthProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

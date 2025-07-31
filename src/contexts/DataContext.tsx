@@ -6,6 +6,7 @@ import React, {
   useContext,
   type ReactNode,
   useEffect,
+  useRef,
 } from "react";
 import type {
   User,
@@ -15,6 +16,7 @@ import type {
   ParticipationStatus,
 } from "../types";
 import { supabase } from "../supabaseClient";
+import { useAuth } from "./AuthContext";
 
 interface DataContextType {
   users: User[];
@@ -56,56 +58,81 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export const DataProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const { isAuthenticated } = useAuth();
+
   const [users, setUsers] = useState<User[]>([]);
   const [groups, setGroups] = useState<WorshipGroup[]>([]);
   const [songs, setSongs] = useState<Song[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const dataFetched = useRef(false);
+
   useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        setLoading(true);
-        const [
-          { data: profilesData, error: profilesError },
-          { data: groupsData, error: groupsError },
-          { data: songsData, error: songsError },
-          { data: schedulesData, error: schedulesError },
+    if (isAuthenticated && !dataFetched.current) {
+      dataFetched.current = true;
 
-          { data: groupMembersData, error: groupMembersError },
-        ] = await Promise.all([
-          supabase.from("profiles").select("*"),
-          supabase.from("groups").select("*"),
-          supabase.from("songs").select("*"),
-          supabase.from("schedules").select("*"),
-          supabase.from("group_members").select("group_id, user_id"),
-        ]);
+      const fetchInitialData = async () => {
+        try {
+          setLoading(true);
 
-        if (profilesError) throw profilesError;
-        if (groupsError) throw groupsError;
-        if (songsError) throw songsError;
-        if (schedulesError) throw schedulesError;
-        if (groupMembersError) throw groupMembersError;
+          // A query mais poderosa de todas: busca tudo e suas relações diretas!
+          const { data: schedulesData, error: schedulesError } =
+            await supabase.from("schedules").select(`
+              id, date, created_at,
+              group:groups (*),
+              schedule_songs ( song_id ),
+              schedule_participants ( user_id, status )
+            `);
 
-        const groupsWithMembers = (groupsData || []).map((group) => ({
-          ...group,
-          members: (groupMembersData || [])
-            .filter((member) => member.group_id === group.id)
-            .map((member) => member.user_id),
-        }));
+          const { data: profilesData, error: profilesError } = await supabase
+            .from("profiles")
+            .select("*");
+          const { data: songsData, error: songsError } = await supabase
+            .from("songs")
+            .select("*");
+          const { data: groupsData, error: groupsError } = await supabase
+            .from("groups")
+            .select("*, members:group_members(user_id)");
 
-        setUsers(profilesData || []);
-        setGroups(groupsWithMembers);
-        setSongs(songsData || []);
-        setSchedules(schedulesData || []);
-      } catch (error) {
-        console.error("Erro ao carregar dados iniciais:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchInitialData();
-  }, []);
+          if (schedulesError) throw schedulesError;
+          if (profilesError) throw profilesError;
+          if (songsError) throw songsError;
+          if (groupsError) throw groupsError;
+
+          const transformedSchedules = (schedulesData || []).map((s) => ({
+            id: s.id,
+            date: s.date,
+            created_at: s.created_at,
+            group: s.group,
+            songs: s.schedule_songs.map((song: any) => song.song_id),
+            membersStatus: s.schedule_participants.map((p: any) => ({
+              memberId: p.user_id,
+              status: p.status,
+            })),
+          }));
+
+          const transformedGroups = (groupsData || []).map((g) => ({
+            ...g,
+            members: g.members.map((m: any) => m.user_id),
+          }));
+
+          setUsers(profilesData || []);
+          setSongs(songsData || []);
+          setSchedules(transformedSchedules as unknown as Schedule[]);
+          setGroups(transformedGroups as unknown as WorshipGroup[]);
+        } catch (error) {
+          console.error("Erro ao carregar dados iniciais:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchInitialData();
+    } else if (!isAuthenticated) {
+      dataFetched.current = false;
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
 
   const createUser = async (userData: {
     name: string;
@@ -118,7 +145,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       options: { data: { name: userData.name } },
     });
     if (error) throw error;
-
     if (data.user) {
       const newProfile: User = {
         id: data.user.id,
@@ -148,7 +174,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       .select()
       .single();
     if (error) throw error;
-    setSongs((prev) => [data, ...prev]);
+    setSongs((prev) =>
+      [data, ...prev].sort((a, b) => a.title.localeCompare(b.title))
+    );
     return data;
   };
 
@@ -159,9 +187,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       .select()
       .single();
     if (error) throw error;
-
     const newGroupWithMembers: WorshipGroup = { ...data, members: [] };
-
     setGroups((prev) => [newGroupWithMembers, ...prev]);
     return newGroupWithMembers;
   };
@@ -171,10 +197,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     details: { memberIds: string[]; leaderId: string }
   ) => {
     const { memberIds, leaderId } = details;
-
-    if (leaderId && !memberIds.includes(leaderId)) {
+    if (leaderId && !memberIds.includes(leaderId))
       throw new Error("O líder selecionado deve ser um membro do grupo.");
-    }
 
     const { data: groupData, error: groupError } = await supabase
       .from("groups")
@@ -185,19 +209,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     if (groupError) throw groupError;
 
     await supabase.from("group_members").delete().eq("group_id", groupId);
-    const membersToInsert = memberIds.map((userId) => ({
-      group_id: groupId,
-      user_id: userId,
-    }));
-    if (membersToInsert.length > 0) {
+    if (memberIds.length > 0) {
+      const membersToInsert = memberIds.map((userId) => ({
+        group_id: groupId,
+        user_id: userId,
+      }));
       const { error: membersError } = await supabase
         .from("group_members")
         .insert(membersToInsert);
       if (membersError) throw membersError;
     }
 
-    setGroups((prev) => prev.map((g) => (g.id === groupId ? groupData : g)));
-    return groupData;
+    const updatedGroupWithMembers = { ...groupData, members: memberIds };
+    setGroups((prev) =>
+      prev.map((g) => (g.id === groupId ? updatedGroupWithMembers : g))
+    );
+    return updatedGroupWithMembers;
   };
 
   const createSchedule = async (scheduleData: {
@@ -205,7 +232,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     worshipGroupId: string;
     songs: string[];
   }) => {
-    const { data, error } = await supabase
+    const group = groups.find((g) => g.id === scheduleData.worshipGroupId);
+    if (!group) throw new Error("Grupo não encontrado.");
+
+    const { data: newScheduleData, error: scheduleError } = await supabase
       .from("schedules")
       .insert({
         date: scheduleData.date,
@@ -213,10 +243,41 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       })
       .select()
       .single();
-    if (error) throw error;
-    setSchedules((prev) => [data, ...prev]);
+    if (scheduleError) throw scheduleError;
 
-    return data;
+    const participantsToInsert = group.members.map((memberId) => ({
+      schedule_id: newScheduleData.id,
+      user_id: memberId,
+      status: "pending" as ParticipationStatus,
+    }));
+    if (participantsToInsert.length > 0) {
+      const { error } = await supabase
+        .from("schedule_participants")
+        .insert(participantsToInsert);
+      if (error) throw error;
+    }
+
+    if (scheduleData.songs.length > 0) {
+      const songsToInsert = scheduleData.songs.map((songId) => ({
+        schedule_id: newScheduleData.id,
+        song_id: songId,
+      }));
+      const { error } = await supabase
+        .from("schedule_songs")
+        .insert(songsToInsert);
+      if (error) throw error;
+    }
+
+    const finalScheduleObject: Schedule = {
+      ...newScheduleData,
+      songs: scheduleData.songs,
+      membersStatus: participantsToInsert.map((p) => ({
+        memberId: p.user_id,
+        status: p.status,
+      })),
+    };
+    setSchedules((prev) => [finalScheduleObject, ...prev]);
+    return finalScheduleObject;
   };
 
   const updateMemberStatus = async (
@@ -231,7 +292,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       .select()
       .single();
     if (error) throw error;
-
+    setSchedules((prev) =>
+      prev.map((s) =>
+        s.id === scheduleId
+          ? {
+              ...s,
+              membersStatus: s.membersStatus.map((ms) =>
+                ms.memberId === memberId ? { ...ms, status: newStatus } : ms
+              ),
+            }
+          : s
+      )
+    );
     return data;
   };
 
@@ -240,17 +312,24 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       .from("schedule_songs")
       .delete()
       .eq("schedule_id", scheduleId);
-    const songsToInsert = songIds.map((songId) => ({
-      schedule_id: scheduleId,
-      song_id: songId,
-    }));
-    if (songsToInsert.length > 0) {
+    if (songIds.length > 0) {
+      const songsToInsert = songIds.map((songId) => ({
+        schedule_id: scheduleId,
+        song_id: songId,
+      }));
       const { data, error } = await supabase
         .from("schedule_songs")
-        .insert(songsToInsert);
+        .insert(songsToInsert)
+        .select();
       if (error) throw error;
+      setSchedules((prev) =>
+        prev.map((s) => (s.id === scheduleId ? { ...s, songs: songIds } : s))
+      );
       return data;
     }
+    setSchedules((prev) =>
+      prev.map((s) => (s.id === scheduleId ? { ...s, songs: [] } : s))
+    );
     return [];
   };
 

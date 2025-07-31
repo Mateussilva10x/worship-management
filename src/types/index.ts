@@ -55,7 +55,7 @@ export interface MemberStatus {
 export interface Schedule {
   id: string;
   date: string;
-  worshipGroupId: WorshipGroup["id"];
+  group: WorshipGroup;
   songs: Song["id"][];
   membersStatus: MemberStatus[];
 }

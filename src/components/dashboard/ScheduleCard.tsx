@@ -1,5 +1,5 @@
 import React from "react";
-import type { Schedule, WorshipGroup, User } from "../../types";
+import type { Schedule, User } from "../../types";
 import {
   Card,
   CardContent,
@@ -17,19 +17,12 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 interface ScheduleCardProps {
   schedule: Schedule;
-  groups: WorshipGroup[];
   users: User[];
   onClick: () => void;
 }
 
-const ScheduleCard: React.FC<ScheduleCardProps> = ({
-  schedule,
-  groups,
-  onClick,
-}) => {
-  const groupName =
-    groups.find((g) => g.id === schedule.worshipGroupId)?.name ||
-    "Grupo não encontrado";
+const ScheduleCard: React.FC<ScheduleCardProps> = ({ schedule, onClick }) => {
+  const groupName = schedule.group?.name || "Grupo não encontrado";
 
   const eventDate = new Date(schedule.date);
   const formattedDate = eventDate.toLocaleDateString("pt-BR", {
@@ -57,7 +50,6 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
     <CardActionArea onClick={onClick} sx={{ mb: 3, borderRadius: 1 }}>
       <Card sx={{ pointerEvents: "none" }}>
         <CardContent>
-          {/* Cabeçalho com a Data */}
           <Box display="flex" alignItems="center" mb={2}>
             <EventIcon color="primary" sx={{ mr: 1 }} />
             <Typography variant="h6" component="div" color="primary.main">
@@ -65,7 +57,6 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
             </Typography>
           </Box>
 
-          {/* Nome do Grupo */}
           <Box display="flex" alignItems="center" mb={2}>
             <PeopleAltIcon color="secondary" sx={{ mr: 1 }} />
             <Typography variant="body1" color="text.secondary">

@@ -94,9 +94,10 @@ const MusicLibraryPage: React.FC = () => {
                     <IconButton
                       aria-label="Abrir link"
                       color="primary"
+                      component="a"
                       href={song.link}
-                      target="_blank" // Abre em nova aba
-                      rel="noopener noreferrer"
+                      target={song.link ? "_blank" : undefined}
+                      rel={song.link ? "noopener noreferrer" : undefined}
                       disabled={!song.link}
                     >
                       <LinkIcon />
