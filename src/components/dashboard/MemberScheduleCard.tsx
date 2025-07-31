@@ -75,6 +75,7 @@ const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
               variant="text"
               startIcon={<EditIcon />}
               onClick={onEditSongs}
+              disabled={isUpdating}
               sx={{ ml: 1 }}
             >
               Músicas

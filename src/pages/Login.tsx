@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import {
   Container,
@@ -23,20 +22,16 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     setError("");
 
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
 
-      if (error) {
-        throw error;
-      }
-    } catch (err: any) {
-      setError(err.message || "E-mail ou senha inválidos.");
-    } finally {
-      setLoading(false);
+    if (error) {
+      setError(error.message || "E-mail ou senha inválidos.");
     }
+
+    setLoading(false);
   };
 
   return (

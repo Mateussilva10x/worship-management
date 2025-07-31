@@ -31,7 +31,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({ onSubmit, onCancel }) => {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
+    <Box component="form" onSubmit={handleSubmit} noValidate>
       <Typography variant="h6" gutterBottom>
         Adicionar Nova Música
       </Typography>
