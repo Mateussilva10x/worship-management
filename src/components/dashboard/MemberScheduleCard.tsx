@@ -26,7 +26,7 @@ const statusMap: Record<
   { label: string; color: "success" | "error" | "warning" }
 > = {
   confirmed: { label: "Confirmado", color: "success" },
-  declined: { label: "Você recusou", color: "error" },
+  declined: { label: "Recusado", color: "error" },
   pending: { label: "Pendente", color: "warning" },
 };
 
