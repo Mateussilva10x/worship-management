@@ -8,16 +8,19 @@ import CssBaseline from "@mui/material/CssBaseline";
 import theme from "./theme/theme.ts";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
 import { DataProvider } from "./contexts/DataContext.tsx";
+import { NotificationProvider } from "./contexts/NotificationContext.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
-      <AuthProvider>
-        <DataProvider>
-          <CssBaseline />
-          <App />
-        </DataProvider>
-      </AuthProvider>
+      <NotificationProvider>
+        <AuthProvider>
+          <DataProvider>
+            <CssBaseline />
+            <App />
+          </DataProvider>
+        </AuthProvider>
+      </NotificationProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

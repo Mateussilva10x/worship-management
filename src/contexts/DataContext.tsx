@@ -28,6 +28,7 @@ interface DataContextType {
     name: string;
     email: string;
     password?: string;
+    whatsapp: string;
   }) => Promise<any>;
   updateUserPassword: (password: string) => Promise<any>;
   createSong: (songData: {
@@ -141,19 +142,27 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const createUser = async (userData: {
     name: string;
     email: string;
+    whatsapp: string;
     password?: string;
   }) => {
     const { data, error } = await supabase.auth.signUp({
       email: userData.email,
       password: userData.password || "senha123",
-      options: { data: { name: userData.name } },
+      options: {
+        data: {
+          name: userData.name,
+          whatsapp: userData.whatsapp,
+        },
+      },
     });
     if (error) throw error;
+
     if (data.user) {
       const newProfile: User = {
         id: data.user.id,
         name: userData.name,
         email: userData.email,
+        whatsapp: userData.whatsapp,
         role: "member",
       };
       setUsers((prev) => [...prev, newProfile]);

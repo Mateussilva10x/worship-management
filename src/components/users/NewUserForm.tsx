@@ -2,12 +2,20 @@ import React, { useState } from "react";
 import { Box, Button, Typography, TextField } from "@mui/material";
 
 interface NewUserFormProps {
-  onSubmit: (formData: { name: string; email: string }) => Promise<void>;
+  onSubmit: (formData: {
+    name: string;
+    email: string;
+    whatsapp: string;
+  }) => Promise<void>;
   onCancel: () => void;
 }
 
 const NewUserForm: React.FC<NewUserFormProps> = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    whatsapp: "",
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,6 +54,15 @@ const NewUserForm: React.FC<NewUserFormProps> = ({ onSubmit, onCancel }) => {
         type="email"
         label="E-mail"
         value={formData.email}
+        onChange={handleChange}
+        fullWidth
+        required
+        sx={{ mb: 2 }}
+      />
+      <TextField
+        name="whatsapp"
+        label="Nº de WhatsApp (Ex: 5583999998888)"
+        value={formData.whatsapp}
         onChange={handleChange}
         fullWidth
         required

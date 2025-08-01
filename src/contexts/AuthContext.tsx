@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import React, {
   createContext,
   useState,
@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import type { User } from "../types";
 import { supabase } from "../supabaseClient";
-import type { AuthChangeEvent } from "@supabase/supabase-js";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -41,15 +40,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         if (sessionError) throw sessionError;
 
         if (isMounted && session?.user) {
-          const { data: profile, error: profileError } = await supabase
+          const { data: profiles, error: profileError } = await supabase
             .from("profiles")
             .select("*")
-            .eq("id", session.user.id)
-            .single();
+            .eq("id", session.user.id);
 
           if (profileError) throw profileError;
 
-          if (isMounted) setUser(profile || null);
+          if (isMounted) {
+            if (profiles && profiles.length > 0) {
+              if (profiles.length > 1) {
+                console.warn(
+                  `AVISO: Múltiplos perfis encontrados para o usuário ID ${session.user.id}. Usando o primeiro.`
+                );
+              }
+
+              setUser(profiles[0]);
+            } else {
+              console.warn(
+                `AVISO: Usuário autenticado ${session.user.id} não possui um perfil correspondente.`
+              );
+              setUser(null);
+            }
+          }
         } else if (isMounted) {
           setUser(null);
         }
@@ -65,8 +78,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent) => {
-      resolveSession();
+    } = supabase.auth.onAuthStateChange(() => {
+      if (isMounted) {
+        resolveSession();
+      }
     });
 
     return () => {
