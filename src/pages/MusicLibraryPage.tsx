@@ -18,12 +18,16 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import LinkIcon from "@mui/icons-material/Link";
+import DeleteIcon from "@mui/icons-material/Delete";
 import NewSongForm from "../components/library/NewSongForm";
 import { useData } from "../contexts/DataContext";
+import type { Song } from "../types";
+import ConfirmationDialog from "../components/common/ConfirmationDialog";
 
 const MusicLibraryPage: React.FC = () => {
-  const { songs, createSong, loading } = useData();
+  const { songs, createSong, deleteSong, loading } = useData();
   const [searchTerm, setSearchTerm] = useState("");
+  const [songToDelete, setSongToDelete] = useState<Song | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCreateSong = async (formData: {
@@ -36,6 +40,17 @@ const MusicLibraryPage: React.FC = () => {
       setIsModalOpen(false);
     } catch (err) {
       alert("Falha ao salvar a música.");
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (songToDelete) {
+      try {
+        await deleteSong(songToDelete.id);
+        setSongToDelete(null);
+      } catch (err) {
+        alert("Falha ao excluir a música.");
+      }
     }
   };
 
@@ -86,36 +101,51 @@ const MusicLibraryPage: React.FC = () => {
 
       <Paper>
         <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: "bold" }}>Título</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Tom</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Ações</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredSongs.map((song) => (
-                <TableRow key={song.id}>
-                  <TableCell>{song.title}</TableCell>
-                  <TableCell>{song.key}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      aria-label="Abrir link"
-                      color="primary"
-                      component="a"
-                      href={song.link}
-                      target={song.link ? "_blank" : undefined}
-                      rel={song.link ? "noopener noreferrer" : undefined}
-                      disabled={!song.link}
-                    >
-                      <LinkIcon />
-                    </IconButton>
-                  </TableCell>
+          {songs.length > 0 ? (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold" }}>Título</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Tom</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Ações</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {filteredSongs.map((song) => (
+                  <TableRow key={song.id}>
+                    <TableCell>{song.title}</TableCell>
+                    <TableCell>{song.key}</TableCell>
+                    <TableCell>
+                      <IconButton
+                        aria-label="Abrir link"
+                        color="primary"
+                        component="a"
+                        href={song.link}
+                        target={song.link ? "_blank" : undefined}
+                        rel={song.link ? "noopener noreferrer" : undefined}
+                        disabled={!song.link}
+                      >
+                        <LinkIcon />
+                      </IconButton>
+                      <IconButton
+                        aria-label="Excluir música"
+                        color="error"
+                        onClick={() => setSongToDelete(song)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <Box sx={{ p: 2, textAlign: "center" }}>
+              <Typography variant="body1">
+                Nenhuma música encontrada.
+              </Typography>
+            </Box>
+          )}
         </TableContainer>
       </Paper>
 
@@ -127,6 +157,13 @@ const MusicLibraryPage: React.FC = () => {
           />
         </Box>
       </Modal>
+      <ConfirmationDialog
+        open={!!songToDelete}
+        title="Confirmar Exclusão"
+        message={`Você tem certeza que deseja excluir a música "${songToDelete?.title}"? Esta ação não pode ser desfeita.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setSongToDelete(null)}
+      />
     </Box>
   );
 };

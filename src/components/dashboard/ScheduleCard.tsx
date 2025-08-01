@@ -1,5 +1,5 @@
 import React from "react";
-import type { Schedule, User } from "../../types";
+import type { Schedule } from "../../types";
 import {
   Card,
   CardContent,
@@ -17,7 +17,6 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 interface ScheduleCardProps {
   schedule: Schedule;
-  users: User[];
   onClick: () => void;
   "data-testid"?: string;
 }

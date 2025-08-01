@@ -21,7 +21,8 @@ import { useData } from "../contexts/DataContext";
 import EditScheduleSongs from "../components/dashboard/EditScheduleSongs";
 
 const AdminDashboard = () => {
-  const { schedules, groups, users, songs, createSchedule } = useData();
+  const { schedules, groups, users, songs, createSchedule, deleteSchedule } =
+    useData();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [viewingSchedule, setViewingSchedule] = useState<Schedule | null>(null);
 
@@ -71,7 +72,6 @@ const AdminDashboard = () => {
             key={schedule.id}
             schedule={schedule}
             onClick={() => handleViewDetails(schedule)}
-            users={[]}
             data-testid={`schedule-card-${schedule.id}`}
           />
         ))
@@ -102,6 +102,7 @@ const AdminDashboard = () => {
               users={users}
               songs={songs}
               onClose={handleCloseDetailsModal}
+              deleteSchedule={deleteSchedule}
             />
           </Box>
         </Modal>
@@ -118,7 +119,7 @@ const MemberDashboard = () => {
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
 
   const mySchedules = useMemo(() => {
-    if (!user) return [];
+    if (!user || !schedules) return [];
     return schedules.filter((s) =>
       s.membersStatus.some((ms) => ms.memberId === user.id)
     );

@@ -1,4 +1,5 @@
-import React from "react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useState } from "react";
 import type {
   Schedule,
   WorshipGroup,
@@ -22,7 +23,9 @@ import {
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { generateSchedulePdf } from "../../utils/pdfGenerator";
+import ConfirmationDialog from "../common/ConfirmationDialog";
 
 const statusMap: Record<
   ParticipationStatus,
@@ -39,6 +42,7 @@ interface ScheduleDetailViewProps {
   users: User[];
   songs: Song[];
   onClose: () => void;
+  deleteSchedule: (scheduleId: string) => Promise<void>;
 }
 
 const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
@@ -47,7 +51,9 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
   users,
   songs,
   onClose,
+  deleteSchedule,
 }) => {
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const scheduleSongs = schedule.songs
     .map((songId) => songs.find((s) => s.id === songId))
     .filter(Boolean) as Song[];
@@ -66,6 +72,16 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
         .map((songId) => songs.find((s) => s.id === songId))
         .filter(Boolean) as Song[];
       generateSchedulePdf(schedule, group, scheduleSongs, users);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteSchedule(schedule.id);
+      setIsConfirmOpen(false);
+      onClose();
+    } catch (error) {
+      alert("Falha ao excluir a escala.");
     }
   };
 
@@ -137,6 +153,25 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
           </ListItem>
         ))}
       </List>
+      <Divider sx={{ my: 2 }} />
+
+      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+        <Button
+          variant="outlined"
+          color="error"
+          startIcon={<DeleteIcon />}
+          onClick={() => setIsConfirmOpen(true)}
+        >
+          Excluir Escala
+        </Button>
+      </Box>
+      <ConfirmationDialog
+        open={isConfirmOpen}
+        title="Confirmar Exclusão"
+        message={`Você tem certeza que deseja excluir esta escala? Esta ação não pode ser desfeita.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setIsConfirmOpen(false)}
+      />
     </Box>
   );
 };

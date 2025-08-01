@@ -51,6 +51,9 @@ interface DataContextType {
     newStatus: ParticipationStatus
   ) => Promise<any>;
   updateScheduleSongs: (scheduleId: string, songIds: string[]) => Promise<any>;
+  deleteSong: (songId: string) => Promise<void>;
+  deleteGroup: (groupId: string) => Promise<void>;
+  deleteSchedule: (scheduleId: string) => Promise<void>;
 }
 
 export const DataContext = createContext<DataContextType | undefined>(
@@ -78,7 +81,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         try {
           setLoading(true);
 
-          // A query mais poderosa de todas: busca tudo e suas relações diretas!
           const { data: schedulesData, error: schedulesError } =
             await supabase.from("schedules").select(`
               id, date, created_at,
@@ -235,7 +237,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     songs: string[];
   }) => {
     const group = groups.find((g) => g.id === scheduleData.worshipGroupId);
-    if (!group) throw new Error("Grupo não encontrado.");
+    if (!group) throw new Error("Grupo selecionado não foi encontrado.");
 
     const { data: newScheduleData, error: scheduleError } = await supabase
       .from("schedules")
@@ -272,14 +274,26 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
     const finalScheduleObject: Schedule = {
       ...newScheduleData,
+      group: group,
       songs: scheduleData.songs,
       membersStatus: participantsToInsert.map((p) => ({
         memberId: p.user_id,
         status: p.status,
       })),
     };
+
     setSchedules((prev) => [finalScheduleObject, ...prev]);
     return finalScheduleObject;
+  };
+
+  const deleteSchedule = async (scheduleId: string): Promise<void> => {
+    const { error } = await supabase
+      .from("schedules")
+      .delete()
+      .eq("id", scheduleId);
+    if (error) throw error;
+
+    setSchedules((prev) => prev.filter((s) => s.id !== scheduleId));
   };
 
   const updateMemberStatus = async (
@@ -335,6 +349,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     return [];
   };
 
+  const deleteSong = async (songId: string): Promise<void> => {
+    const { error } = await supabase.from("songs").delete().eq("id", songId);
+    if (error) throw error;
+
+    setSongs((prev) => prev.filter((s) => s.id !== songId));
+  };
+
+  const deleteGroup = async (groupId: string): Promise<void> => {
+    const { error } = await supabase.from("groups").delete().eq("id", groupId);
+    if (error) throw error;
+
+    setGroups((prev) => prev.filter((g) => g.id !== groupId));
+
+    setSchedules((prev) => prev.filter((s) => s.group.id !== groupId));
+  };
+
   const value = {
     users,
     groups,
@@ -349,6 +379,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     createSchedule,
     updateMemberStatus,
     updateScheduleSongs,
+    deleteSong,
+    deleteGroup,
+    deleteSchedule,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

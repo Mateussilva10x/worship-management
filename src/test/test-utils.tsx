@@ -59,6 +59,9 @@ const customRender = (ui: ReactElement, options: CustomRenderOptions = {}) => {
     createSchedule: vi.fn(),
     updateMemberStatus: vi.fn(),
     updateScheduleSongs: vi.fn(),
+    deleteSong: vi.fn(),
+    deleteGroup: vi.fn(),
+    deleteSchedule: vi.fn(),
     ...options.dataValue,
   };
 
