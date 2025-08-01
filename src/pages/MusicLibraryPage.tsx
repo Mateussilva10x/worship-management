@@ -14,6 +14,7 @@ import {
   TableHead,
   TableRow,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import LinkIcon from "@mui/icons-material/Link";
@@ -21,7 +22,7 @@ import NewSongForm from "../components/library/NewSongForm";
 import { useData } from "../contexts/DataContext";
 
 const MusicLibraryPage: React.FC = () => {
-  const { songs, createSong } = useData();
+  const { songs, createSong, loading } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -45,6 +46,14 @@ const MusicLibraryPage: React.FC = () => {
       ),
     [songs, searchTerm]
   );
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>

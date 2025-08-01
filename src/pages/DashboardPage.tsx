@@ -2,7 +2,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { Typography, Box, Button, Modal } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Button,
+  Modal,
+  CircularProgress,
+} from "@mui/material";
 import ScheduleCard from "../components/dashboard/ScheduleCard";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -21,7 +27,6 @@ const AdminDashboard = () => {
 
   const handleOpenCreateModal = () => setIsCreateModalOpen(true);
   const handleCloseCreateModal = () => setIsCreateModalOpen(false);
-
   const handleViewDetails = (schedule: Schedule) =>
     setViewingSchedule(schedule);
   const handleCloseDetailsModal = () => setViewingSchedule(null);
@@ -65,9 +70,8 @@ const AdminDashboard = () => {
           <ScheduleCard
             key={schedule.id}
             schedule={schedule}
-            groups={groups}
-            users={users}
             onClick={() => handleViewDetails(schedule)}
+            users={[]}
           />
         ))
       ) : (
@@ -91,12 +95,9 @@ const AdminDashboard = () => {
       {viewingSchedule && (
         <Modal open={!!viewingSchedule} onClose={handleCloseDetailsModal}>
           <Box sx={modalStyle}>
-            {" "}
             <ScheduleDetailView
               schedule={viewingSchedule}
-              group={groups.find(
-                (g) => g.id === viewingSchedule.worshipGroupId
-              )}
+              group={viewingSchedule.group}
               users={users}
               songs={songs}
               onClose={handleCloseDetailsModal}
@@ -110,14 +111,8 @@ const AdminDashboard = () => {
 
 const MemberDashboard = () => {
   const { user } = useAuth();
-  const {
-    schedules,
-    groups,
-    songs,
-    users,
-    updateMemberStatus,
-    updateScheduleSongs,
-  } = useData();
+  const { schedules, songs, users, updateMemberStatus, updateScheduleSongs } =
+    useData();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
 
@@ -162,7 +157,7 @@ const MemberDashboard = () => {
           const myStatus =
             schedule.membersStatus.find((ms) => ms.memberId === user?.id)
               ?.status || "pending";
-          const group = groups.find((g) => g.id === schedule.worshipGroupId);
+          const group = schedule.group;
           const isLeader = group?.leaderId === user?.id;
           return (
             <MemberScheduleCard
@@ -191,9 +186,7 @@ const MemberDashboard = () => {
             <EditScheduleSongs
               schedule={editingSchedule}
               allSongs={songs}
-              group={groups.find(
-                (g) => g.id === editingSchedule.worshipGroupId
-              )}
+              group={editingSchedule.group}
               users={users}
               onSave={handleSaveSongs}
               onClose={() => setEditingSchedule(null)}
@@ -207,6 +200,23 @@ const MemberDashboard = () => {
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const { loading } = useData();
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "80vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return user?.role === "admin" ? <AdminDashboard /> : <MemberDashboard />;
 };
 

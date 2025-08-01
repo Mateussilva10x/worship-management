@@ -53,7 +53,9 @@ interface DataContextType {
   updateScheduleSongs: (scheduleId: string, songIds: string[]) => Promise<any>;
 }
 
-const DataContext = createContext<DataContextType | undefined>(undefined);
+export const DataContext = createContext<DataContextType | undefined>(
+  undefined
+);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({
   children,

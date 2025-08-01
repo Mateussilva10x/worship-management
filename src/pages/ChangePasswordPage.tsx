@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useData } from "../contexts/DataContext";
 import {
   Box,
   Typography,
@@ -11,12 +12,12 @@ import {
   Paper,
   Alert,
 } from "@mui/material";
-import { useData } from "../contexts/DataContext";
 
 const ChangePasswordPage: React.FC = () => {
-  const { updateUserPassword } = useData();
   const { user, refreshAuthUser } = useAuth();
+  const { updateUserPassword } = useData();
   const navigate = useNavigate();
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,7 +31,6 @@ const ChangePasswordPage: React.FC = () => {
       setError("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
-
     if (password !== confirmPassword) {
       setError("As senhas não coincidem.");
       return;
@@ -43,9 +43,7 @@ const ChangePasswordPage: React.FC = () => {
     setLoading(true);
     try {
       const updatedUser = await updateUserPassword(password);
-
       refreshAuthUser(updatedUser);
-
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.message || "Ocorreu um erro ao atualizar a senha.");
@@ -83,6 +81,7 @@ const ChangePasswordPage: React.FC = () => {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
           />
           <TextField
             margin="normal"
@@ -94,6 +93,7 @@ const ChangePasswordPage: React.FC = () => {
             id="confirmPassword"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
           />
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>

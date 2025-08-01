@@ -11,6 +11,7 @@ import {
   ListItemText,
   ListItemAvatar,
   Avatar,
+  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import GroupIcon from "@mui/icons-material/Group";
@@ -19,7 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { useData } from "../contexts/DataContext";
 
 const GroupsPage: React.FC = () => {
-  const { groups, createGroup } = useData();
+  const { groups, createGroup, loading } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -31,6 +32,14 @@ const GroupsPage: React.FC = () => {
       alert("Falha ao salvar grupo.");
     }
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -54,26 +63,32 @@ const GroupsPage: React.FC = () => {
 
       <Paper>
         <List>
-          {groups.map((group) => (
-            <ListItem
-              key={group.id}
-              onClick={() => navigate(`/groups/${group.id}`)}
-              sx={{
-                cursor: "pointer",
-                "&:hover": { backgroundColor: "action.hover" },
-              }}
-            >
-              <ListItemAvatar>
-                <Avatar sx={{ bgcolor: "secondary.main" }}>
-                  <GroupIcon />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary={group.name}
-                secondary={`${group.members.length} membro(s)`}
-              />
-            </ListItem>
-          ))}
+          {groups.length > 0 ? (
+            groups.map((group) => (
+              <ListItem
+                key={group.id}
+                onClick={() => navigate(`/groups/${group.id}`)}
+                sx={{
+                  cursor: "pointer",
+                  "&:hover": { backgroundColor: "action.hover" },
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{ bgcolor: "secondary.main" }}>
+                    <GroupIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={group.name}
+                  secondary={`${group.members.length} membro(s)`}
+                />
+              </ListItem>
+            ))
+          ) : (
+            <Typography sx={{ p: 2, textAlign: "center" }}>
+              Nenhum grupo encontrado.
+            </Typography>
+          )}
         </List>
       </Paper>
 

@@ -13,6 +13,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -32,7 +33,7 @@ const modalStyle = {
 };
 
 const UsersPage: React.FC = () => {
-  const { users, createUser } = useData();
+  const { users, createUser, loading } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCreateUser = async (formData: {
@@ -49,6 +50,14 @@ const UsersPage: React.FC = () => {
       alert(`Erro: ${err.message}`);
     }
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -71,28 +80,34 @@ const UsersPage: React.FC = () => {
       </Box>
 
       <Paper>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: "bold" }}>Nome</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>E-mail</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Papel</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell sx={{ textTransform: "capitalize" }}>
-                    {user.role}
-                  </TableCell>
+        {users.length > 0 ? (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold" }}>Nome</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>E-mail</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Papel</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell sx={{ textTransform: "capitalize" }}>
+                      {user.role}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Typography sx={{ p: 2, textAlign: "center" }}>
+            Nenhum usuário encontrado.
+          </Typography>
+        )}
       </Paper>
 
       <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
