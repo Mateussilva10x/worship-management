@@ -19,9 +19,14 @@ interface ScheduleCardProps {
   schedule: Schedule;
   users: User[];
   onClick: () => void;
+  "data-testid"?: string;
 }
 
-const ScheduleCard: React.FC<ScheduleCardProps> = ({ schedule, onClick }) => {
+const ScheduleCard: React.FC<ScheduleCardProps> = ({
+  schedule,
+  onClick,
+  "data-testid": dataTestId,
+}) => {
   const groupName = schedule.group?.name || "Grupo não encontrado";
 
   const eventDate = new Date(schedule.date);
@@ -47,7 +52,11 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ schedule, onClick }) => {
   ).length;
 
   return (
-    <CardActionArea onClick={onClick} sx={{ mb: 3, borderRadius: 1 }}>
+    <CardActionArea
+      onClick={onClick}
+      sx={{ mb: 3, borderRadius: 1 }}
+      data-testid={dataTestId}
+    >
       <Card sx={{ pointerEvents: "none" }}>
         <CardContent>
           <Box display="flex" alignItems="center" mb={2}>

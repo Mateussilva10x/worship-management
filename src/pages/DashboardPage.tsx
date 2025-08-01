@@ -72,6 +72,7 @@ const AdminDashboard = () => {
             schedule={schedule}
             onClick={() => handleViewDetails(schedule)}
             users={[]}
+            data-testid={`schedule-card-${schedule.id}`}
           />
         ))
       ) : (
