@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 import { Box, CircularProgress } from "@mui/material";
+import { useAuth } from "../../contexts/AuthContext";
 
 /**
  * @description

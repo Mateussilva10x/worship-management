@@ -30,7 +30,7 @@ interface DataContextType {
     password?: string;
     whatsapp: string;
   }) => Promise<any>;
-  updateUserPassword: (password: string) => Promise<any>;
+  updateUserPassword: (userId: string, password: string) => Promise<any>;
   createSong: (songData: {
     title: string;
     key: string;
@@ -39,7 +39,7 @@ interface DataContextType {
   createGroup: (groupData: { name: string }) => Promise<WorshipGroup>;
   updateGroupDetails: (
     groupId: string,
-    details: { memberIds: string[]; leaderId: string }
+    details: { memberIds: string[]; leader_id: string }
   ) => Promise<WorshipGroup>;
   createSchedule: (scheduleData: {
     date: string;
@@ -143,16 +143,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     name: string;
     email: string;
     whatsapp: string;
-    password?: string;
   }) => {
-    const { data, error } = await supabase.auth.signUp({
-      email: userData.email,
-      password: userData.password || "senha123",
-      options: {
-        data: {
-          name: userData.name,
-          whatsapp: userData.whatsapp,
-        },
+    const { data, error } = await supabase.functions.invoke("create-user", {
+      body: {
+        name: userData.name,
+        email: userData.email,
+        whatsapp: userData.whatsapp,
       },
     });
     if (error) throw error;
@@ -160,20 +156,33 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     if (data.user) {
       const newProfile: User = {
         id: data.user.id,
-        name: userData.name,
-        email: userData.email,
-        whatsapp: userData.whatsapp,
+        name: data.user.user_metadata.name,
+        email: data.user.email!,
+        whatsapp: data.user.user_metadata.whatsapp,
         role: "member",
+        must_change_password: true,
       };
       setUsers((prev) => [...prev, newProfile]);
     }
-    return data;
+    return data.user;
   };
 
-  const updateUserPassword = async (password: string) => {
-    const { data, error } = await supabase.auth.updateUser({ password });
-    if (error) throw error;
-    return data;
+  const updateUserPassword = async (userId: string, password: string) => {
+    const { error: authError } = await supabase.auth.updateUser({ password });
+    if (authError) throw authError;
+
+    const { data: updatedProfile, error: profileError } = await supabase
+      .from("profiles")
+      .update({ must_change_password: false })
+      .eq("id", userId)
+      .select()
+      .single();
+
+    if (profileError) throw profileError;
+
+    setUsers((prev) => prev.map((u) => (u.id === userId ? updatedProfile : u)));
+
+    return updatedProfile;
   };
 
   const createSong = async (songData: {
@@ -207,15 +216,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateGroupDetails = async (
     groupId: string,
-    details: { memberIds: string[]; leaderId: string }
+    details: { memberIds: string[]; leader_id: string }
   ) => {
-    const { memberIds, leaderId } = details;
-    if (leaderId && !memberIds.includes(leaderId))
+    const { memberIds, leader_id } = details;
+    if (leader_id && !memberIds.includes(leader_id)) {
       throw new Error("O líder selecionado deve ser um membro do grupo.");
+    }
 
-    const { data: groupData, error: groupError } = await supabase
+    const { data: updatedGroupData, error: groupError } = await supabase
       .from("groups")
-      .update({ leader_id: leaderId || null })
+      .update({ leader_id: leader_id || null })
       .eq("id", groupId)
       .select()
       .single();
@@ -233,11 +243,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       if (membersError) throw membersError;
     }
 
-    const updatedGroupWithMembers = { ...groupData, members: memberIds };
+    const finalUpdatedGroup: WorshipGroup = {
+      ...updatedGroupData,
+      members: memberIds,
+    };
+
     setGroups((prev) =>
-      prev.map((g) => (g.id === groupId ? updatedGroupWithMembers : g))
+      prev.map((g) => (g.id === groupId ? finalUpdatedGroup : g))
     );
-    return updatedGroupWithMembers;
+
+    return finalUpdatedGroup;
   };
 
   const createSchedule = async (scheduleData: {

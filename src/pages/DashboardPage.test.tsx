@@ -29,7 +29,7 @@ const mockGroups = [
     id: "group-01",
     name: "Grupo de Teste",
     members: ["user-02", "user-03"],
-    leaderId: "user-03",
+    leader_id: "user-03",
   },
 ];
 

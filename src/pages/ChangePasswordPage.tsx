@@ -42,7 +42,7 @@ const ChangePasswordPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const updatedUser = await updateUserPassword(password);
+      const updatedUser = await updateUserPassword(user.id, password);
       refreshAuthUser(updatedUser);
       navigate("/dashboard");
     } catch (err: any) {

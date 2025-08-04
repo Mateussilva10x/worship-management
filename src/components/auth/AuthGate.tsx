@@ -6,7 +6,7 @@ const AuthGate: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  if (user?.mustChangePassword) {
+  if (user?.must_change_password) {
     if (location.pathname !== "/reset-password") {
       return <Navigate to="/reset-password" replace />;
     }

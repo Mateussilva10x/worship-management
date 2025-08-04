@@ -23,9 +23,9 @@ const mockGroups = [
     id: "group-01",
     name: "Equipe de Domingo",
     members: ["user-02"],
-    leaderId: "user-02",
+    leader_id: "user-02",
   },
-  { id: "group-02", name: "Equipe Jovem", members: [], leaderId: "" },
+  { id: "group-02", name: "Equipe Jovem", members: [], leader_id: "" },
 ];
 
 describe("Página de Gestão de Grupos (GroupsPage)", () => {

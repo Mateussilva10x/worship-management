@@ -40,7 +40,7 @@ const mockGroup = {
   id: "group-01",
   name: "Equipe de Domingo",
   members: ["user-02"],
-  leaderId: "user-02",
+  leader_id: "user-02",
 };
 
 describe("Página de Detalhes do Grupo (GroupDetailPage)", () => {
@@ -103,7 +103,7 @@ describe("Página de Detalhes do Grupo (GroupDetailPage)", () => {
 
     expect(updateGroupDetailsMock).toHaveBeenCalledWith("group-01", {
       memberIds: ["user-02"],
-      leaderId: "",
+      leader_id: "",
     });
 
     expect(
@@ -111,7 +111,7 @@ describe("Página de Detalhes do Grupo (GroupDetailPage)", () => {
     ).toBeInTheDocument();
   });
 
-  it("deve chamar o navigate para /grupos ao clicar no botão Voltar", async () => {
+  it("deve chamar o navigate para /groups ao clicar no botão Voltar", async () => {
     const user = userEvent.setup();
     render(<GroupDetailPage />, {
       dataValue: { groups: [mockGroup], users: mockUsers },

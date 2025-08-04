@@ -4,7 +4,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
-  Alert,
   Paper,
   Button,
   Autocomplete,
@@ -12,8 +11,10 @@ import {
   Snackbar,
   FormControl,
   InputLabel,
-  MenuItem,
   Select,
+  MenuItem,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import type { User } from "../types";
 import { useData } from "../contexts/DataContext";
@@ -21,8 +22,12 @@ import { useData } from "../contexts/DataContext";
 const GroupDetailPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
-
-  const { groups, users, updateGroupDetails } = useData();
+  const {
+    groups,
+    users,
+    updateGroupDetails,
+    loading: isDataContextLoading,
+  } = useData();
 
   const group = useMemo(
     () => groups.find((g) => g.id === groupId),
@@ -30,8 +35,8 @@ const GroupDetailPage: React.FC = () => {
   );
 
   const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
+  const [leader_id, setleader_id] = useState<string>("");
   const [saving, setSaving] = useState(false);
-  const [leaderId, setLeaderId] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   useEffect(() => {
@@ -40,7 +45,7 @@ const GroupDetailPage: React.FC = () => {
         group.members.includes(user.id)
       );
       setSelectedMembers(currentMembers);
-      setLeaderId(group.leaderId || "");
+      setleader_id(group.leader_id || "");
     }
   }, [group, users]);
 
@@ -49,7 +54,7 @@ const GroupDetailPage: React.FC = () => {
     setSaving(true);
     const memberIds = selectedMembers.map((member) => member.id);
     try {
-      await updateGroupDetails(groupId, { memberIds, leaderId });
+      await updateGroupDetails(groupId, { memberIds, leader_id });
       setSnackbarOpen(true);
     } catch (err: any) {
       alert(`Falha ao salvar: ${err.message}`);
@@ -58,10 +63,14 @@ const GroupDetailPage: React.FC = () => {
     }
   };
 
+  if (isDataContextLoading) {
+    return <CircularProgress />;
+  }
+
   if (!group) {
     return (
       <Alert severity="error">
-        Grupo não encontrado. Verifique o endereço e tente novamente.
+        Grupo não encontrado ou você não tem permissão para vê-lo.
       </Alert>
     );
   }
@@ -84,14 +93,12 @@ const GroupDetailPage: React.FC = () => {
           value={selectedMembers}
           onChange={(_, newValue) => {
             setSelectedMembers(newValue);
+            if (!newValue.some((member) => member.id === leader_id)) {
+              setleader_id("");
+            }
           }}
           renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="outlined"
-              label="Selecionar Membros"
-              placeholder="Digite para buscar..."
-            />
+            <TextField {...params} label="Selecionar Membros" />
           )}
           isOptionEqualToValue={(option, value) => option.id === value.id}
         />
@@ -99,9 +106,9 @@ const GroupDetailPage: React.FC = () => {
           <InputLabel id="leader-select-label">Líder da Equipe</InputLabel>
           <Select
             labelId="leader-select-label"
-            value={leaderId}
+            value={leader_id}
             label="Líder da Equipe"
-            onChange={(e) => setLeaderId(e.target.value)}
+            onChange={(e) => setleader_id(e.target.value as string)}
             disabled={selectedMembers.length === 0}
           >
             <MenuItem value="">
@@ -114,6 +121,7 @@ const GroupDetailPage: React.FC = () => {
             ))}
           </Select>
         </FormControl>
+
         <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
             {saving ? "Salvando..." : "Salvar Alterações"}

@@ -8,7 +8,6 @@ import {
 import LoginPage from "./pages/Login";
 import DashboardPage from "./pages/DashboardPage";
 
-import ProtectedRoute from "./components/ProtectedRoute";
 import MainLayout from "./components/MainLayout";
 import MusicLibraryPage from "./pages/MusicLibraryPage";
 import GroupsPage from "./pages/GroupsPage";
@@ -20,6 +19,7 @@ import RedirectIfAuth from "./components/auth/RedirectIfAuth";
 import { useNotificationState } from "./contexts/NotificationContext";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
   const { open, message, severity, handleClose } = useNotificationState();

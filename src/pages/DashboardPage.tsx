@@ -160,7 +160,7 @@ const MemberDashboard = () => {
             schedule.membersStatus.find((ms) => ms.memberId === user?.id)
               ?.status || "pending";
           const group = schedule.group;
-          const isLeader = group?.leaderId === user?.id;
+          const isLeader = group?.leader_id === user?.id;
           return (
             <MemberScheduleCard
               key={schedule.id}

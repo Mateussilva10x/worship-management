@@ -13,7 +13,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  mustChangePassword?: boolean;
+  must_change_password?: boolean;
   whatsapp?: string;
 }
 
@@ -34,7 +34,7 @@ export interface WorshipGroup {
   id: string;
   name: string;
   members: User["id"][];
-  leaderId?: User["id"];
+  leader_id?: User["id"];
 }
 
 /**
