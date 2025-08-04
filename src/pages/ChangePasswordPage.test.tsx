@@ -16,7 +16,7 @@ const mockUserNeedingPasswordChange: User = {
   name: "Novo Usuário",
   email: "novo@email.com",
   role: "member" as UserRole,
-  mustChangePassword: true,
+  must_change_password: true,
 };
 
 describe("Página de Alteração de Senha (ChangePasswordPage)", () => {
