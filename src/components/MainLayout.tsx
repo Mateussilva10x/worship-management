@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 
@@ -16,11 +15,8 @@ import {
   ListItemText,
   Tooltip,
   AppBar,
-  Menu,
-  MenuItem,
 } from "@mui/material";
 import MuiDrawer from "@mui/material/Drawer";
-import LanguageIcon from "@mui/icons-material/Language";
 
 import { useTheme, type Theme, type CSSObject } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -58,32 +54,32 @@ const closedMixin = (theme: Theme): CSSObject => ({
   },
 });
 
-const languages = [
-  { code: "pt", name: "Português", flag: "🇧🇷" },
-  { code: "en", name: "English", flag: "🇺🇸" },
-];
+// const languages = [
+//   { code: "pt", name: "Português", flag: "🇧🇷" },
+//   { code: "en", name: "English", flag: "🇺🇸" },
+// ];
 
 const MainLayout: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
 
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [open, setOpen] = useState(!isMobile);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const menuOpen = Boolean(anchorEl);
+  // const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  // const menuOpen = Boolean(anchorEl);
 
-  const handleLanguageMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleLanguageMenuClose = () => {
-    setAnchorEl(null);
-  };
-  const handleLanguageChange = (langCode: string) => {
-    i18n.changeLanguage(langCode);
-    handleLanguageMenuClose();
-  };
+  // const handleLanguageMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+  //   setAnchorEl(event.currentTarget);
+  // };
+  // const handleLanguageMenuClose = () => {
+  //   setAnchorEl(null);
+  // };
+  // const handleLanguageChange = (langCode: string) => {
+  //   i18n.changeLanguage(langCode);
+  //   handleLanguageMenuClose();
+  // };
 
   useEffect(() => {
     setOpen(!isMobile);
