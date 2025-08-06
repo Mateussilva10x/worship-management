@@ -89,7 +89,10 @@ describe("Página de Alteração de Senha (ChangePasswordPage)", () => {
     );
 
     await waitFor(() => {
-      expect(updateUserPasswordMock).toHaveBeenCalledWith(newPassword);
+      expect(updateUserPasswordMock).toHaveBeenCalledWith(
+        "user-new",
+        newPassword
+      );
     });
     expect(refreshAuthUserMock).toHaveBeenCalledTimes(1);
     expect(navigateMock).toHaveBeenCalledWith("/dashboard");

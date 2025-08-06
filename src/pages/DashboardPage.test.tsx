@@ -56,7 +56,7 @@ describe("Página do Painel (DashboardPage)", () => {
         users: [mockAdminUser, mockMemberUser],
       },
     });
-    expect(screen.getByText("Próximas Escalas")).toBeInTheDocument();
+    expect(screen.getByText("upcomingSchedules")).toBeInTheDocument();
   });
 
   it("[ADMIN] deve abrir e fechar a modal de criação de escala", async () => {
@@ -66,7 +66,7 @@ describe("Página do Painel (DashboardPage)", () => {
       dataValue: { schedules: mockSchedules, groups: mockGroups },
     });
 
-    await user.click(screen.getByRole("button", { name: /nova escala/i }));
+    await user.click(screen.getByRole("button", { name: /newSchedule/i }));
     expect(await screen.findByText("Criar Nova Escala")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /cancelar/i }));
