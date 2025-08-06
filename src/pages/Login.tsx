@@ -8,8 +8,8 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import { supabase } from "../supabaseClient";
+import logoIPC from "../assets/logo.png";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -44,7 +44,11 @@ const LoginPage: React.FC = () => {
           alignItems: "center",
         }}
       >
-        <MusicNoteIcon color="primary" sx={{ fontSize: 40, mb: 2 }} />
+        <img
+          src={logoIPC}
+          alt="Logo da Igreja"
+          style={{ width: "85px", height: "auto", marginBottom: "4px" }}
+        />
         <Typography component="h1" variant="h5">
           Escalas Louvor IPC
         </Typography>
