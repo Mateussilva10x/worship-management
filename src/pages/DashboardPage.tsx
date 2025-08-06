@@ -9,6 +9,7 @@ import {
   Modal,
   CircularProgress,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import ScheduleCard from "../components/dashboard/ScheduleCard";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -21,6 +22,7 @@ import { useData } from "../contexts/DataContext";
 import EditScheduleSongs from "../components/dashboard/EditScheduleSongs";
 
 const AdminDashboard = () => {
+  const { t } = useTranslation();
   const { schedules, groups, users, songs, createSchedule, deleteSchedule } =
     useData();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -56,14 +58,14 @@ const AdminDashboard = () => {
         }}
       >
         <Typography variant="h5" sx={{ mb: 2 }}>
-          Próximas Escalas
+          {t("upcomingSchedules")}
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleOpenCreateModal}
         >
-          Nova Escala
+          {t("newSchedule")}
         </Button>
       </Box>
       {schedules.length > 0 ? (
@@ -76,7 +78,7 @@ const AdminDashboard = () => {
           />
         ))
       ) : (
-        <Typography>Nenhuma escala encontrada.</Typography>
+        <Typography>{t("noSchedulesFound")}</Typography>
       )}
       <Modal
         open={isCreateModalOpen}

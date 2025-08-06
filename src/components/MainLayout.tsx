@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 
@@ -15,8 +16,11 @@ import {
   ListItemText,
   Tooltip,
   AppBar,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import MuiDrawer from "@mui/material/Drawer";
+import LanguageIcon from "@mui/icons-material/Language";
 
 import { useTheme, type Theme, type CSSObject } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -29,6 +33,7 @@ import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import PeopleIcon from "@mui/icons-material/People";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import { useAuth } from "../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const drawerWidth = 240;
 
@@ -53,13 +58,32 @@ const closedMixin = (theme: Theme): CSSObject => ({
   },
 });
 
+const languages = [
+  { code: "pt", name: "Português", flag: "🇧🇷" },
+  { code: "en", name: "English", flag: "🇺🇸" },
+];
+
 const MainLayout: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
 
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [open, setOpen] = useState(!isMobile);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
+
+  const handleLanguageMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleLanguageMenuClose = () => {
+    setAnchorEl(null);
+  };
+  const handleLanguageChange = (langCode: string) => {
+    i18n.changeLanguage(langCode);
+    handleLanguageMenuClose();
+  };
 
   useEffect(() => {
     setOpen(!isMobile);
@@ -71,11 +95,16 @@ const MainLayout: React.FC = () => {
   };
 
   const menuItems = [
-    { text: "Painel", icon: <DashboardIcon />, path: "/dashboard" },
-    { text: "Músicas", icon: <MusicNoteIcon />, path: "/songs" },
-    { text: "Grupos", icon: <PeopleIcon />, path: "/groups", adminOnly: true },
+    { text: t("dashboard"), icon: <DashboardIcon />, path: "/dashboard" },
+    { text: t("songs"), icon: <MusicNoteIcon />, path: "/songs" },
     {
-      text: "Usuários",
+      text: t("groups"),
+      icon: <PeopleIcon />,
+      path: "/groups",
+      adminOnly: true,
+    },
+    {
+      text: t("users"),
       icon: <GroupAddIcon />,
       path: "/users",
       adminOnly: true,
@@ -102,9 +131,38 @@ const MainLayout: React.FC = () => {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Escalas Louvor IPC
           </Typography>
+
           <Typography sx={{ mr: 2, display: { xs: "none", sm: "block" } }}>
             Olá, {user?.name.split(" ")[0]}
           </Typography>
+          {/* <Tooltip title="Mudar Idioma">
+            <IconButton
+              size="large"
+              edge="end"
+              onClick={handleLanguageMenuOpen}
+              color="inherit"
+            >
+              <LanguageIcon />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={anchorEl}
+            open={menuOpen}
+            onClose={handleLanguageMenuClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+          >
+            {languages.map((lang) => (
+              <MenuItem
+                key={lang.code}
+                onClick={() => handleLanguageChange(lang.code)}
+                selected={i18n.language === lang.code}
+              >
+                <Typography sx={{ mr: 1.5 }}>{lang.flag}</Typography>{" "}
+                {lang.name}
+              </MenuItem>
+            ))}
+          </Menu> */}
           <Tooltip title="Sair">
             <IconButton
               color="inherit"
