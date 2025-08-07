@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, Button, Typography, TextField } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 interface NewSongFormProps {
   onSubmit: (formData: {
@@ -11,6 +12,7 @@ interface NewSongFormProps {
 }
 
 const NewSongForm: React.FC<NewSongFormProps> = ({ onSubmit, onCancel }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ title: "", key: "", link: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,11 +35,11 @@ const NewSongForm: React.FC<NewSongFormProps> = ({ onSubmit, onCancel }) => {
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
       <Typography variant="h6" gutterBottom>
-        Adicionar Nova Música
+        {t("newSongFormTitle")}
       </Typography>
       <TextField
         name="title"
-        label="Título da Música"
+        label={t("songTitle")}
         value={formData.title}
         onChange={handleChange}
         fullWidth
@@ -46,7 +48,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({ onSubmit, onCancel }) => {
       />
       <TextField
         name="key"
-        label="Tom (Ex: G, Am, C#)"
+        label={t("songKey")}
         value={formData.key}
         onChange={handleChange}
         fullWidth
@@ -55,7 +57,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({ onSubmit, onCancel }) => {
       />
       <TextField
         name="link"
-        label="Link para Cifra ou Vídeo"
+        label={t("songLink")}
         value={formData.link}
         onChange={handleChange}
         fullWidth
@@ -63,7 +65,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({ onSubmit, onCancel }) => {
       />
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
         <Button onClick={onCancel} color="secondary" disabled={isSubmitting}>
-          Cancelar
+          {t("cancel")}
         </Button>
         <Button
           type="submit"
@@ -71,7 +73,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({ onSubmit, onCancel }) => {
           color="primary"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Salvando..." : "Salvar Música"}
+          {isSubmitting ? t("saving") : t("save")}
         </Button>
       </Box>
     </Box>

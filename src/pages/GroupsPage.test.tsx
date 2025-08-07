@@ -56,11 +56,11 @@ describe("Página de Gestão de Grupos (GroupsPage)", () => {
     render(<GroupsPage />);
 
     expect(screen.getByText("Equipe de Domingo")).toBeInTheDocument();
-    expect(screen.getByText("1 membro(s)")).toBeInTheDocument();
+    expect(screen.getByText("1 member(s)")).toBeInTheDocument();
     expect(screen.getByText("Equipe Jovem")).toBeInTheDocument();
-    expect(screen.getByText("0 membro(s)")).toBeInTheDocument();
+    expect(screen.getByText("0 member(s)")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /novo grupo/i })
+      screen.getByRole("button", { name: /newGroup/i })
     ).toBeInTheDocument();
   });
 
@@ -72,7 +72,7 @@ describe("Página de Gestão de Grupos (GroupsPage)", () => {
 
     render(<GroupsPage />);
 
-    expect(screen.getByText("Nenhum grupo encontrado.")).toBeInTheDocument();
+    expect(screen.getByText("noGroupsFound")).toBeInTheDocument();
   });
 
   it("deve abrir a modal, preencher o formulário e chamar createGroup ao salvar", async () => {
@@ -93,13 +93,13 @@ describe("Página de Gestão de Grupos (GroupsPage)", () => {
 
     render(<GroupsPage />);
 
-    await user.click(screen.getByRole("button", { name: /novo grupo/i }));
+    await user.click(screen.getByRole("button", { name: /newGroup/i }));
 
-    const inputNome = await screen.findByLabelText(/nome do grupo/i);
+    const inputNome = await screen.findByLabelText(/groupName/i);
     expect(inputNome).toBeInTheDocument();
     await user.type(inputNome, "Nova Equipe de Teste");
 
-    await user.click(screen.getByRole("button", { name: /salvar grupo/i }));
+    await user.click(screen.getByRole("button", { name: /save/i }));
 
     expect(createGroupMock).toHaveBeenCalledTimes(1);
     expect(createGroupMock).toHaveBeenCalledWith({
@@ -107,7 +107,7 @@ describe("Página de Gestão de Grupos (GroupsPage)", () => {
     });
 
     await waitFor(() => {
-      expect(screen.queryByText("Criar Novo Grupo")).not.toBeInTheDocument();
+      expect(screen.queryByText("creteNewGroup")).not.toBeInTheDocument();
     });
   });
 });

@@ -57,7 +57,7 @@ describe("Página de Detalhes do Grupo (GroupDetailPage)", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("heading", {
-          name: /Editando Grupo: Equipe de Domingo/i,
+          name: /editGroup: Equipe de Domingo/i,
         })
       ).toBeInTheDocument();
 
@@ -66,7 +66,7 @@ describe("Página de Detalhes do Grupo (GroupDetailPage)", () => {
       ).toBeInTheDocument();
 
       const leaderSelect = screen.getByRole("combobox", {
-        name: /líder da equipe/i,
+        name: /teamLeader/i,
       });
       expect(leaderSelect).toHaveTextContent(/joão silva/i);
     });
@@ -87,28 +87,24 @@ describe("Página de Detalhes do Grupo (GroupDetailPage)", () => {
     });
 
     const leaderSelect = await screen.findByRole("combobox", {
-      name: /líder da equipe/i,
+      name: /teamLeader/i,
     });
 
     await user.click(leaderSelect);
 
     const noLeaderOption = await screen.findByRole("option", {
-      name: /nenhum/i,
+      name: /none/i,
     });
     await user.click(noLeaderOption);
 
-    await user.click(
-      screen.getByRole("button", { name: /salvar alterações/i })
-    );
+    await user.click(screen.getByRole("button", { name: /save/i }));
 
     expect(updateGroupDetailsMock).toHaveBeenCalledWith("group-01", {
       memberIds: ["user-02"],
       leader_id: "",
     });
 
-    expect(
-      await screen.findByText(/grupo atualizado com sucesso/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/groupUpdate/i)).toBeInTheDocument();
   });
 
   it("deve chamar o navigate para /groups ao clicar no botão Voltar", async () => {
@@ -117,7 +113,7 @@ describe("Página de Detalhes do Grupo (GroupDetailPage)", () => {
       dataValue: { groups: [mockGroup], users: mockUsers },
     });
 
-    const backButton = await screen.findByRole("button", { name: /voltar/i });
+    const backButton = await screen.findByRole("button", { name: /cancel/i });
     await user.click(backButton);
 
     expect(navigateMock).toHaveBeenCalledWith("/groups");

@@ -30,15 +30,11 @@ describe("Página de Alteração de Senha (ChangePasswordPage)", () => {
     });
 
     expect(
-      screen.getByRole("heading", { name: /primeiro acesso/i })
+      screen.getByRole("heading", { name: /changePasswordTitle/i })
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Nova Senha *")).toBeInTheDocument();
-    expect(
-      screen.getByLabelText("Confirme a Nova Senha *")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /salvar nova senha/i })
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("newPassword *")).toBeInTheDocument();
+    expect(screen.getByLabelText("confirmPassword *")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument();
   });
 
   it("deve mostrar um erro de validação se as senhas não coincidirem", async () => {
@@ -47,17 +43,15 @@ describe("Página de Alteração de Senha (ChangePasswordPage)", () => {
       authValue: { user: mockUserNeedingPasswordChange },
     });
 
-    await user.type(screen.getByLabelText("Nova Senha *"), "senha123");
+    await user.type(screen.getByLabelText("newPassword *"), "senha123");
     await user.type(
-      screen.getByLabelText("Confirme a Nova Senha *"),
+      screen.getByLabelText("confirmPassword *"),
       "senhadiferente"
     );
-    await user.click(
-      screen.getByRole("button", { name: /salvar nova senha/i })
-    );
+    await user.click(screen.getByRole("button", { name: /save/i }));
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(/as senhas não coincidem/i);
+    expect(alert).toHaveTextContent(/passwordMismatch/i);
   });
 
   it("deve chamar as funções de atualização e navegar para o dashboard em caso de sucesso", async () => {
@@ -79,14 +73,9 @@ describe("Página de Alteração de Senha (ChangePasswordPage)", () => {
 
     const newPassword = "novasenha123";
 
-    await user.type(screen.getByLabelText("Nova Senha *"), newPassword);
-    await user.type(
-      screen.getByLabelText("Confirme a Nova Senha *"),
-      newPassword
-    );
-    await user.click(
-      screen.getByRole("button", { name: /salvar nova senha/i })
-    );
+    await user.type(screen.getByLabelText("newPassword *"), newPassword);
+    await user.type(screen.getByLabelText("confirmPassword *"), newPassword);
+    await user.click(screen.getByRole("button", { name: /save/i }));
 
     await waitFor(() => {
       expect(updateUserPasswordMock).toHaveBeenCalledWith(

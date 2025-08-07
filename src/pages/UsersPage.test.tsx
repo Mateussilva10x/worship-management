@@ -67,7 +67,7 @@ describe("Página de Gestão de Usuários (UsersPage)", () => {
         dataValue: { users: [], loading: false },
       }
     );
-    expect(screen.getByText(/Nenhum usuário encontrado/i)).toBeInTheDocument();
+    expect(screen.getByText(/noUsersFound/i)).toBeInTheDocument();
   });
 
   it("deve abrir a modal de criação e chamar a função createUser ao submeter", async () => {
@@ -84,14 +84,14 @@ describe("Página de Gestão de Usuários (UsersPage)", () => {
       }
     );
 
-    await user.click(screen.getByRole("button", { name: /novo membro/i }));
+    await user.click(screen.getByRole("button", { name: /newUser/i }));
 
-    const nameInput = await screen.findByLabelText(/nome completo/i);
+    const nameInput = await screen.findByLabelText(/userName/i);
     await user.type(nameInput, "Novo Membro");
-    await user.type(screen.getByLabelText(/e-mail/i), "novo@email.com");
+    await user.type(screen.getByLabelText(/email/i), "novo@email.com");
     await user.type(screen.getByLabelText(/whatsapp/i), "11999999999");
 
-    await user.click(screen.getByRole("button", { name: /criar membro/i }));
+    await user.click(screen.getByRole("button", { name: /save/i }));
 
     expect(createUserMock).toHaveBeenCalledTimes(1);
     expect(createUserMock).toHaveBeenCalledWith({
@@ -101,9 +101,7 @@ describe("Página de Gestão de Usuários (UsersPage)", () => {
     });
 
     await waitFor(() => {
-      expect(
-        screen.queryByText("Cadastrar Novo Membro")
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText("createNewUser")).not.toBeInTheDocument();
     });
   });
 });

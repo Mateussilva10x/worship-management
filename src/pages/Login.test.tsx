@@ -44,7 +44,6 @@ describe("Página de Login", () => {
       error: { message: errorMessage },
     });
 
-    // Act
     await user.type(
       screen.getByLabelText(/endereço de e-mail/i),
       "teste@email.com"
@@ -52,7 +51,6 @@ describe("Página de Login", () => {
     await user.type(screen.getByLabelText(/senha/i), "senha123");
     await user.click(screen.getByRole("button", { name: /entrar/i }));
 
-    // Assert
     const alert = await screen.findByRole("alert");
 
     expect(alert).toBeInTheDocument();

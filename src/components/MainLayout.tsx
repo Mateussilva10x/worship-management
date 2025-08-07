@@ -15,6 +15,8 @@ import {
   ListItemText,
   Tooltip,
   AppBar,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import MuiDrawer from "@mui/material/Drawer";
 
@@ -28,6 +30,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import PeopleIcon from "@mui/icons-material/People";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import LanguageIcon from "@mui/icons-material/Language";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 
@@ -54,32 +57,32 @@ const closedMixin = (theme: Theme): CSSObject => ({
   },
 });
 
-// const languages = [
-//   { code: "pt", name: "Português", flag: "🇧🇷" },
-//   { code: "en", name: "English", flag: "🇺🇸" },
-// ];
+const languages = [
+  { code: "pt", name: "Português", flag: "🇧🇷" },
+  { code: "en", name: "English", flag: "🇺🇸" },
+];
 
 const MainLayout: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
 
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [open, setOpen] = useState(!isMobile);
-  // const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  // const menuOpen = Boolean(anchorEl);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
 
-  // const handleLanguageMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-  //   setAnchorEl(event.currentTarget);
-  // };
-  // const handleLanguageMenuClose = () => {
-  //   setAnchorEl(null);
-  // };
-  // const handleLanguageChange = (langCode: string) => {
-  //   i18n.changeLanguage(langCode);
-  //   handleLanguageMenuClose();
-  // };
+  const handleLanguageMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleLanguageMenuClose = () => {
+    setAnchorEl(null);
+  };
+  const handleLanguageChange = (langCode: string) => {
+    i18n.changeLanguage(langCode);
+    handleLanguageMenuClose();
+  };
 
   useEffect(() => {
     setOpen(!isMobile);
@@ -129,9 +132,9 @@ const MainLayout: React.FC = () => {
           </Typography>
 
           <Typography sx={{ mr: 2, display: { xs: "none", sm: "block" } }}>
-            Olá, {user?.name.split(" ")[0]}
+            {t("hello")}, {user?.name.split(" ")[0]}
           </Typography>
-          {/* <Tooltip title="Mudar Idioma">
+          <Tooltip title="Mudar Idioma">
             <IconButton
               size="large"
               edge="end"
@@ -158,7 +161,7 @@ const MainLayout: React.FC = () => {
                 {lang.name}
               </MenuItem>
             ))}
-          </Menu> */}
+          </Menu>
           <Tooltip title="Sair">
             <IconButton
               color="inherit"

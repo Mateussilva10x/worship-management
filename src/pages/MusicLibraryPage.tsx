@@ -23,8 +23,10 @@ import NewSongForm from "../components/library/NewSongForm";
 import { useData } from "../contexts/DataContext";
 import type { Song } from "../types";
 import ConfirmationDialog from "../components/common/ConfirmationDialog";
+import { useTranslation } from "react-i18next";
 
 const MusicLibraryPage: React.FC = () => {
+  const { t } = useTranslation();
   const { songs, createSong, deleteSong, loading } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
@@ -80,18 +82,18 @@ const MusicLibraryPage: React.FC = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h4">Biblioteca de Músicas</Typography>
+        <Typography variant="h4">{t("musicLibrary")}</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setIsModalOpen(true)}
         >
-          Nova Música
+          {t("newSong")}
         </Button>
       </Box>
 
       <TextField
-        label="Buscar por título"
+        label={t("searchSongs")}
         variant="outlined"
         fullWidth
         sx={{ mb: 3 }}
@@ -105,9 +107,15 @@ const MusicLibraryPage: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>Título</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Tom</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Ações</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    {t("songTitle")}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    {t("songKey")}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    {t("actions")}
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -141,9 +149,7 @@ const MusicLibraryPage: React.FC = () => {
             </Table>
           ) : (
             <Box sx={{ p: 2, textAlign: "center" }}>
-              <Typography variant="body1">
-                Nenhuma música encontrada.
-              </Typography>
+              <Typography variant="body1">{t("noSongsFound")}</Typography>
             </Box>
           )}
         </TableContainer>
@@ -159,8 +165,10 @@ const MusicLibraryPage: React.FC = () => {
       </Modal>
       <ConfirmationDialog
         open={!!songToDelete}
-        title="Confirmar Exclusão"
-        message={`Você tem certeza que deseja excluir a música "${songToDelete?.title}"? Esta ação não pode ser desfeita.`}
+        title={t("confirmDelete")}
+        message={t("confirmDeleteSongMessage", {
+          songTitle: songToDelete?.title,
+        })}
         onConfirm={handleConfirmDelete}
         onCancel={() => setSongToDelete(null)}
       />

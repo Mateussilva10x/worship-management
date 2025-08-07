@@ -63,7 +63,7 @@ describe("Página da Biblioteca de Músicas (MusicLibraryPage)", () => {
       dataValue: { songs: mockSongs, loading: false },
     });
 
-    const searchInput = screen.getByLabelText(/buscar por título/i);
+    const searchInput = screen.getByLabelText(/searchSongs/i);
 
     await user.type(searchInput, "Deus");
 
@@ -86,17 +86,17 @@ describe("Página da Biblioteca de Músicas (MusicLibraryPage)", () => {
       },
     });
 
-    await user.click(screen.getByRole("button", { name: /nova música/i }));
+    await user.click(screen.getByRole("button", { name: /newSong/i }));
 
-    const titleInput = await screen.findByLabelText(/título da música/i);
-    const keyInput = screen.getByLabelText(/tom/i);
-    const linkInput = screen.getByLabelText(/link para cifra ou vídeo/i);
+    const titleInput = await screen.findByLabelText(/songTitle/i);
+    const keyInput = screen.getByLabelText(/songKey/i);
+    const linkInput = screen.getByLabelText(/songLink/i);
 
     await user.type(titleInput, "Nova Canção");
     await user.type(keyInput, "C");
     await user.type(linkInput, "http://novacancao.com");
 
-    await user.click(screen.getByRole("button", { name: /salvar música/i }));
+    await user.click(screen.getByRole("button", { name: /save/i }));
 
     expect(createSongMock).toHaveBeenCalledTimes(1);
     expect(createSongMock).toHaveBeenCalledWith({

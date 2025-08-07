@@ -12,8 +12,10 @@ import {
   Paper,
   Alert,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 const ChangePasswordPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user, refreshAuthUser } = useAuth();
   const { updateUserPassword } = useData();
   const navigate = useNavigate();
@@ -28,15 +30,14 @@ const ChangePasswordPage: React.FC = () => {
     setError("");
 
     if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres.");
+      setError(t("passwordLength"));
       return;
     }
     if (password !== confirmPassword) {
-      setError("As senhas não coincidem.");
+      setError(t("passwordMismatch"));
       return;
     }
     if (!user) {
-      setError("Sessão inválida. Por favor, faça login novamente.");
       return;
     }
 
@@ -60,7 +61,7 @@ const ChangePasswordPage: React.FC = () => {
     >
       <Paper sx={{ p: 4, width: "100%" }}>
         <Typography component="h1" variant="h5" align="center" gutterBottom>
-          Primeiro Acesso
+          {t("changePasswordTitle")}
         </Typography>
         <Typography
           variant="body2"
@@ -68,7 +69,7 @@ const ChangePasswordPage: React.FC = () => {
           sx={{ mb: 3 }}
           align="center"
         >
-          Por segurança, crie uma nova senha pessoal para acessar o sistema.
+          {t("changePasswordDescription")}
         </Typography>
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <TextField
@@ -76,7 +77,7 @@ const ChangePasswordPage: React.FC = () => {
             required
             fullWidth
             name="password"
-            label="Nova Senha"
+            label={t("newPassword")}
             type="password"
             id="password"
             value={password}
@@ -88,7 +89,7 @@ const ChangePasswordPage: React.FC = () => {
             required
             fullWidth
             name="confirmPassword"
-            label="Confirme a Nova Senha"
+            label={t("confirmPassword")}
             type="password"
             id="confirmPassword"
             value={confirmPassword}
@@ -107,7 +108,7 @@ const ChangePasswordPage: React.FC = () => {
             sx={{ mt: 3, mb: 2 }}
             disabled={loading}
           >
-            {loading ? "Salvando..." : "Salvar Nova Senha"}
+            {loading ? t("saving") : t("save")}
           </Button>
         </Box>
       </Paper>

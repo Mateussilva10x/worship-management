@@ -22,8 +22,10 @@ import { useNavigate } from "react-router-dom";
 import { useData } from "../contexts/DataContext";
 import type { WorshipGroup } from "../types";
 import ConfirmationDialog from "../components/common/ConfirmationDialog";
+import { useTranslation } from "react-i18next";
 
 const GroupsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { groups, createGroup, deleteGroup, loading } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<WorshipGroup | null>(null);
@@ -67,13 +69,13 @@ const GroupsPage: React.FC = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h4">Gestão de Grupos</Typography>
+        <Typography variant="h4">{t("groupsPage")}</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setIsModalOpen(true)}
         >
-          Novo Grupo
+          {t("newGroup")}
         </Button>
       </Box>
 
@@ -96,7 +98,7 @@ const GroupsPage: React.FC = () => {
                 </ListItemAvatar>
                 <ListItemText
                   primary={group.name}
-                  secondary={`${group.members.length} membro(s)`}
+                  secondary={`${group.members.length} ${t("member(s)")}`}
                 />
                 <IconButton
                   edge="end"
@@ -113,7 +115,7 @@ const GroupsPage: React.FC = () => {
             ))
           ) : (
             <Typography sx={{ p: 2, textAlign: "center" }}>
-              Nenhum grupo encontrado.
+              {t("noGroupsFound")}
             </Typography>
           )}
         </List>
@@ -129,8 +131,8 @@ const GroupsPage: React.FC = () => {
       </Modal>
       <ConfirmationDialog
         open={!!groupToDelete}
-        title="Confirmar Exclusão de Grupo"
-        message={`Você tem certeza que deseja excluir o grupo "${groupToDelete?.name}"? Todas as escalas associadas a este grupo também serão apagadas. Esta ação não pode ser desfeita.`}
+        title={t("confirmDelete")}
+        message={t("confirmGroupDelete", { groupName: groupToDelete?.name })}
         onConfirm={handleConfirmDelete}
         onCancel={() => setGroupToDelete(null)}
       />

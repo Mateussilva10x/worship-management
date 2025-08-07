@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
 import EditIcon from "@mui/icons-material/Edit";
+import { useTranslation } from "react-i18next";
 
 interface MemberScheduleCardProps {
   schedule: Schedule;
@@ -21,15 +22,6 @@ interface MemberScheduleCardProps {
   onEditSongs: () => void;
 }
 
-const statusMap: Record<
-  ParticipationStatus,
-  { label: string; color: "success" | "error" | "warning" }
-> = {
-  confirmed: { label: "Confirmado", color: "success" },
-  declined: { label: "Recusado", color: "error" },
-  pending: { label: "Pendente", color: "warning" },
-};
-
 const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
   schedule,
   groupName,
@@ -39,16 +31,26 @@ const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
   isLeader,
   onEditSongs,
 }) => {
+  const { t, i18n } = useTranslation();
   const eventDate = new Date(schedule.date);
-  const formattedDate = eventDate.toLocaleDateString("pt-BR", {
+  const formattedDate = eventDate.toLocaleDateString(i18n.language, {
     weekday: "long",
     day: "2-digit",
     month: "long",
   });
-  const formattedTime = eventDate.toLocaleTimeString("pt-BR", {
+  const formattedTime = eventDate.toLocaleTimeString(i18n.language, {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  const statusMap: Record<
+    ParticipationStatus,
+    { label: string; color: "success" | "error" | "warning" }
+  > = {
+    confirmed: { label: t("confirmed"), color: "success" },
+    declined: { label: t("declined"), color: "error" },
+    pending: { label: t("pending"), color: "warning" },
+  };
 
   return (
     <Card sx={{ mb: 3 }}>
@@ -60,7 +62,7 @@ const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
           </Typography>
         </Box>
         <Typography color="text.secondary" gutterBottom>
-          Equipe: {groupName}
+          {t("team")}: {groupName}
         </Typography>
 
         <Box
@@ -78,7 +80,7 @@ const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
               disabled={isUpdating}
               sx={{ ml: 1 }}
             >
-              Músicas
+              {t("songs")}
             </Button>
           )}
           <Chip
@@ -93,7 +95,7 @@ const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
               onClick={() => onStatusUpdate("confirmed")}
               disabled={myStatus === "confirmed" || isUpdating}
             >
-              Confirmar
+              {t("confirm")}
             </Button>
             <Button
               size="small"
@@ -102,7 +104,7 @@ const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
               onClick={() => onStatusUpdate("declined")}
               disabled={myStatus === "declined" || isUpdating}
             >
-              Recusar
+              {t("decline")}
             </Button>
           </Box>
         </Box>

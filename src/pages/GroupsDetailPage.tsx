@@ -18,8 +18,10 @@ import {
 } from "@mui/material";
 import type { User } from "../types";
 import { useData } from "../contexts/DataContext";
+import { useTranslation } from "react-i18next";
 
 const GroupDetailPage: React.FC = () => {
+  const { t } = useTranslation();
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const {
@@ -80,11 +82,11 @@ const GroupDetailPage: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        Editando Grupo: {group.name}
+        {t("editGroup")}: {group.name}
       </Typography>
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
-          Membros da Equipe
+          {t("teamMembers")}
         </Typography>
         <Autocomplete
           multiple
@@ -98,21 +100,21 @@ const GroupDetailPage: React.FC = () => {
             }
           }}
           renderInput={(params) => (
-            <TextField {...params} label="Selecionar Membros" />
+            <TextField {...params} label={t("selectMembers")} />
           )}
           isOptionEqualToValue={(option, value) => option.id === value.id}
         />
         <FormControl fullWidth sx={{ mt: 3 }}>
-          <InputLabel id="leader-select-label">Líder da Equipe</InputLabel>
+          <InputLabel id="leader-select-label">{t("teamLeader")}</InputLabel>
           <Select
             labelId="leader-select-label"
             value={leader_id}
-            label="Líder da Equipe"
+            label={t("leader")}
             onChange={(e) => setleader_id(e.target.value as string)}
             disabled={selectedMembers.length === 0}
           >
             <MenuItem value="">
-              <em>Nenhum</em>
+              <em>{t("none")}</em>
             </MenuItem>
             {selectedMembers.map((member) => (
               <MenuItem key={member.id} value={member.id}>
@@ -124,10 +126,10 @@ const GroupDetailPage: React.FC = () => {
 
         <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar Alterações"}
+            {saving ? t("saving") : t("save")}
           </Button>
           <Button variant="outlined" onClick={() => navigate("/groups")}>
-            Voltar
+            {t("cancel")}
           </Button>
         </Box>
       </Paper>
@@ -135,7 +137,7 @@ const GroupDetailPage: React.FC = () => {
         open={snackbarOpen}
         autoHideDuration={4000}
         onClose={() => setSnackbarOpen(false)}
-        message="Grupo atualizado com sucesso!"
+        message={t("groupUpdated")}
       />
     </Box>
   );

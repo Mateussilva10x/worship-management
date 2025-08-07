@@ -20,6 +20,7 @@ import AddIcon from "@mui/icons-material/Add";
 import NewUserForm from "../components/users/NewUserForm";
 import { useData } from "../contexts/DataContext";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
+import { useTranslation } from "react-i18next";
 
 const modalStyle = {
   position: "absolute" as const,
@@ -34,6 +35,7 @@ const modalStyle = {
 };
 
 const UsersPage: React.FC = () => {
+  const { t } = useTranslation();
   const { users, createUser, loading } = useData();
   const { showNotification } = useNotificationDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,7 +63,7 @@ const UsersPage: React.FC = () => {
       const whatsappUrl = `https://wa.me/${numeroFinal}?text=${message}`;
 
       showNotification(
-        `Usuário criado! Use este link para notificar: ${whatsappUrl}`,
+        t("userCreatedSuccess", { whatsappUrl: whatsappUrl }),
         "success"
       );
       setIsModalOpen(false);
@@ -88,13 +90,13 @@ const UsersPage: React.FC = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h4">Gestão de Usuários</Typography>
+        <Typography variant="h4">{t("usersPage")}</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setIsModalOpen(true)}
         >
-          Novo Membro
+          {t("newUser")}
         </Button>
       </Box>
 
@@ -104,9 +106,11 @@ const UsersPage: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>Nome</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>E-mail</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Papel</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>{t("name")}</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    {t("email")}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>{t("role")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -124,7 +128,7 @@ const UsersPage: React.FC = () => {
           </TableContainer>
         ) : (
           <Typography sx={{ p: 2, textAlign: "center" }}>
-            Nenhum usuário encontrado.
+            {t("noUsersFound")}
           </Typography>
         )}
       </Paper>

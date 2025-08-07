@@ -26,15 +26,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { generateSchedulePdf } from "../../utils/pdfGenerator";
 import ConfirmationDialog from "../common/ConfirmationDialog";
-
-const statusMap: Record<
-  ParticipationStatus,
-  { label: string; color: "success" | "error" | "warning" }
-> = {
-  confirmed: { label: "Confirmado", color: "success" },
-  declined: { label: "Recusado", color: "error" },
-  pending: { label: "Pendente", color: "warning" },
-};
+import { useTranslation } from "react-i18next";
 
 interface ScheduleDetailViewProps {
   schedule: Schedule;
@@ -53,7 +45,18 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
   onClose,
   deleteSchedule,
 }) => {
+  const { t, i18n } = useTranslation();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  const statusMap: Record<
+    ParticipationStatus,
+    { label: string; color: "success" | "error" | "warning" }
+  > = {
+    confirmed: { label: t("confirmed"), color: "success" },
+    declined: { label: t("declined"), color: "error" },
+    pending: { label: t("pending"), color: "warning" },
+  };
+
   const scheduleSongs = schedule.songs
     .map((songId) => songs.find((s) => s.id === songId))
     .filter(Boolean) as Song[];
@@ -89,7 +92,7 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h6" id="schedule-detail-title">
-          Detalhes da Escala
+          {t("scheduleDetails")}
         </Typography>
         <Box>
           <Button
@@ -107,17 +110,19 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
         </Box>
       </Box>
       <Typography variant="body1" color="text.secondary" gutterBottom>
-        {new Date(schedule.date).toLocaleString("pt-BR", {
+        {new Date(schedule.date).toLocaleString(i18n.language, {
           dateStyle: "full",
           timeStyle: "short",
         })}
       </Typography>
-      <Typography variant="body1">Equipe: {group?.name || "N/A"}</Typography>
+      <Typography variant="body1">
+        {t("team")}: {group?.name || "N/A"}
+      </Typography>
 
       <Divider sx={{ my: 2 }} />
 
       <Typography variant="subtitle1" gutterBottom>
-        Músicas
+        {t("songs")}
       </Typography>
       <List dense>
         {scheduleSongs.map((song) => (
@@ -135,7 +140,7 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
       <Divider sx={{ my: 2 }} />
 
       <Typography variant="subtitle1" gutterBottom>
-        Membros da Equipe
+        {t("teamMembers")}
       </Typography>
       <List>
         {memberDetails.map(({ user, status }) => (
@@ -149,7 +154,7 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
               />
             }
           >
-            <ListItemText primary={user?.name || "Usuário não encontrado"} />
+            <ListItemText primary={user?.name || t("userNotFound")} />
           </ListItem>
         ))}
       </List>
@@ -162,13 +167,13 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
           startIcon={<DeleteIcon />}
           onClick={() => setIsConfirmOpen(true)}
         >
-          Excluir Escala
+          {t("deleteSchedule")}
         </Button>
       </Box>
       <ConfirmationDialog
         open={isConfirmOpen}
-        title="Confirmar Exclusão"
-        message={`Você tem certeza que deseja excluir esta escala? Esta ação não pode ser desfeita.`}
+        title={t("confirmDelete")}
+        message={t("confirmDeleteMessage")}
         onConfirm={handleConfirmDelete}
         onCancel={() => setIsConfirmOpen(false)}
       />

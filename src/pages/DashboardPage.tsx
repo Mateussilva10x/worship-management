@@ -115,6 +115,7 @@ const AdminDashboard = () => {
 
 const MemberDashboard = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { schedules, songs, users, updateMemberStatus, updateScheduleSongs } =
     useData();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -154,7 +155,7 @@ const MemberDashboard = () => {
   return (
     <Box>
       <Typography variant="h5" sx={{ mb: 2 }}>
-        Minhas Próximas Escalas
+        {t("mySchedules")}
       </Typography>
       {mySchedules.length > 0 ? (
         mySchedules.map((schedule) => {
@@ -179,7 +180,7 @@ const MemberDashboard = () => {
           );
         })
       ) : (
-        <Typography>Você não está em nenhuma escala futura.</Typography>
+        <Typography>{t("noSchedules")}</Typography>
       )}
       {editingSchedule && (
         <Modal

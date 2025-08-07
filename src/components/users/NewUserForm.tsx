@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, Button, Typography, TextField } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 interface NewUserFormProps {
   onSubmit: (formData: {
@@ -11,6 +12,7 @@ interface NewUserFormProps {
 }
 
 const NewUserForm: React.FC<NewUserFormProps> = ({ onSubmit, onCancel }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,7 +28,6 @@ const NewUserForm: React.FC<NewUserFormProps> = ({ onSubmit, onCancel }) => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!formData.name.trim() || !formData.email.trim()) {
-      alert("Por favor, preencha todos os campos.");
       return;
     }
     setIsSubmitting(true);
@@ -37,11 +38,11 @@ const NewUserForm: React.FC<NewUserFormProps> = ({ onSubmit, onCancel }) => {
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Typography variant="h6" gutterBottom>
-        Cadastrar Novo Membro
+        {t("createNewUser")}
       </Typography>
       <TextField
         name="name"
-        label="Nome Completo"
+        label={t("userName")}
         value={formData.name}
         onChange={handleChange}
         fullWidth
@@ -52,7 +53,7 @@ const NewUserForm: React.FC<NewUserFormProps> = ({ onSubmit, onCancel }) => {
       <TextField
         name="email"
         type="email"
-        label="E-mail"
+        label={t("email")}
         value={formData.email}
         onChange={handleChange}
         fullWidth
@@ -61,7 +62,7 @@ const NewUserForm: React.FC<NewUserFormProps> = ({ onSubmit, onCancel }) => {
       />
       <TextField
         name="whatsapp"
-        label="Nº de WhatsApp (Ex: 5583999998888)"
+        label="Whatsapp (Ex: 5583999998888)"
         value={formData.whatsapp}
         onChange={handleChange}
         fullWidth
@@ -70,15 +71,20 @@ const NewUserForm: React.FC<NewUserFormProps> = ({ onSubmit, onCancel }) => {
       />
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
         <Button onClick={onCancel} color="secondary" disabled={isSubmitting}>
-          Cancelar
+          {t("cancel")}
         </Button>
         <Button
           type="submit"
           variant="contained"
           color="primary"
-          disabled={isSubmitting}
+          disabled={
+            isSubmitting ||
+            !formData.name ||
+            !formData.email ||
+            !formData.whatsapp
+          }
         >
-          {isSubmitting ? "Salvando..." : "Criar Membro"}
+          {isSubmitting ? t("saving") : t("save")}
         </Button>
       </Box>
     </Box>

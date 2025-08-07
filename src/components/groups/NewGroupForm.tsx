@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, Button, Typography, TextField } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 interface NewGroupFormProps {
   onSubmit: (formData: { name: string }) => Promise<void>;
@@ -7,6 +8,7 @@ interface NewGroupFormProps {
 }
 
 const NewGroupForm: React.FC<NewGroupFormProps> = ({ onSubmit, onCancel }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,10 +26,10 @@ const NewGroupForm: React.FC<NewGroupFormProps> = ({ onSubmit, onCancel }) => {
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Typography variant="h6" gutterBottom>
-        Criar Novo Grupo
+        {t("createNewGroup")}
       </Typography>
       <TextField
-        label="Nome do Grupo"
+        label={t("groupName")}
         value={name}
         onChange={(e) => setName(e.target.value)}
         fullWidth
@@ -37,7 +39,7 @@ const NewGroupForm: React.FC<NewGroupFormProps> = ({ onSubmit, onCancel }) => {
       />
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
         <Button onClick={onCancel} color="secondary" disabled={isSubmitting}>
-          Cancelar
+          {t("cancel")}
         </Button>
         <Button
           type="submit"
@@ -45,7 +47,7 @@ const NewGroupForm: React.FC<NewGroupFormProps> = ({ onSubmit, onCancel }) => {
           color="primary"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Salvando..." : "Salvar Grupo"}
+          {isSubmitting ? t("saving") : t("save")}
         </Button>
       </Box>
     </Box>

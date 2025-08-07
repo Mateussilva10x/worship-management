@@ -7,6 +7,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 interface ConfirmationDialogProps {
   open: boolean;
@@ -23,6 +24,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onCancel}>
       <DialogTitle>{title}</DialogTitle>
@@ -31,10 +33,10 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel} color="secondary">
-          Cancelar
+          {t("cancel")}
         </Button>
         <Button onClick={onConfirm} color="error" variant="contained" autoFocus>
-          Confirmar Exclusão
+          {t("confirmDeleteBtn")}
         </Button>
       </DialogActions>
     </Dialog>

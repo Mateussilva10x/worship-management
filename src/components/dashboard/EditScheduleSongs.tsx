@@ -20,15 +20,7 @@ import type {
   WorshipGroup,
   ParticipationStatus,
 } from "../../types";
-
-const statusMap: Record<
-  ParticipationStatus,
-  { label: string; color: "success" | "error" | "warning" }
-> = {
-  confirmed: { label: "Confirmado", color: "success" },
-  declined: { label: "Recusado", color: "error" },
-  pending: { label: "Pendente", color: "warning" },
-};
+import { useTranslation } from "react-i18next";
 
 interface EditScheduleSongsProps {
   schedule: Schedule;
@@ -47,8 +39,18 @@ const EditScheduleSongs: React.FC<EditScheduleSongsProps> = ({
   onSave,
   onClose,
 }) => {
+  const { t, i18n } = useTranslation();
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  const statusMap: Record<
+    ParticipationStatus,
+    { label: string; color: "success" | "error" | "warning" }
+  > = {
+    confirmed: { label: t("confirmed"), color: "success" },
+    declined: { label: t("declined"), color: "error" },
+    pending: { label: t("pending"), color: "warning" },
+  };
 
   useEffect(() => {
     const currentSongs = allSongs.filter((song) =>
@@ -72,25 +74,25 @@ const EditScheduleSongs: React.FC<EditScheduleSongsProps> = ({
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="h6">Editar Músicas da Escala</Typography>
+        <Typography variant="h6">{t("editScheduleSongs")}</Typography>
         <IconButton onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </Box>
       <Typography variant="body2" color="text.secondary">
-        {new Date(schedule.date).toLocaleString("pt-BR", {
+        {new Date(schedule.date).toLocaleString(i18n.language, {
           dateStyle: "full",
           timeStyle: "short",
         })}
       </Typography>
       <Typography variant="body1" gutterBottom>
-        Equipe: {group?.name || "N/A"}
+        {t("team")}: {group?.name || "N/A"}
       </Typography>
 
       <Divider sx={{ my: 2 }} />
 
       <Typography variant="subtitle1" gutterBottom>
-        Repertório
+        {t("selectedSongs")}
       </Typography>
       <Autocomplete
         multiple
@@ -101,14 +103,14 @@ const EditScheduleSongs: React.FC<EditScheduleSongsProps> = ({
           setSelectedSongs(newValue);
         }}
         renderInput={(params) => (
-          <TextField {...params} label="Selecionar Músicas" />
+          <TextField {...params} label={t("selectSongs")} />
         )}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         sx={{ mb: 2 }}
       />
 
       <Typography variant="subtitle1" gutterBottom>
-        Status da Equipe
+        {t("teamStatus")}
       </Typography>
       <List dense>
         {memberDetails.map(({ user, status }) => (
@@ -129,10 +131,10 @@ const EditScheduleSongs: React.FC<EditScheduleSongsProps> = ({
 
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 3 }}>
         <Button onClick={onClose} color="secondary" disabled={isSaving}>
-          Cancelar
+          {t("cancel")}
         </Button>
         <Button onClick={handleSave} variant="contained" disabled={isSaving}>
-          {isSaving ? "Salvando..." : "Salvar Músicas"}
+          {isSaving ? t("saving") : t("save")}
         </Button>
       </Box>
     </Box>

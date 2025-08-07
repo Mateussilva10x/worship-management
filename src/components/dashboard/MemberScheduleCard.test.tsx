@@ -28,12 +28,12 @@ describe("Componente MemberScheduleCard", () => {
     );
 
     expect(screen.getByText(/domingo, 10 de agosto/i)).toBeInTheDocument();
-    expect(screen.getByText("Equipe: Equipe de Domingo")).toBeInTheDocument();
-    expect(screen.getByText("Pendente")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /confirmar/i })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /recusar/i })).toBeEnabled();
+    expect(screen.getByText("team: Equipe de Domingo")).toBeInTheDocument();
+    expect(screen.getByText("pending")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /confirm/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /decline/i })).toBeEnabled();
     expect(
-      screen.queryByRole("button", { name: /músicas/i })
+      screen.queryByRole("button", { name: /songs/i })
     ).not.toBeInTheDocument();
   });
 
@@ -50,9 +50,9 @@ describe("Componente MemberScheduleCard", () => {
       />
     );
 
-    expect(screen.getByText("Confirmado")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /confirmar/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /recusar/i })).toBeEnabled();
+    expect(screen.getByText("confirmed")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /confirm/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /decline/i })).toBeEnabled();
   });
 
   it('deve chamar a função onStatusUpdate com "confirmed" ao clicar em Confirmar', async () => {
@@ -71,7 +71,7 @@ describe("Componente MemberScheduleCard", () => {
       />
     );
 
-    await user.click(screen.getByRole("button", { name: /confirmar/i }));
+    await user.click(screen.getByRole("button", { name: /confirm/i }));
 
     expect(onStatusUpdateMock).toHaveBeenCalledTimes(1);
     expect(onStatusUpdateMock).toHaveBeenCalledWith("confirmed");
@@ -93,7 +93,7 @@ describe("Componente MemberScheduleCard", () => {
       />
     );
 
-    await user.click(screen.getByRole("button", { name: /recusar/i }));
+    await user.click(screen.getByRole("button", { name: /decline/i }));
 
     expect(onStatusUpdateMock).toHaveBeenCalledWith("declined");
   });
@@ -114,7 +114,7 @@ describe("Componente MemberScheduleCard", () => {
       />
     );
 
-    const editButton = screen.getByRole("button", { name: /músicas/i });
+    const editButton = screen.getByRole("button", { name: /songs/i });
     expect(editButton).toBeInTheDocument();
 
     await user.click(editButton);
@@ -135,9 +135,9 @@ describe("Componente MemberScheduleCard", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: /confirmar/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /recusar/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /confirm/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /decline/i })).toBeDisabled();
 
-    expect(screen.getByRole("button", { name: /músicas/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /songs/i })).toBeDisabled();
   });
 });

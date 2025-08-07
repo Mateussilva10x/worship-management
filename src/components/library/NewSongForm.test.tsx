@@ -15,17 +15,11 @@ describe("Componente NewSongForm", () => {
   it("deve renderizar os campos do formulário e os botões", () => {
     render(<NewSongForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
 
-    expect(screen.getByLabelText(/título da música/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/tom/i)).toBeInTheDocument();
-    expect(
-      screen.getByLabelText(/link para cifra ou vídeo/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /salvar música/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /cancelar/i })
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/songTitle/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/songKey/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/songLink/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
   });
 
   it("deve chamar onSubmit com os dados corretos ao submeter", async () => {
@@ -38,24 +32,21 @@ describe("Componente NewSongForm", () => {
       link: "https://cifraclub.com.br/grande-e-o-senhor",
     };
 
-    await user.type(screen.getByLabelText(/título da música/i), songData.title);
-    await user.type(screen.getByLabelText(/tom/i), songData.key);
-    await user.type(
-      screen.getByLabelText(/link para cifra ou vídeo/i),
-      songData.link
-    );
+    await user.type(screen.getByLabelText(/songTitle/i), songData.title);
+    await user.type(screen.getByLabelText(/songKey/i), songData.key);
+    await user.type(screen.getByLabelText(/songLink/i), songData.link);
 
-    await user.click(screen.getByRole("button", { name: /salvar música/i }));
+    await user.click(screen.getByRole("button", { name: /save/i }));
 
     expect(mockOnSubmit).toHaveBeenCalledTimes(1);
     expect(mockOnSubmit).toHaveBeenCalledWith(songData);
   });
 
-  it("deve chamar onCancel ao clicar no botão de cancelar", async () => {
+  it("deve chamar onCancel ao clicar no botão de cancel", async () => {
     const user = userEvent.setup();
     render(<NewSongForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
 
-    await user.click(screen.getByRole("button", { name: /cancelar/i }));
+    await user.click(screen.getByRole("button", { name: /cancel/i }));
 
     expect(mockOnCancel).toHaveBeenCalledTimes(1);
     expect(mockOnSubmit).not.toHaveBeenCalled();
@@ -69,28 +60,28 @@ describe("Componente NewSongForm", () => {
 
     render(<NewSongForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
 
-    const saveButton = screen.getByRole("button", { name: /salvar música/i });
-    const cancelButton = screen.getByRole("button", { name: /cancelar/i });
+    const saveButton = screen.getByRole("button", { name: /save/i });
+    const cancelButton = screen.getByRole("button", { name: /cancel/i });
 
-    await user.type(screen.getByLabelText(/título da música/i), "Título Teste");
-    await user.type(screen.getByLabelText(/tom/i), "C");
+    await user.type(screen.getByLabelText(/songTitle/i), "Título Teste");
+    await user.type(screen.getByLabelText(/songKey/i), "C");
     await user.click(saveButton);
 
     expect(saveButton).toBeDisabled();
     expect(cancelButton).toBeDisabled();
-    expect(saveButton).toHaveTextContent(/salvando.../i);
+    expect(saveButton).toHaveTextContent(/saving/i);
 
     await waitFor(() => expect(saveButton).toBeEnabled());
 
     expect(cancelButton).toBeEnabled();
-    expect(saveButton).toHaveTextContent(/salvar música/i);
+    expect(saveButton).toHaveTextContent(/save/i);
   });
 
   it("não deve chamar onSubmit e deve mostrar um alerta se os campos obrigatórios não forem preenchidos", async () => {
     const user = userEvent.setup();
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
     render(<NewSongForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
-    await user.click(screen.getByRole("button", { name: /salvar música/i }));
+    await user.click(screen.getByRole("button", { name: /save/i }));
     expect(alertSpy).toHaveBeenCalledWith(
       "Por favor, preencha pelo menos o título e o tom."
     );

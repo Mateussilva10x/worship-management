@@ -14,6 +14,7 @@ import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { useTranslation } from "react-i18next";
 
 interface ScheduleCardProps {
   schedule: Schedule;
@@ -26,16 +27,17 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
   onClick,
   "data-testid": dataTestId,
 }) => {
-  const groupName = schedule.group?.name || "Grupo não encontrado";
+  const { t, i18n } = useTranslation();
+  const groupName = schedule.group?.name || t("groupNotFound");
 
   const eventDate = new Date(schedule.date);
-  const formattedDate = eventDate.toLocaleDateString("pt-BR", {
+  const formattedDate = eventDate.toLocaleDateString(i18n.language, {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
-  const formattedTime = eventDate.toLocaleTimeString("pt-BR", {
+  const formattedTime = eventDate.toLocaleTimeString(i18n.language, {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -68,31 +70,31 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
           <Box display="flex" alignItems="center" mb={2}>
             <PeopleAltIcon color="secondary" sx={{ mr: 1 }} />
             <Typography variant="body1" color="text.secondary">
-              Equipe: {groupName}
+              {t("team")}: {groupName}
             </Typography>
           </Box>
 
           <Divider sx={{ my: 2 }} />
 
           <Typography variant="subtitle1" gutterBottom>
-            Status da Equipe
+            {t("teamStatus")}
           </Typography>
           <Box display="flex" gap={2} flexWrap="wrap">
             <Chip
               icon={<CheckCircleIcon />}
-              label={`${confirmedCount} Confirmados`}
+              label={`${confirmedCount} ${t("confirmed")}`}
               color="success"
               variant="outlined"
             />
             <Chip
               icon={<CancelIcon />}
-              label={`${declinedCount} Recusaram`}
+              label={`${declinedCount} ${t("recused")}`}
               color="error"
               variant="outlined"
             />
             <Chip
               icon={<HelpOutlineIcon />}
-              label={`${pendingCount} Pendentes`}
+              label={`${pendingCount} ${t("pending")}`}
               color="warning"
               variant="outlined"
             />

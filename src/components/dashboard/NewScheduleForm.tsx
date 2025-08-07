@@ -16,6 +16,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { ptBR } from "date-fns/locale/pt-BR";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { useTranslation } from "react-i18next";
 
 interface FormData {
   date: Date | null;
@@ -38,6 +39,7 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<FormData>({
     date: new Date(),
     worshipGroupId: "",
@@ -52,12 +54,12 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!formData.date || !formData.worshipGroupId) {
-      alert("Por favor, preencha a data e selecione um grupo.");
-      return;
-    }
     setIsSubmitting(true);
 
+    if (!formData.date) {
+      setIsSubmitting(false);
+      return;
+    }
     await onSubmit({ ...formData, date: formData.date.toISOString() });
     setIsSubmitting(false);
   };
@@ -66,11 +68,11 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
       <Box component="form" onSubmit={handleSubmit}>
         <Typography variant="h6" gutterBottom>
-          Criar Nova Escala
+          {t("createNewSchedule")}
         </Typography>
 
         <DateTimePicker
-          label="Data e Hora do Culto"
+          label={t("scheduleDate")}
           value={formData.date}
           onChange={(newDate) =>
             setFormData((prev) => ({ ...prev, date: newDate }))
@@ -79,13 +81,13 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
         />
 
         <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel id="group-select-label">Equipe de Louvor</InputLabel>
+          <InputLabel id="group-select-label">{t("worshipTeam")}</InputLabel>
           <Select
             labelId="group-select-label"
             name="worshipGroupId"
             value={formData.worshipGroupId}
             onChange={handleSelectChange}
-            label="Equipe de Louvor"
+            label={t("worshipTeam")}
           >
             {groups.map((group) => (
               <MenuItem key={group.id} value={group.id}>
@@ -96,14 +98,14 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
         </FormControl>
 
         <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel id="song-select-label">Músicas</InputLabel>
+          <InputLabel id="song-select-label">{t("songs")}</InputLabel>
           <Select
             labelId="song-select-label"
             name="songs"
             multiple
             value={formData.songs}
             onChange={handleSelectChange}
-            input={<OutlinedInput label="Músicas" />}
+            input={<OutlinedInput label={t("songs")} />}
             renderValue={(selected) => (
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                 {(selected as string[]).map((value) => (
@@ -127,15 +129,17 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
           sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 3 }}
         >
           <Button onClick={onCancel} color="secondary" disabled={isSubmitting}>
-            Cancelar
+            {t("cancel")}
           </Button>
           <Button
             type="submit"
             variant="contained"
             color="primary"
-            disabled={isSubmitting}
+            disabled={
+              isSubmitting || !formData.date || !formData.worshipGroupId
+            }
           >
-            {isSubmitting ? "Salvando..." : "Salvar Escala"}
+            {isSubmitting ? t("saving") : t("saveSchedule")}
           </Button>
         </Box>
       </Box>

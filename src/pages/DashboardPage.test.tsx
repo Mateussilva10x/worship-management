@@ -67,11 +67,11 @@ describe("Página do Painel (DashboardPage)", () => {
     });
 
     await user.click(screen.getByRole("button", { name: /newSchedule/i }));
-    expect(await screen.findByText("Criar Nova Escala")).toBeInTheDocument();
+    expect(await screen.findByText("createNewSchedule")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /cancelar/i }));
+    await user.click(screen.getByRole("button", { name: /cancel/i }));
     await waitFor(() => {
-      expect(screen.queryByText("Criar Nova Escala")).not.toBeInTheDocument();
+      expect(screen.queryByText("createNewSchedule")).not.toBeInTheDocument();
     });
   });
 
@@ -89,7 +89,7 @@ describe("Página do Painel (DashboardPage)", () => {
     const card = screen.getByTestId("schedule-card-sched-01");
     await user.click(card);
 
-    expect(await screen.findByText("Detalhes da Escala")).toBeInTheDocument();
+    expect(await screen.findByText("scheduleDetails")).toBeInTheDocument();
   });
 
   it("[MEMBRO] deve chamar updateMemberStatus ao clicar em Confirmar", async () => {
@@ -106,7 +106,7 @@ describe("Página do Painel (DashboardPage)", () => {
     });
 
     const confirmButton = await screen.findByRole("button", {
-      name: /confirmar/i,
+      name: /confirm/i,
     });
     await user.click(confirmButton);
 
@@ -129,12 +129,10 @@ describe("Página do Painel (DashboardPage)", () => {
     });
 
     const editSongsButton = await screen.findByRole("button", {
-      name: /músicas/i,
+      name: /songs/i,
     });
     await user.click(editSongsButton);
 
-    expect(
-      await screen.findByText("Editar Músicas da Escala")
-    ).toBeInTheDocument();
+    expect(await screen.findByText("editScheduleSongs")).toBeInTheDocument();
   });
 });
