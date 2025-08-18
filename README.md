@@ -124,27 +124,3 @@ Follow the steps below to set up and run the application in your local developme
     npm run dev
     ```
 2.  Open your browser and navigate to `http://localhost:5173` (or the address shown in your terminal).
-
-### **Mock Login Credentials**
-
-To test the application, use the following credentials:
-
-- **Administrator:**
-  - **Email:** `admin@email.com`
-  - **Password:** `admin123`
-- **Standard Member:**
-  - **Email:** `membro@email.com`
-  - **Password:** `membro123`
-- **New User (created by Admin):**
-  - **Temporary Password:** `senha123` (will be prompted to change on first login).
-
----
-
-## 🗺️ Roadmap (Potential Next Steps - v2)
-
-- [ ] Implement unit and integration tests with **Vitest** and **React Testing Library**.
-- [ ] Notification system (in-app or by email) for new schedules and declined RSVPs.
-- [ ] Integration with a real backend (Firebase, Supabase) for data persistence.
-- [ ] File uploads (chord chart PDFs, rehearsal audio files).
-- [ ] A visual calendar view for schedules.
-- [ ] Deployment of the application to a platform like Vercel or Netlify.
