@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -17,28 +17,22 @@ import {
   CircularProgress,
 } from "@mui/material";
 import type { User } from "../types";
-import { useData } from "../contexts/DataContext";
 import { useTranslation } from "react-i18next";
+import { useNotificationDispatch } from "../contexts/NotificationContext";
+import { useGroup, useUsers, useUpdateGroupDetails } from "../hooks/useGroups";
 
 const GroupDetailPage: React.FC = () => {
   const { t } = useTranslation();
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
-  const {
-    groups,
-    users,
-    updateGroupDetails,
-    loading: isDataContextLoading,
-  } = useData();
-
-  const group = useMemo(
-    () => groups.find((g) => g.id === groupId),
-    [groups, groupId]
-  );
+  const { showNotification } = useNotificationDispatch();
+  const { data: group, isLoading: isGroupLoading } = useGroup(groupId!);
+  const { data: users = [], isLoading: areUsersLoading } = useUsers();
+  const updateGroupMutation = useUpdateGroupDetails();
 
   const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
-  const [leader_id, setleader_id] = useState<string>("");
-  const [saving, setSaving] = useState(false);
+  const [leaderId, setLeaderId] = useState<string>("");
+  const [saving, _setSaving] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   useEffect(() => {
@@ -47,25 +41,31 @@ const GroupDetailPage: React.FC = () => {
         group.members.includes(user.id)
       );
       setSelectedMembers(currentMembers);
-      setleader_id(group.leader_id || "");
+      setLeaderId(group.leader_id || "");
     }
   }, [group, users]);
 
   const handleSave = async () => {
     if (!groupId) return;
-    setSaving(true);
     const memberIds = selectedMembers.map((member) => member.id);
-    try {
-      await updateGroupDetails(groupId, { memberIds, leader_id });
-      setSnackbarOpen(true);
-    } catch (err: any) {
-      alert(`Falha ao salvar: ${err.message}`);
-    } finally {
-      setSaving(false);
-    }
+
+    await updateGroupMutation.mutateAsync(
+      { groupId, details: { memberIds, leader_id: leaderId } },
+      {
+        onSuccess: () => {
+          showNotification("Grupo atualizado com sucesso!", "success");
+          navigate("/groups");
+        },
+        onError: (err) => {
+          showNotification(`Falha ao salvar: ${err.message}`, "error");
+        },
+      }
+    );
   };
 
-  if (isDataContextLoading) {
+  const isLoading = isGroupLoading || areUsersLoading;
+
+  if (isLoading) {
     return <CircularProgress />;
   }
 
@@ -95,8 +95,8 @@ const GroupDetailPage: React.FC = () => {
           value={selectedMembers}
           onChange={(_, newValue) => {
             setSelectedMembers(newValue);
-            if (!newValue.some((member) => member.id === leader_id)) {
-              setleader_id("");
+            if (!newValue.some((member) => member.id === leaderId)) {
+              setLeaderId("");
             }
           }}
           renderInput={(params) => (
@@ -108,9 +108,9 @@ const GroupDetailPage: React.FC = () => {
           <InputLabel id="leader-select-label">{t("teamLeader")}</InputLabel>
           <Select
             labelId="leader-select-label"
-            value={leader_id}
+            value={leaderId}
             label={t("leader")}
-            onChange={(e) => setleader_id(e.target.value as string)}
+            onChange={(e) => setLeaderId(e.target.value as string)}
             disabled={selectedMembers.length === 0}
           >
             <MenuItem value="">

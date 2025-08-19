@@ -18,9 +18,9 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 
 import NewUserForm from "../components/users/NewUserForm";
-import { useData } from "../contexts/DataContext";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
 import { useTranslation } from "react-i18next";
+import { useUsers, useCreateUser } from "../hooks/useUsers";
 
 const modalStyle = {
   position: "absolute" as const,
@@ -36,43 +36,42 @@ const modalStyle = {
 
 const UsersPage: React.FC = () => {
   const { t } = useTranslation();
-  const { users, createUser, loading } = useData();
+  const { data: users = [], isLoading } = useUsers();
   const { showNotification } = useNotificationDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const createUserMutation = useCreateUser();
 
   const handleCreateUser = async (formData: {
     name: string;
     email: string;
     whatsapp: string;
   }) => {
-    try {
-      await createUser(formData);
-      const numeroDigitado = formData.whatsapp;
+    await createUserMutation.mutateAsync(formData, {
+      onSuccess: () => {
+        const numeroLimpo = formData.whatsapp.replace(/\D/g, "");
+        const numeroFinal = numeroLimpo.startsWith("55")
+          ? numeroLimpo
+          : `55${numeroLimpo}`;
+        const tempPassword = "senha123";
+        const message = encodeURIComponent(
+          `Olá ${formData.name}! Sua conta no sistema "Escala Louvor IPC" foi criada. E-mail: ${formData.email} | Senha Temporária: ${tempPassword}`
+        );
+        const whatsappUrl = `https://wa.me/${numeroFinal}?text=${message}`;
 
-      const numeroLimpo = numeroDigitado.replace(/\D/g, "");
-
-      const numeroFinal = numeroLimpo.startsWith("55")
-        ? numeroLimpo
-        : `55${numeroLimpo}`;
-
-      const tempPassword = "senha123";
-      const message = encodeURIComponent(
-        `Olá ${formData.name}! Sua conta no sistema "Escala Louvor IPC" foi criada. E-mail: ${formData.email} | Senha Temporária: ${tempPassword}`
-      );
-
-      const whatsappUrl = `https://wa.me/${numeroFinal}?text=${message}`;
-
-      showNotification(
-        t("userCreatedSuccess", { whatsappUrl: whatsappUrl }),
-        "success"
-      );
-      setIsModalOpen(false);
-    } catch (err: any) {
-      showNotification(err.message, "error");
-    }
+        showNotification(
+          t("userCreatedSuccess", { whatsappUrl: whatsappUrl }),
+          "success"
+        );
+        setIsModalOpen(false);
+      },
+      onError: (err) => {
+        showNotification(err.message, "error");
+      },
+    });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />

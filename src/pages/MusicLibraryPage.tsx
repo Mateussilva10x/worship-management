@@ -20,14 +20,19 @@ import AddIcon from "@mui/icons-material/Add";
 import LinkIcon from "@mui/icons-material/Link";
 import DeleteIcon from "@mui/icons-material/Delete";
 import NewSongForm from "../components/library/NewSongForm";
-import { useData } from "../contexts/DataContext";
 import type { Song } from "../types";
 import ConfirmationDialog from "../components/common/ConfirmationDialog";
 import { useTranslation } from "react-i18next";
+import { useSongs, useCreateSong, useDeleteSong } from "../hooks/useSongs";
+import { useNotificationDispatch } from "../contexts/NotificationContext";
 
 const MusicLibraryPage: React.FC = () => {
   const { t } = useTranslation();
-  const { songs, createSong, deleteSong, loading } = useData();
+  const { data: songs = [], isLoading, isError, error } = useSongs();
+  const createSongMutation = useCreateSong();
+  const deleteSongMutation = useDeleteSong();
+
+  const { showNotification } = useNotificationDispatch();
   const [searchTerm, setSearchTerm] = useState("");
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,22 +42,28 @@ const MusicLibraryPage: React.FC = () => {
     key: string;
     link: string;
   }) => {
-    try {
-      await createSong(formData);
-      setIsModalOpen(false);
-    } catch (err) {
-      alert("Falha ao salvar a música.");
-    }
+    await createSongMutation.mutateAsync(formData, {
+      onSuccess: () => {
+        setIsModalOpen(false);
+        showNotification("Música criada com sucesso!", "success");
+      },
+      onError: (err) => {
+        showNotification(`Falha ao criar música: ${err.message}`, "error");
+      },
+    });
   };
 
   const handleConfirmDelete = async () => {
     if (songToDelete) {
-      try {
-        await deleteSong(songToDelete.id);
-        setSongToDelete(null);
-      } catch (err) {
-        alert("Falha ao excluir a música.");
-      }
+      await deleteSongMutation.mutateAsync(songToDelete.id, {
+        onSuccess: () => {
+          setSongToDelete(null);
+          showNotification("Música excluída com sucesso!", "success");
+        },
+        onError: (err) => {
+          showNotification(`Falha ao excluir música: ${err.message}`, "error");
+        },
+      });
     }
   };
 
@@ -64,11 +75,19 @@ const MusicLibraryPage: React.FC = () => {
     [songs, searchTerm]
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />
       </Box>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Typography color="error">
+        Erro ao carregar as músicas: {error?.message}
+      </Typography>
     );
   }
 

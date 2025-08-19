@@ -19,39 +19,51 @@ import GroupIcon from "@mui/icons-material/Group";
 import DeleteIcon from "@mui/icons-material/Delete";
 import NewGroupForm from "../components/groups/NewGroupForm";
 import { useNavigate } from "react-router-dom";
-import { useData } from "../contexts/DataContext";
 import type { WorshipGroup } from "../types";
 import ConfirmationDialog from "../components/common/ConfirmationDialog";
 import { useTranslation } from "react-i18next";
+import { useNotificationDispatch } from "../contexts/NotificationContext";
+import { useGroups, useCreateGroup, useDeleteGroup } from "../hooks/useGroups";
 
 const GroupsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { groups, createGroup, deleteGroup, loading } = useData();
+  const navigate = useNavigate();
+  const { showNotification } = useNotificationDispatch();
+
+  const { data: groups = [], isLoading } = useGroups();
+  const createGroupMutation = useCreateGroup();
+  const deleteGroupMutation = useDeleteGroup();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<WorshipGroup | null>(null);
-  const navigate = useNavigate();
 
   const handleCreateGroup = async (formData: { name: string }) => {
-    try {
-      await createGroup(formData);
-      setIsModalOpen(false);
-    } catch (err) {
-      alert("Falha ao salvar grupo.");
-    }
+    await createGroupMutation.mutateAsync(formData, {
+      onSuccess: () => {
+        setIsModalOpen(false);
+        showNotification("Grupo criado com sucesso!", "success");
+      },
+      onError: (err) => {
+        showNotification(`Falha ao criar grupo: ${err.message}`, "error");
+      },
+    });
   };
 
   const handleConfirmDelete = async () => {
     if (groupToDelete) {
-      try {
-        await deleteGroup(groupToDelete.id);
-        setGroupToDelete(null);
-      } catch (error) {
-        alert("Falha ao excluir o grupo.");
-      }
+      await deleteGroupMutation.mutateAsync(groupToDelete.id, {
+        onSuccess: () => {
+          setGroupToDelete(null);
+          showNotification("Grupo excluído com sucesso!", "success");
+        },
+        onError: (err) => {
+          showNotification(`Falha ao excluir grupo: ${err.message}`, "error");
+        },
+      });
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />

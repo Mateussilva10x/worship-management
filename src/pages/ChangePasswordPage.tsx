@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useData } from "../contexts/DataContext";
 import {
   Box,
   Typography,
@@ -13,17 +12,17 @@ import {
   Alert,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { useUpdateUserPassword } from "../hooks/useUsers";
 
 const ChangePasswordPage: React.FC = () => {
   const { t } = useTranslation();
   const { user, refreshAuthUser } = useAuth();
-  const { updateUserPassword } = useData();
   const navigate = useNavigate();
+  const updateUserPasswordMutation = useUpdateUserPassword();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -37,20 +36,20 @@ const ChangePasswordPage: React.FC = () => {
       setError(t("passwordMismatch"));
       return;
     }
-    if (!user) {
-      return;
-    }
+    if (!user) return;
 
-    setLoading(true);
-    try {
-      const updatedUser = await updateUserPassword(user.id, password);
-      refreshAuthUser(updatedUser);
-      navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Ocorreu um erro ao atualizar a senha.");
-    } finally {
-      setLoading(false);
-    }
+    await updateUserPasswordMutation.mutateAsync(
+      { userId: user.id, password: password },
+      {
+        onSuccess: (updatedUser) => {
+          refreshAuthUser(updatedUser);
+          navigate("/dashboard");
+        },
+        onError: (err: any) => {
+          setError(err.message || "Ocorreu um erro ao atualizar a senha.");
+        },
+      }
+    );
   };
 
   return (
@@ -106,9 +105,9 @@ const ChangePasswordPage: React.FC = () => {
             fullWidth
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
-            disabled={loading}
+            disabled={updateUserPasswordMutation.isPending}
           >
-            {loading ? t("saving") : t("save")}
+            {updateUserPasswordMutation.isPending ? t("saving") : t("save")}
           </Button>
         </Box>
       </Paper>

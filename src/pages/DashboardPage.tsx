@@ -10,6 +10,17 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { useNotificationDispatch } from "../contexts/NotificationContext";
+import {
+  useSchedules,
+  useCreateSchedule,
+  useDeleteSchedule,
+  useUpdateMemberStatus,
+  useUpdateScheduleSongs,
+} from "../hooks/useSchedule";
+import { useGroups } from "../hooks/useGroups";
+import { useSongs } from "../hooks/useSongs";
+import { useUsers } from "../hooks/useUsers";
 import ScheduleCard from "../components/dashboard/ScheduleCard";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -18,13 +29,19 @@ import type { Schedule, ParticipationStatus } from "../types";
 import NewScheduleForm from "../components/dashboard/NewScheduleForm";
 import ScheduleDetailView from "../components/dashboard/ScheduleDetailView";
 import MemberScheduleCard from "../components/dashboard/MemberScheduleCard";
-import { useData } from "../contexts/DataContext";
 import EditScheduleSongs from "../components/dashboard/EditScheduleSongs";
 
 const AdminDashboard = () => {
   const { t } = useTranslation();
-  const { schedules, groups, users, songs, createSchedule, deleteSchedule } =
-    useData();
+  const { data: schedules = [], isLoading: schedulesLoading } = useSchedules();
+  const { data: groups = [], isLoading: groupsLoading } = useGroups();
+  const { data: songs = [], isLoading: songsLoading } = useSongs();
+  const { data: users = [], isLoading: usersLoading } = useUsers();
+  const { showNotification } = useNotificationDispatch();
+
+  const createScheduleMutation = useCreateSchedule();
+  const deleteScheduleMutation = useDeleteSchedule();
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [viewingSchedule, setViewingSchedule] = useState<Schedule | null>(null);
 
@@ -39,13 +56,39 @@ const AdminDashboard = () => {
     worshipGroupId: string;
     songs: string[];
   }) => {
-    try {
-      await createSchedule(formData);
-      setIsCreateModalOpen(false);
-    } catch (err: any) {
-      alert(`Erro: ${err.message}`);
-    }
+    await createScheduleMutation.mutateAsync(formData, {
+      onSuccess: () => {
+        setIsCreateModalOpen(false);
+        showNotification("Escala criada com sucesso!", "success");
+      },
+      onError: (err: any) => {
+        showNotification(`Falha ao criar escala: ${err.message}`, "error");
+      },
+    });
   };
+
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    await deleteScheduleMutation.mutateAsync(scheduleId, {
+      onSuccess: () => {
+        setViewingSchedule(null);
+        showNotification("Escala excluída com sucesso!", "success");
+      },
+      onError: (err: any) => {
+        showNotification(`Falha ao excluir escala: ${err.message}`, "error");
+      },
+    });
+  };
+
+  const isLoading =
+    schedulesLoading || groupsLoading || songsLoading || usersLoading;
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -69,7 +112,7 @@ const AdminDashboard = () => {
         </Button>
       </Box>
       {schedules.length > 0 ? (
-        schedules.map((schedule) => (
+        schedules.map((schedule: Schedule) => (
           <ScheduleCard
             key={schedule.id}
             schedule={schedule}
@@ -104,7 +147,7 @@ const AdminDashboard = () => {
               users={users}
               songs={songs}
               onClose={handleCloseDetailsModal}
-              deleteSchedule={deleteSchedule}
+              deleteSchedule={handleDeleteSchedule}
             />
           </Box>
         </Modal>
@@ -116,15 +159,23 @@ const AdminDashboard = () => {
 const MemberDashboard = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const { schedules, songs, users, updateMemberStatus, updateScheduleSongs } =
-    useData();
+  const { showNotification } = useNotificationDispatch();
+  const { data: schedules = [], isLoading: schedulesLoading } = useSchedules();
+  const { data: songs = [], isLoading: songsLoading } = useSongs();
+  const { data: users = [], isLoading: usersLoading } = useUsers();
+
+  const updateMemberStatusMutation = useUpdateMemberStatus();
+  const updateScheduleSongsMutation = useUpdateScheduleSongs();
+
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
 
   const mySchedules = useMemo(() => {
     if (!user || !schedules) return [];
-    return schedules.filter((s) =>
-      s.membersStatus.some((ms) => ms.memberId === user.id)
+    return schedules.filter((s: { membersStatus: { memberId: string }[] }) =>
+      s.membersStatus.some(
+        (ms: { memberId: string }) => ms.memberId === user.id
+      )
     );
   }, [schedules, user]);
 
@@ -134,36 +185,62 @@ const MemberDashboard = () => {
   ) => {
     if (!user) return;
     setUpdatingId(scheduleId);
-    try {
-      await updateMemberStatus(scheduleId, user.id, newStatus);
-    } catch (err) {
-      alert("Falha ao atualizar seu status. Tente novamente.");
-    } finally {
-      setUpdatingId(null);
-    }
+
+    await updateMemberStatusMutation.mutateAsync(
+      { scheduleId, memberId: user.id, newStatus },
+      {
+        onSuccess: () => {
+          showNotification("Status atualizado com sucesso!", "success");
+        },
+        onError: (err: any) => {
+          showNotification(
+            `Falha ao atualizar status: ${err.message}`,
+            "error"
+          );
+        },
+        onSettled: () => {
+          setUpdatingId(null);
+        },
+      }
+    );
   };
 
   const handleSaveSongs = async (scheduleId: string, newSongIds: string[]) => {
-    try {
-      await updateScheduleSongs(scheduleId, newSongIds);
-      setEditingSchedule(null);
-    } catch (err) {
-      alert("Falha ao salvar as músicas. Tente novamente.");
-    }
+    await updateScheduleSongsMutation.mutateAsync(
+      { scheduleId, songIds: newSongIds },
+      {
+        onSuccess: () => {
+          setEditingSchedule(null);
+          showNotification("Músicas da escala atualizadas!", "success");
+        },
+        onError: (err: any) => {
+          showNotification(`Falha ao salvar músicas: ${err.message}`, "error");
+        },
+      }
+    );
   };
 
+  const isLoading = schedulesLoading || songsLoading || usersLoading;
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
   return (
     <Box>
       <Typography variant="h5" sx={{ mb: 2 }}>
         {t("mySchedules")}
       </Typography>
       {mySchedules.length > 0 ? (
-        mySchedules.map((schedule) => {
+        mySchedules.map((schedule: any) => {
           const myStatus =
-            schedule.membersStatus.find((ms) => ms.memberId === user?.id)
+            schedule.membersStatus.find((ms: any) => ms.memberId === user?.id)
               ?.status || "pending";
           const group = schedule.group;
           const isLeader = group?.leader_id === user?.id;
+
           return (
             <MemberScheduleCard
               key={schedule.id}
@@ -174,7 +251,10 @@ const MemberDashboard = () => {
               onStatusUpdate={(newStatus) =>
                 handleStatusUpdate(schedule.id, newStatus)
               }
-              isUpdating={updatingId === schedule.id}
+              isUpdating={
+                updateMemberStatusMutation.isPending &&
+                updatingId === schedule.id
+              }
               onEditSongs={() => setEditingSchedule(schedule)}
             />
           );
@@ -205,9 +285,14 @@ const MemberDashboard = () => {
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const { loading } = useData();
+  const { isLoading: schedulesLoading } = useSchedules();
+  const { isLoading: groupsLoading } = useGroups();
+  const { isLoading: songsLoading } = useSongs();
+  const { isLoading: usersLoading } = useUsers();
+  const isLoading =
+    schedulesLoading || groupsLoading || songsLoading || usersLoading;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box
         sx={{
