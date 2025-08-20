@@ -1,12 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render } from "../test/test-utils";
-import GroupDetailPage from "./GroupsDetailPage";
+import GroupsDetailPage from "./GroupsDetailPage";
 import type { User, UserRole } from "../types";
 
 const navigateMock = vi.fn();
-
 vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react-router-dom")>();
   return {
@@ -15,6 +14,14 @@ vi.mock("react-router-dom", async (importOriginal) => {
     useParams: () => ({ groupId: "group-01" }),
   };
 });
+
+vi.mock("../hooks/useGroups", () => ({
+  useGroup: vi.fn(),
+  useUsers: vi.fn(),
+  useUpdateGroupDetails: vi.fn(),
+}));
+
+import { useGroup, useUsers, useUpdateGroupDetails } from "../hooks/useGroups";
 
 const mockAdminUser: User = {
   id: "user-01",
@@ -43,75 +50,79 @@ const mockGroup = {
   leader_id: "user-02",
 };
 
+const mockUpdateGroupDetails = vi.fn();
+
 describe("Página de Detalhes do Grupo (GroupDetailPage)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    (useGroup as vi.Mock).mockReturnValue({
+      data: mockGroup,
+      isLoading: false,
+    });
+    (useUsers as vi.Mock).mockReturnValue({
+      data: mockUsers,
+      isLoading: false,
+    });
+    (useUpdateGroupDetails as vi.Mock).mockReturnValue({
+      mutateAsync: mockUpdateGroupDetails,
+      isPending: false,
+    });
   });
 
   it("deve renderizar os detalhes do grupo e os membros corretamente", async () => {
-    render(<GroupDetailPage />, {
-      dataValue: { groups: [mockGroup], users: mockUsers, loading: false },
+    render(<GroupsDetailPage />, {
       authValue: { user: mockAdminUser, isAuthenticated: true },
     });
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole("heading", {
-          name: /editGroup: Equipe de Domingo/i,
-        })
-      ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: /editGroup: Equipe de Domingo/i,
+      })
+    ).toBeInTheDocument();
 
-      expect(
-        screen.getByRole("button", { name: /joão silva/i })
-      ).toBeInTheDocument();
+    const memberChip = screen.getByRole("button", { name: /João Silva/i });
+    expect(memberChip).toBeInTheDocument();
 
-      const leaderSelect = screen.getByRole("combobox", {
-        name: /teamLeader/i,
-      });
-      expect(leaderSelect).toHaveTextContent(/joão silva/i);
-    });
+    const leaderSelect = screen.getByRole("combobox", { name: /teamLeader/i });
+    expect(leaderSelect).toHaveTextContent("João Silva");
   });
 
-  it("deve chamar updateGroupDetails com os novos dados ao salvar", async () => {
+  it("deve chamar a mutação updateGroupDetails com os novos dados ao salvar", async () => {
     const user = userEvent.setup();
-    const updateGroupDetailsMock = vi.fn().mockResolvedValue({});
+    mockUpdateGroupDetails.mockResolvedValue({});
 
-    render(<GroupDetailPage />, {
-      dataValue: {
-        groups: [mockGroup],
-        users: mockUsers,
-        loading: false,
-        updateGroupDetails: updateGroupDetailsMock,
-      },
+    render(<GroupsDetailPage />, {
       authValue: { user: mockAdminUser, isAuthenticated: true },
     });
 
-    const leaderSelect = await screen.findByRole("combobox", {
-      name: /teamLeader/i,
+    const membersAutocomplete = screen.getByRole("combobox", {
+      name: /selectMembers/i,
     });
+    await user.click(membersAutocomplete);
+    await user.click(await screen.findByText("Maria Clara"));
 
+    const leaderSelect = screen.getByRole("combobox", { name: /teamLeader/i });
     await user.click(leaderSelect);
-
-    const noLeaderOption = await screen.findByRole("option", {
-      name: /none/i,
-    });
-    await user.click(noLeaderOption);
+    await user.click(
+      await screen.findByRole("option", { name: "Maria Clara" })
+    );
 
     await user.click(screen.getByRole("button", { name: /save/i }));
 
-    expect(updateGroupDetailsMock).toHaveBeenCalledWith("group-01", {
-      memberIds: ["user-02"],
-      leader_id: "",
+    expect(mockUpdateGroupDetails).toHaveBeenCalled();
+    expect(vi.mocked(mockUpdateGroupDetails).mock.calls[0][0]).toEqual({
+      groupId: "group-01",
+      details: {
+        memberIds: ["user-02", "user-03"],
+        leader_id: "user-03",
+      },
     });
-
-    expect(await screen.findByText(/groupUpdate/i)).toBeInTheDocument();
   });
 
-  it("deve chamar o navigate para /groups ao clicar no botão Voltar", async () => {
+  it("deve navegar para /groups ao clicar no botão Voltar", async () => {
     const user = userEvent.setup();
-    render(<GroupDetailPage />, {
-      dataValue: { groups: [mockGroup], users: mockUsers },
-    });
+    render(<GroupsDetailPage />, { authValue: { user: mockAdminUser } });
 
     const backButton = await screen.findByRole("button", { name: /cancel/i });
     await user.click(backButton);

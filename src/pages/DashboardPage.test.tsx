@@ -1,9 +1,40 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render } from "../test/test-utils";
 import DashboardPage from "./DashboardPage";
 import type { Schedule, UserRole } from "../types";
+
+vi.mock("../hooks/useSchedule", () => ({
+  useSchedules: vi.fn(),
+  useUpdateMemberStatus: vi.fn(),
+  useUpdateScheduleSongs: vi.fn(),
+  useDeleteSchedule: vi.fn(),
+  useCreateSchedule: vi.fn(),
+}));
+
+vi.mock("../hooks/useGroups", () => ({
+  useGroups: vi.fn(),
+}));
+
+vi.mock("../hooks/useSongs", () => ({
+  useSongs: vi.fn(),
+}));
+
+vi.mock("../hooks/useUsers", () => ({
+  useUsers: vi.fn(),
+}));
+
+import {
+  useSchedules,
+  useUpdateMemberStatus,
+  useUpdateScheduleSongs,
+  useDeleteSchedule,
+  useCreateSchedule,
+} from "../hooks/useSchedule";
+import { useGroups } from "../hooks/useGroups";
+import { useSongs } from "../hooks/useSongs";
+import { useUsers } from "../hooks/useUsers";
 
 const mockAdminUser = {
   id: "user-01",
@@ -23,7 +54,6 @@ const mockLeaderUser = {
   email: "leader@test.com",
   role: "member" as UserRole,
 };
-
 const mockGroups = [
   {
     id: "group-01",
@@ -32,7 +62,6 @@ const mockGroups = [
     leader_id: "user-03",
   },
 ];
-
 const mockSchedules: Schedule[] = [
   {
     id: "sched-01",
@@ -46,24 +75,60 @@ const mockSchedules: Schedule[] = [
   },
 ];
 
+const mockUpdateMemberStatus = vi.fn();
+const mockUpdateScheduleSongs = vi.fn();
+const mockDeleteSchedule = vi.fn();
+const mockCreateSchedule = vi.fn();
+
 describe("Página do Painel (DashboardPage)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    (useSchedules as vi.Mock).mockReturnValue({
+      data: mockSchedules,
+      isLoading: false,
+    });
+    (useGroups as vi.Mock).mockReturnValue({
+      data: mockGroups,
+      isLoading: false,
+    });
+    (useSongs as vi.Mock).mockReturnValue({ data: [], isLoading: false });
+    (useUsers as vi.Mock).mockReturnValue({
+      data: [mockAdminUser, mockMemberUser, mockLeaderUser],
+      isLoading: false,
+    });
+
+    (useUpdateMemberStatus as vi.Mock).mockReturnValue({
+      mutateAsync: mockUpdateMemberStatus,
+      isPending: false,
+    });
+    (useUpdateScheduleSongs as vi.Mock).mockReturnValue({
+      mutateAsync: mockUpdateScheduleSongs,
+      isPending: false,
+    });
+    (useDeleteSchedule as vi.Mock).mockReturnValue({
+      mutateAsync: mockDeleteSchedule,
+      isPending: false,
+    });
+    (useCreateSchedule as vi.Mock).mockReturnValue({
+      mutateAsync: mockCreateSchedule,
+      isPending: false,
+    });
+  });
+
   it("deve renderizar o painel do Administrador se o usuário for admin", () => {
     render(<DashboardPage />, {
       authValue: { user: mockAdminUser, isAuthenticated: true },
-      dataValue: {
-        schedules: mockSchedules,
-        groups: mockGroups,
-        users: [mockAdminUser, mockMemberUser],
-      },
     });
+
     expect(screen.getByText("upcomingSchedules")).toBeInTheDocument();
+    expect(screen.getByTestId("schedule-card-sched-01")).toBeInTheDocument();
   });
 
   it("[ADMIN] deve abrir e fechar a modal de criação de escala", async () => {
     const user = userEvent.setup();
     render(<DashboardPage />, {
       authValue: { user: mockAdminUser, isAuthenticated: true },
-      dataValue: { schedules: mockSchedules, groups: mockGroups },
     });
 
     await user.click(screen.getByRole("button", { name: /newSchedule/i }));
@@ -79,11 +144,6 @@ describe("Página do Painel (DashboardPage)", () => {
     const user = userEvent.setup();
     render(<DashboardPage />, {
       authValue: { user: mockAdminUser, isAuthenticated: true },
-      dataValue: {
-        schedules: mockSchedules,
-        groups: mockGroups,
-        users: [mockMemberUser],
-      },
     });
 
     const card = screen.getByTestId("schedule-card-sched-01");
@@ -92,17 +152,12 @@ describe("Página do Painel (DashboardPage)", () => {
     expect(await screen.findByText("scheduleDetails")).toBeInTheDocument();
   });
 
-  it("[MEMBRO] deve chamar updateMemberStatus ao clicar em Confirmar", async () => {
+  it("[MEMBRO] deve chamar a mutação updateMemberStatus ao clicar em Confirmar", async () => {
     const user = userEvent.setup();
-    const updateMemberStatusMock = vi.fn();
+    mockUpdateMemberStatus.mockResolvedValue({});
 
     render(<DashboardPage />, {
       authValue: { user: mockMemberUser, isAuthenticated: true },
-      dataValue: {
-        schedules: mockSchedules,
-        groups: mockGroups,
-        updateMemberStatus: updateMemberStatusMock,
-      },
     });
 
     const confirmButton = await screen.findByRole("button", {
@@ -110,22 +165,19 @@ describe("Página do Painel (DashboardPage)", () => {
     });
     await user.click(confirmButton);
 
-    expect(updateMemberStatusMock).toHaveBeenCalledWith(
-      "sched-01",
-      "user-02",
-      "confirmed"
-    );
+    expect(mockUpdateMemberStatus).toHaveBeenCalled();
+
+    expect(vi.mocked(mockUpdateMemberStatus).mock.calls[0][0]).toEqual({
+      scheduleId: "sched-01",
+      memberId: "user-02",
+      newStatus: "confirmed",
+    });
   });
 
   it("[LÍDER] deve abrir a modal de edição de músicas ao clicar no botão de edição", async () => {
     const user = userEvent.setup();
     render(<DashboardPage />, {
       authValue: { user: mockLeaderUser, isAuthenticated: true },
-      dataValue: {
-        schedules: mockSchedules,
-        groups: mockGroups,
-        users: [mockLeaderUser],
-      },
     });
 
     const editSongsButton = await screen.findByRole("button", {
@@ -134,5 +186,15 @@ describe("Página do Painel (DashboardPage)", () => {
     await user.click(editSongsButton);
 
     expect(await screen.findByText("editScheduleSongs")).toBeInTheDocument();
+  });
+
+  it("deve mostrar um indicador de loading geral enquanto os dados são carregados", () => {
+    (useSchedules as vi.Mock).mockReturnValue({ data: [], isLoading: true });
+
+    render(<DashboardPage />, {
+      authValue: { user: mockAdminUser, isAuthenticated: true },
+    });
+
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
   });
 });

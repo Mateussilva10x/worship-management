@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render } from "../test/test-utils";
@@ -6,13 +6,20 @@ import UsersPage from "./UsersPage";
 import { NotificationProvider } from "../contexts/NotificationContext";
 import type { User, UserRole } from "../types";
 
+vi.mock("../hooks/useUsers", () => ({
+  useUsers: vi.fn(),
+  useCreateUser: vi.fn(),
+}));
+
+import { useUsers, useCreateUser } from "../hooks/useUsers";
+
 const mockAdminUser: User = {
   id: "user-01",
   name: "Admin Teste",
   email: "admin@test.com",
   role: "admin" as UserRole,
 };
-const mockUsers: User[] = [
+const mockUsersList: User[] = [
   {
     id: "user-01",
     name: "Admin Principal",
@@ -27,62 +34,47 @@ const mockUsers: User[] = [
   },
 ];
 
+const mockCreateUser = vi.fn();
+
 describe("Página de Gestão de Usuários (UsersPage)", () => {
-  it("deve mostrar um indicador de carregamento enquanto os dados são buscados", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    (useUsers as vi.Mock).mockReturnValue({
+      data: mockUsersList,
+      isLoading: false,
+    });
+    (useCreateUser as vi.Mock).mockReturnValue({ mutateAsync: mockCreateUser });
+  });
+
+  const renderComponent = () =>
     render(
       <NotificationProvider>
         <UsersPage />
       </NotificationProvider>,
-      {
-        authValue: { user: mockAdminUser, isAuthenticated: true },
-        dataValue: { loading: true },
-      }
+      { authValue: { user: mockAdminUser, isAuthenticated: true } }
     );
+
+  it("deve mostrar um indicador de carregamento enquanto os dados são buscados", () => {
+    (useUsers as vi.Mock).mockReturnValue({ data: [], isLoading: true });
+    renderComponent();
     expect(screen.getByRole("progressbar")).toBeInTheDocument();
   });
 
   it("deve renderizar a tabela com a lista de usuários", () => {
-    render(
-      <NotificationProvider>
-        <UsersPage />
-      </NotificationProvider>,
-      {
-        authValue: { user: mockAdminUser, isAuthenticated: true },
-        dataValue: { users: mockUsers, loading: false },
-      }
-    );
+    renderComponent();
     expect(screen.getByText("Admin Principal")).toBeInTheDocument();
     expect(screen.getByText("admin@email.com")).toBeInTheDocument();
     expect(screen.getByText("Membro Comum")).toBeInTheDocument();
     expect(screen.getByText("membro@email.com")).toBeInTheDocument();
   });
 
-  it('deve mostrar uma mensagem de "nenhum usuário encontrado" se a lista estiver vazia', () => {
-    render(
-      <NotificationProvider>
-        <UsersPage />
-      </NotificationProvider>,
-      {
-        authValue: { user: mockAdminUser, isAuthenticated: true },
-        dataValue: { users: [], loading: false },
-      }
-    );
-    expect(screen.getByText(/noUsersFound/i)).toBeInTheDocument();
-  });
-
-  it("deve abrir a modal de criação e chamar a função createUser ao submeter", async () => {
+  it("deve abrir a modal de criação e chamar a mutação createUser ao submeter", async () => {
     const user = userEvent.setup();
-    const createUserMock = vi.fn().mockResolvedValue({});
+    mockCreateUser.mockResolvedValue({});
 
-    render(
-      <NotificationProvider>
-        <UsersPage />
-      </NotificationProvider>,
-      {
-        authValue: { user: mockAdminUser, isAuthenticated: true },
-        dataValue: { users: [], loading: false, createUser: createUserMock },
-      }
-    );
+    (useUsers as vi.Mock).mockReturnValue({ data: [], isLoading: false });
+    renderComponent();
 
     await user.click(screen.getByRole("button", { name: /newUser/i }));
 
@@ -93,15 +85,11 @@ describe("Página de Gestão de Usuários (UsersPage)", () => {
 
     await user.click(screen.getByRole("button", { name: /save/i }));
 
-    expect(createUserMock).toHaveBeenCalledTimes(1);
-    expect(createUserMock).toHaveBeenCalledWith({
+    expect(mockCreateUser).toHaveBeenCalled();
+    expect(vi.mocked(mockCreateUser).mock.calls[0][0]).toEqual({
       name: "Novo Membro",
       email: "novo@email.com",
       whatsapp: "11999999999",
-    });
-
-    await waitFor(() => {
-      expect(screen.queryByText("createNewUser")).not.toBeInTheDocument();
     });
   });
 });

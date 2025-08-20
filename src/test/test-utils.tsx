@@ -3,36 +3,45 @@ import React, { type ReactElement } from "react";
 import { render, type RenderOptions } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { AuthContext } from "../contexts/AuthContext";
-import { DataContext } from "../contexts/DataContext";
+import { NotificationProvider } from "../contexts/NotificationContext";
 
 type AuthContextType = React.ComponentProps<
   typeof AuthContext.Provider
 >["value"];
-type DataContextType = React.ComponentProps<
-  typeof DataContext.Provider
->["value"];
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
 
 const AllTheProviders: React.FC<{
   children: React.ReactNode;
   authValue: AuthContextType;
-  dataValue: DataContextType;
-}> = ({ children, authValue, dataValue }) => {
+}> = ({ children, authValue }) => {
+  const [queryClient] = React.useState(() => createTestQueryClient());
+
   return (
     <MemoryRouter>
-      <AuthContext.Provider value={authValue}>
-        <DataContext.Provider value={dataValue}>
-          {children}
-        </DataContext.Provider>
-      </AuthContext.Provider>
+      <QueryClientProvider client={queryClient}>
+        <NotificationProvider>
+          <AuthContext.Provider value={authValue}>
+            {children}
+          </AuthContext.Provider>
+        </NotificationProvider>
+      </QueryClientProvider>
     </MemoryRouter>
   );
 };
 
 interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
   authValue?: Partial<AuthContextType>;
-  dataValue?: Partial<DataContextType>;
 }
 
 const customRender = (ui: ReactElement, options: CustomRenderOptions = {}) => {
@@ -45,33 +54,9 @@ const customRender = (ui: ReactElement, options: CustomRenderOptions = {}) => {
     ...options.authValue,
   };
 
-  const defaultDataValue: DataContextType = {
-    loading: false,
-    users: [],
-    groups: [],
-    songs: [],
-    schedules: [],
-    createUser: vi.fn(),
-    updateUserPassword: vi.fn(),
-    createSong: vi.fn(),
-    createGroup: vi.fn(),
-    updateGroupDetails: vi.fn(),
-    createSchedule: vi.fn(),
-    updateMemberStatus: vi.fn(),
-    updateScheduleSongs: vi.fn(),
-    deleteSong: vi.fn(),
-    deleteGroup: vi.fn(),
-    deleteSchedule: vi.fn(),
-    ...options.dataValue,
-  };
-
   return render(ui, {
     wrapper: (props) => (
-      <AllTheProviders
-        {...props}
-        authValue={defaultAuthValue}
-        dataValue={defaultDataValue}
-      />
+      <AllTheProviders {...props} authValue={defaultAuthValue} />
     ),
     ...options,
   });
