@@ -201,6 +201,7 @@ const MusicLibraryPage: React.FC = () => {
                         aria-label="Excluir música"
                         color="error"
                         onClick={() => setSongToDelete(song)}
+                        disabled={user?.role !== "admin"}
                       >
                         <DeleteIcon />
                       </IconButton>
