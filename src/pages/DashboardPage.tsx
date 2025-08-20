@@ -19,7 +19,7 @@ import {
   useUpdateScheduleSongs,
 } from "../hooks/useSchedule";
 import { useGroups } from "../hooks/useGroups";
-import { useSongs } from "../hooks/useSongs";
+import { useApprovedSongs } from "../hooks/useSongs";
 import { useUsers } from "../hooks/useUsers";
 import ScheduleCard from "../components/dashboard/ScheduleCard";
 import AddIcon from "@mui/icons-material/Add";
@@ -35,7 +35,7 @@ const AdminDashboard = () => {
   const { t } = useTranslation();
   const { data: schedules = [], isLoading: schedulesLoading } = useSchedules();
   const { data: groups = [], isLoading: groupsLoading } = useGroups();
-  const { data: songs = [], isLoading: songsLoading } = useSongs();
+  const { data: songs = [], isLoading: songsLoading } = useApprovedSongs();
   const { data: users = [], isLoading: usersLoading } = useUsers();
   const { showNotification } = useNotificationDispatch();
 
@@ -161,7 +161,7 @@ const MemberDashboard = () => {
   const { t } = useTranslation();
   const { showNotification } = useNotificationDispatch();
   const { data: schedules = [], isLoading: schedulesLoading } = useSchedules();
-  const { data: songs = [], isLoading: songsLoading } = useSongs();
+  const { data: songs = [], isLoading: songsLoading } = useApprovedSongs();
   const { data: users = [], isLoading: usersLoading } = useUsers();
 
   const updateMemberStatusMutation = useUpdateMemberStatus();
@@ -285,14 +285,9 @@ const MemberDashboard = () => {
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const { isLoading: schedulesLoading } = useSchedules();
-  const { isLoading: groupsLoading } = useGroups();
-  const { isLoading: songsLoading } = useSongs();
-  const { isLoading: usersLoading } = useUsers();
-  const isLoading =
-    schedulesLoading || groupsLoading || songsLoading || usersLoading;
+  const { loading: authLoading } = useAuth();
 
-  if (isLoading) {
+  if (authLoading) {
     return (
       <Box
         sx={{

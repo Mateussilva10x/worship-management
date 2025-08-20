@@ -15,6 +15,7 @@ import {
   TableRow,
   IconButton,
   CircularProgress,
+  Chip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import LinkIcon from "@mui/icons-material/Link";
@@ -23,14 +24,22 @@ import NewSongForm from "../components/library/NewSongForm";
 import type { Song } from "../types";
 import ConfirmationDialog from "../components/common/ConfirmationDialog";
 import { useTranslation } from "react-i18next";
-import { useSongs, useCreateSong, useDeleteSong } from "../hooks/useSongs";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  useAllSongs,
+  useCreateSong,
+  useDeleteSong,
+  useUpdateSongStatus,
+} from "../hooks/useSongs";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
 
 const MusicLibraryPage: React.FC = () => {
   const { t } = useTranslation();
-  const { data: songs = [], isLoading, isError, error } = useSongs();
+  const { user } = useAuth();
+  const { data: songs = [], isLoading } = useAllSongs();
   const createSongMutation = useCreateSong();
   const deleteSongMutation = useDeleteSong();
+  const updateStatusMutation = useUpdateSongStatus();
 
   const { showNotification } = useNotificationDispatch();
   const [searchTerm, setSearchTerm] = useState("");
@@ -83,13 +92,13 @@ const MusicLibraryPage: React.FC = () => {
     );
   }
 
-  if (isError) {
-    return (
-      <Typography color="error">
-        Erro ao carregar as músicas: {error?.message}
-      </Typography>
-    );
-  }
+  const handleApprove = (songId: string) => {
+    updateStatusMutation.mutate({ songId, status: "approved" });
+  };
+
+  const handleReject = (songId: string) => {
+    updateStatusMutation.mutate({ songId, status: "rejected" });
+  };
 
   return (
     <Box>
@@ -133,6 +142,9 @@ const MusicLibraryPage: React.FC = () => {
                     {t("songKey")}
                   </TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>
+                    {t("status")}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
                     {t("actions")}
                   </TableCell>
                 </TableRow>
@@ -143,6 +155,37 @@ const MusicLibraryPage: React.FC = () => {
                     <TableCell>{song.title}</TableCell>
                     <TableCell>{song.key}</TableCell>
                     <TableCell>
+                      <Chip
+                        label={t(song.status)}
+                        color={
+                          song.status === "approved"
+                            ? "success"
+                            : song.status === "pending"
+                            ? "warning"
+                            : "error"
+                        }
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {user?.role === "admin" && song.status === "pending" && (
+                        <>
+                          <Button
+                            size="small"
+                            color="success"
+                            onClick={() => handleApprove(song.id)}
+                          >
+                            {t("approve")}
+                          </Button>
+                          <Button
+                            size="small"
+                            color="error"
+                            onClick={() => handleReject(song.id)}
+                          >
+                            {t("reject")}
+                          </Button>
+                        </>
+                      )}
                       <IconButton
                         aria-label="Abrir link"
                         color="primary"

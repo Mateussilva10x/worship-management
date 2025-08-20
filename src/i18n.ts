@@ -71,6 +71,11 @@ const resources = {
       "passwordMismatch": "Passwords do not match.",
       "member(s)": "member(s)",
       "createNewGroup": "Create New Group",
+      "approved": "Approved",
+      "status": "Status",
+      "approve": "Approve",
+      "reject": "Reject",
+      "rejected": "Rejected",
     }
   },
   pt: {
@@ -140,6 +145,11 @@ const resources = {
       "passwordLength": "A senha deve ter pelo menos 6 caracteres.",
       "passwordMismatch": "As senhas não coincidem.",
       "member(s)": "membro(s)",
+      "approved": "Aprovado",
+      "status": "Status",
+      "approve": "Aprovar",
+      "reject": "Rejeitar",
+      "rejected": "Reprovada",
     }
   }
 };

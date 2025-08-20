@@ -18,6 +18,12 @@ export interface User {
 }
 
 /**
+ * @description Define o status de uma música na biblioteca.
+ */
+export type SongStatus = 'pending' | 'approved' | 'rejected';
+
+
+/**
  * @description Representa uma música na biblioteca.
  */
 export interface Song {
@@ -25,6 +31,8 @@ export interface Song {
   title: string;
   key: string;
   link: string;
+  status: SongStatus;
+  submitted_by?: string;
 }
 
 /**
