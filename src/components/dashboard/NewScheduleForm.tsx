@@ -13,7 +13,7 @@ import {
   type SelectChangeEvent,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { ptBR } from "date-fns/locale/pt-BR";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useTranslation } from "react-i18next";
@@ -60,7 +60,12 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
       setIsSubmitting(false);
       return;
     }
-    await onSubmit({ ...formData, date: formData.date.toISOString() });
+    const date = new Date(formData.date);
+    const timezoneOffset = date.getTimezoneOffset() * 60000;
+    const dateWithoutTimezone = new Date(date.getTime() - timezoneOffset);
+    const formattedDate = dateWithoutTimezone.toISOString().split("T")[0];
+
+    await onSubmit({ ...formData, date: formattedDate });
     setIsSubmitting(false);
   };
 
@@ -71,7 +76,7 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
           {t("createNewSchedule")}
         </Typography>
 
-        <DateTimePicker
+        <DatePicker
           label={t("scheduleDate")}
           value={formData.date}
           onChange={(newDate) =>

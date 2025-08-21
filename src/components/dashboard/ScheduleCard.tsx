@@ -30,16 +30,12 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
   const { t, i18n } = useTranslation();
   const groupName = schedule.group?.name || t("groupNotFound");
 
-  const eventDate = new Date(schedule.date);
+  const eventDate = new Date(`${schedule.date}T00:00:00`);
   const formattedDate = eventDate.toLocaleDateString(i18n.language, {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
-  });
-  const formattedTime = eventDate.toLocaleTimeString(i18n.language, {
-    hour: "2-digit",
-    minute: "2-digit",
   });
 
   const confirmedCount = schedule.membersStatus.filter(
@@ -63,7 +59,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
           <Box display="flex" alignItems="center" mb={2}>
             <EventIcon color="primary" sx={{ mr: 1 }} />
             <Typography variant="h6" component="div" color="primary.main">
-              {formattedDate} - {formattedTime}
+              {formattedDate}
             </Typography>
           </Box>
 
