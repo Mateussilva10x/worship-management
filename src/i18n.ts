@@ -80,6 +80,7 @@ const resources = {
       "single_confirmed": "Confirmed",
       "single_declined": "Declined",
       "single_pending": "Pending",
+      "userCreatedSuccess": "User created successfully! Send the message via WhatsApp: <a href='{{whatsappUrl}}' target='_blank' rel='noopener noreferrer'>Send WhatsApp</a>",
     }
   },
   pt: {
@@ -158,6 +159,7 @@ const resources = {
       "single_confirmed": "Confirmado",
       "single_declined": "Recusado",
       "single_pending": "Pendente",
+      "userCreatedSuccess": "Usuário criado com sucesso! Envie a mensagem via WhatsApp: <a href='{{whatsappUrl}}' target='_blank' rel='noopener noreferrer'>Enviar WhatsApp</a>",
     }
   }
 };
