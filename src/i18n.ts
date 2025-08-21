@@ -76,6 +76,10 @@ const resources = {
       "approve": "Approve",
       "reject": "Reject",
       "rejected": "Rejected",
+      "recused": "Recused",
+      "single_confirmed": "Confirmed",
+      "single_declined": "Declined",
+      "single_pending": "Pending",
     }
   },
   pt: {
@@ -150,6 +154,10 @@ const resources = {
       "approve": "Aprovar",
       "reject": "Rejeitar",
       "rejected": "Reprovada",
+      "recused": "Recusados",
+      "single_confirmed": "Confirmado",
+      "single_declined": "Recusado",
+      "single_pending": "Pendente",
     }
   }
 };

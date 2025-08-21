@@ -52,9 +52,9 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
     ParticipationStatus,
     { label: string; color: "success" | "error" | "warning" }
   > = {
-    confirmed: { label: t("confirmed"), color: "success" },
-    declined: { label: t("declined"), color: "error" },
-    pending: { label: t("pending"), color: "warning" },
+    confirmed: { label: t("single_confirmed"), color: "success" },
+    declined: { label: t("single_declined"), color: "error" },
+    pending: { label: t("single_pending"), color: "warning" },
   };
 
   const scheduleSongs = schedule.songs

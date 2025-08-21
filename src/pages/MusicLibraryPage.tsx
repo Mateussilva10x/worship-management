@@ -21,7 +21,7 @@ import AddIcon from "@mui/icons-material/Add";
 import LinkIcon from "@mui/icons-material/Link";
 import DeleteIcon from "@mui/icons-material/Delete";
 import NewSongForm from "../components/library/NewSongForm";
-import type { Song } from "../types";
+import type { Song, SongStatus } from "../types";
 import ConfirmationDialog from "../components/common/ConfirmationDialog";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
@@ -100,6 +100,15 @@ const MusicLibraryPage: React.FC = () => {
     updateStatusMutation.mutate({ songId, status: "rejected" });
   };
 
+  const statusMap: Record<
+    SongStatus,
+    { label: string; color: "success" | "error" | "warning" }
+  > = {
+    approved: { label: t("approved"), color: "success" },
+    rejected: { label: t("rejected"), color: "error" },
+    pending: { label: t("single_pending"), color: "warning" },
+  };
+
   return (
     <Box>
       <Box
@@ -156,14 +165,8 @@ const MusicLibraryPage: React.FC = () => {
                     <TableCell>{song.key}</TableCell>
                     <TableCell>
                       <Chip
-                        label={t(song.status)}
-                        color={
-                          song.status === "approved"
-                            ? "success"
-                            : song.status === "pending"
-                            ? "warning"
-                            : "error"
-                        }
+                        label={statusMap[song.status].label}
+                        color={statusMap[song.status].color}
                         size="small"
                       />
                     </TableCell>
