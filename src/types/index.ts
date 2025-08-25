@@ -29,6 +29,8 @@ export type SongStatus = 'pending' | 'approved' | 'rejected';
 export interface Song {
   id: string;
   title: string;
+  artist: string;
+  version?: string;
   key: string;
   link: string;
   status: SongStatus;

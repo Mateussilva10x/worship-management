@@ -1,20 +1,46 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Typography, TextField } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import type { Song } from "../../types";
 
 interface NewSongFormProps {
   onSubmit: (formData: {
     title: string;
+    artist: string;
+    version: string;
     key: string;
     link: string;
   }) => Promise<void>;
   onCancel: () => void;
+  songToEdit?: Song | null;
 }
 
-const NewSongForm: React.FC<NewSongFormProps> = ({ onSubmit, onCancel }) => {
+const NewSongForm: React.FC<NewSongFormProps> = ({
+  onSubmit,
+  onCancel,
+  songToEdit,
+}) => {
   const { t } = useTranslation();
-  const [formData, setFormData] = useState({ title: "", key: "", link: "" });
+  const [formData, setFormData] = useState({
+    title: "",
+    artist: "",
+    version: "",
+    key: "",
+    link: "",
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (songToEdit) {
+      setFormData({
+        title: songToEdit.title,
+        artist: songToEdit.artist,
+        version: songToEdit.version || "",
+        key: songToEdit.key,
+        link: songToEdit.link,
+      });
+    }
+  }, [songToEdit]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -23,8 +49,8 @@ const NewSongForm: React.FC<NewSongFormProps> = ({ onSubmit, onCancel }) => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!formData.title || !formData.key) {
-      alert("Por favor, preencha pelo menos o título e o tom.");
+    if (!formData.title || !formData.key || !formData.artist) {
+      alert("Por favor, preencha pelo menos o título, Artistat e o tom.");
       return;
     }
     setIsSubmitting(true);
@@ -35,7 +61,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({ onSubmit, onCancel }) => {
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
       <Typography variant="h6" gutterBottom>
-        {t("newSongFormTitle")}
+        {songToEdit ? t("editSong") : t("newSongFormTitle")}
       </Typography>
       <TextField
         name="title"
@@ -44,6 +70,23 @@ const NewSongForm: React.FC<NewSongFormProps> = ({ onSubmit, onCancel }) => {
         onChange={handleChange}
         fullWidth
         required
+        sx={{ mb: 2 }}
+      />
+      <TextField
+        name="artist"
+        label={t("artist")}
+        value={formData.artist}
+        onChange={handleChange}
+        fullWidth
+        required
+        sx={{ mb: 2 }}
+      />
+      <TextField
+        name="version"
+        label={t("version")}
+        value={formData.version}
+        onChange={handleChange}
+        fullWidth
         sx={{ mb: 2 }}
       />
       <TextField

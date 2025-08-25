@@ -74,6 +74,28 @@ export const useUpdateSongStatus = () => {
     });
 };
 
+export const useUpdateSong = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, ...songData }: Partial<Song>) => {
+            if (!id) throw new Error("ID da música é obrigatório para atualização.");
+            
+            const { data, error } = await supabase
+                .from('songs')
+                .update(songData)
+                .eq('id', id)
+                .select()
+                .single();
+
+            if (error) throw new Error(error.message);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['songs'] });
+        }
+    });
+};
+
 
 export const useDeleteSong = () => {
   const queryClient = useQueryClient();

@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import LinkIcon from "@mui/icons-material/Link";
+import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import NewSongForm from "../components/library/NewSongForm";
 import type { Song, SongStatus } from "../types";
@@ -30,6 +31,7 @@ import {
   useCreateSong,
   useDeleteSong,
   useUpdateSongStatus,
+  useUpdateSong,
 } from "../hooks/useSongs";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
 
@@ -40,26 +42,53 @@ const MusicLibraryPage: React.FC = () => {
   const createSongMutation = useCreateSong();
   const deleteSongMutation = useDeleteSong();
   const updateStatusMutation = useUpdateSongStatus();
+  const updateSongMutation = useUpdateSong();
 
   const { showNotification } = useNotificationDispatch();
   const [searchTerm, setSearchTerm] = useState("");
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [songToEdit, setSongToEdit] = useState<Song | null>(null);
 
-  const handleCreateSong = async (formData: {
+  const handleOpenEditModal = (song: Song) => {
+    setSongToEdit(song);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSongToEdit(null);
+  };
+
+  const handleFormSubmit = async (formData: {
     title: string;
+    artist: string;
+    version: string;
     key: string;
     link: string;
   }) => {
-    await createSongMutation.mutateAsync(formData, {
-      onSuccess: () => {
-        setIsModalOpen(false);
-        showNotification("Música criada com sucesso!", "success");
-      },
-      onError: (err) => {
-        showNotification(`Falha ao criar música: ${err.message}`, "error");
-      },
-    });
+    if (songToEdit) {
+      await updateSongMutation.mutateAsync(
+        { id: songToEdit.id, ...formData },
+        {
+          onSuccess: () => {
+            showNotification("Música atualizada com sucesso!", "success");
+            handleCloseModal();
+          },
+          onError: (err) =>
+            showNotification(`Falha ao editar música: ${err.message}`, "error"),
+        }
+      );
+    } else {
+      await createSongMutation.mutateAsync(formData, {
+        onSuccess: () => {
+          showNotification("Música criada com sucesso!", "success");
+          handleCloseModal();
+        },
+        onError: (err) =>
+          showNotification(`Falha ao criar música: ${err.message}`, "error"),
+      });
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -148,6 +177,9 @@ const MusicLibraryPage: React.FC = () => {
                     {t("songTitle")}
                   </TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>
+                    {t("artist")}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
                     {t("songKey")}
                   </TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>
@@ -161,7 +193,15 @@ const MusicLibraryPage: React.FC = () => {
               <TableBody>
                 {filteredSongs.map((song) => (
                   <TableRow key={song.id}>
-                    <TableCell>{song.title}</TableCell>
+                    <TableCell>
+                      {song.title}
+                      {song.version && (
+                        <Typography variant="caption" display="block">
+                          ({song.version})
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>{song.artist}</TableCell>
                     <TableCell>{song.key}</TableCell>
                     <TableCell>
                       <Chip
@@ -201,6 +241,13 @@ const MusicLibraryPage: React.FC = () => {
                         <LinkIcon />
                       </IconButton>
                       <IconButton
+                        aria-label="Editar música"
+                        color="primary"
+                        onClick={() => handleOpenEditModal(song)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
                         aria-label="Excluir música"
                         color="error"
                         onClick={() => setSongToDelete(song)}
@@ -224,8 +271,9 @@ const MusicLibraryPage: React.FC = () => {
       <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <Box sx={modalStyle}>
           <NewSongForm
-            onSubmit={handleCreateSong}
+            onSubmit={handleFormSubmit}
             onCancel={() => setIsModalOpen(false)}
+            songToEdit={songToEdit}
           />
         </Box>
       </Modal>

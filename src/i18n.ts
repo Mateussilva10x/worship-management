@@ -81,6 +81,9 @@ const resources = {
       "single_declined": "Declined",
       "single_pending": "Pending",
       "cancel": "Cancel",
+      "artist": "Artist",
+      "version": "Version (Ex: Eli Soares)",
+      "editSong": "Edit Song",
       "userCreatedSuccess": "User created successfully! Send the message via WhatsApp: <a href='{{whatsappUrl}}' target='_blank' rel='noopener noreferrer'>Send WhatsApp</a>",
     }
   },
@@ -161,6 +164,9 @@ const resources = {
       "single_declined": "Recusado",
       "single_pending": "Pendente",
       "cancel": "Cancelar",
+      "artist": "Artista",
+      "version": "Versão (Ex: Eli Soares)",
+      "editSong": "Editar Música",
       "userCreatedSuccess": "Usuário criado com sucesso! Envie a mensagem via WhatsApp: <a href='{{whatsappUrl}}' target='_blank' rel='noopener noreferrer'>Enviar WhatsApp</a>",
     }
   }
