@@ -32,7 +32,7 @@ const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
   onEditSongs,
 }) => {
   const { t, i18n } = useTranslation();
-  const eventDate = new Date(schedule.date);
+  const eventDate = new Date(`${schedule.date}T00:00:00`);
   const formattedDate = eventDate.toLocaleDateString(i18n.language, {
     weekday: "long",
     day: "2-digit",
