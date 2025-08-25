@@ -38,10 +38,6 @@ const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
     day: "2-digit",
     month: "long",
   });
-  const formattedTime = eventDate.toLocaleTimeString(i18n.language, {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 
   const statusMap: Record<
     ParticipationStatus,
@@ -57,9 +53,7 @@ const MemberScheduleCard: React.FC<MemberScheduleCardProps> = ({
       <CardContent>
         <Box display="flex" alignItems="center" mb={1}>
           <EventIcon color="primary" sx={{ mr: 1 }} />
-          <Typography variant="h6">
-            {formattedDate} às {formattedTime}
-          </Typography>
+          <Typography variant="h6">{formattedDate}</Typography>
         </Box>
         <Typography color="text.secondary" gutterBottom>
           {t("team")}: {groupName}
