@@ -86,6 +86,7 @@ const GroupsPage: React.FC = () => {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setIsModalOpen(true)}
+          sx={{ whiteSpace: "nowrap", px: 4 }}
         >
           {t("newGroup")}
         </Button>

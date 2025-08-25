@@ -16,6 +16,10 @@ import {
   IconButton,
   CircularProgress,
   Chip,
+  Card,
+  CardContent,
+  CardActions,
+  Pagination,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import LinkIcon from "@mui/icons-material/Link";
@@ -34,21 +38,40 @@ import {
   useUpdateSong,
 } from "../hooks/useSongs";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
+import { useDebounce } from "../hooks/useDebounce";
+
+const SONGS_PER_PAGE = 5;
 
 const MusicLibraryPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { data: songs = [], isLoading } = useAllSongs();
+  const { showNotification } = useNotificationDispatch();
+
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const { data, isLoading } = useAllSongs(page, debouncedSearchTerm);
+  const songs = data?.songs || [];
+  const count = data?.count || 0;
+
   const createSongMutation = useCreateSong();
   const deleteSongMutation = useDeleteSong();
-  const updateStatusMutation = useUpdateSongStatus();
   const updateSongMutation = useUpdateSong();
+  const updateStatusMutation = useUpdateSongStatus();
 
-  const { showNotification } = useNotificationDispatch();
-  const [searchTerm, setSearchTerm] = useState("");
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [songToEdit, setSongToEdit] = useState<Song | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const pageCount = Math.ceil(count / SONGS_PER_PAGE);
+
+  const handlePageChange = (
+    _event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
+    setPage(value);
+  };
 
   const handleOpenEditModal = (song: Song) => {
     setSongToEdit(song);
@@ -153,6 +176,7 @@ const MusicLibraryPage: React.FC = () => {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setIsModalOpen(true)}
+          sx={{ whiteSpace: "nowrap", px: 4 }}
         >
           {t("newSong")}
         </Button>
@@ -164,109 +188,185 @@ const MusicLibraryPage: React.FC = () => {
         fullWidth
         sx={{ mb: 3 }}
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setPage(1);
+        }}
       />
 
-      <Paper>
-        <TableContainer>
-          {songs.length > 0 ? (
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>
-                    {t("songTitle")}
+      <TableContainer
+        component={Paper}
+        sx={{ display: { xs: "none", md: "block" } }}
+      >
+        {songs.length > 0 ? (
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: "bold" }}>
+                  {t("songTitle")}
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>{t("artist")}</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>
+                  {t("songKey")}
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>{t("status")}</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>
+                  {t("actions")}
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredSongs.map((song) => (
+                <TableRow key={song.id}>
+                  <TableCell>
+                    {song.title}
+                    {song.version && (
+                      <Typography variant="caption" display="block">
+                        ({song.version})
+                      </Typography>
+                    )}
                   </TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>
-                    {t("artist")}
+                  <TableCell>{song.artist}</TableCell>
+                  <TableCell>{song.key}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={statusMap[song.status].label}
+                      color={statusMap[song.status].color}
+                      size="small"
+                    />
                   </TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>
-                    {t("songKey")}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>
-                    {t("status")}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>
-                    {t("actions")}
+                  <TableCell>
+                    {user?.role === "admin" && song.status === "pending" && (
+                      <>
+                        <Button
+                          size="small"
+                          color="success"
+                          onClick={() => handleApprove(song.id)}
+                        >
+                          {t("approve")}
+                        </Button>
+                        <Button
+                          size="small"
+                          color="error"
+                          onClick={() => handleReject(song.id)}
+                        >
+                          {t("reject")}
+                        </Button>
+                      </>
+                    )}
+                    <IconButton
+                      aria-label="Abrir link"
+                      color="primary"
+                      component="a"
+                      href={song.link}
+                      target={song.link ? "_blank" : undefined}
+                      rel={song.link ? "noopener noreferrer" : undefined}
+                      disabled={!song.link}
+                    >
+                      <LinkIcon />
+                    </IconButton>
+                    <IconButton
+                      aria-label="Editar música"
+                      color="primary"
+                      onClick={() => handleOpenEditModal(song)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      aria-label="Excluir música"
+                      color="error"
+                      onClick={() => setSongToDelete(song)}
+                      disabled={user?.role !== "admin"}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredSongs.map((song) => (
-                  <TableRow key={song.id}>
-                    <TableCell>
-                      {song.title}
-                      {song.version && (
-                        <Typography variant="caption" display="block">
-                          ({song.version})
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>{song.artist}</TableCell>
-                    <TableCell>{song.key}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={statusMap[song.status].label}
-                        color={statusMap[song.status].color}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {user?.role === "admin" && song.status === "pending" && (
-                        <>
-                          <Button
-                            size="small"
-                            color="success"
-                            onClick={() => handleApprove(song.id)}
-                          >
-                            {t("approve")}
-                          </Button>
-                          <Button
-                            size="small"
-                            color="error"
-                            onClick={() => handleReject(song.id)}
-                          >
-                            {t("reject")}
-                          </Button>
-                        </>
-                      )}
-                      <IconButton
-                        aria-label="Abrir link"
-                        color="primary"
-                        component="a"
-                        href={song.link}
-                        target={song.link ? "_blank" : undefined}
-                        rel={song.link ? "noopener noreferrer" : undefined}
-                        disabled={!song.link}
-                      >
-                        <LinkIcon />
-                      </IconButton>
-                      <IconButton
-                        aria-label="Editar música"
-                        color="primary"
-                        onClick={() => handleOpenEditModal(song)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        aria-label="Excluir música"
-                        color="error"
-                        onClick={() => setSongToDelete(song)}
-                        disabled={user?.role !== "admin"}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <Box sx={{ p: 2, textAlign: "center" }}>
-              <Typography variant="body1">{t("noSongsFound")}</Typography>
-            </Box>
-          )}
-        </TableContainer>
-      </Paper>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <Box sx={{ p: 2, textAlign: "center" }}>
+            <Typography variant="body1">{t("noSongsFound")}</Typography>
+          </Box>
+        )}
+      </TableContainer>
+
+      <Box sx={{ display: { xs: "block", md: "none" } }}>
+        <Box display="flex" flexDirection="column" gap={2}>
+          {filteredSongs.map((song) => (
+            <Card key={song.id} variant="outlined">
+              <CardContent>
+                <Typography variant="h6" component="div">
+                  {song.title} {song.version && `(${song.version})`}
+                </Typography>
+                <Typography color="text.secondary" sx={{ mb: 1.5 }}>
+                  {song.artist} - Tom: {song.key}
+                </Typography>
+                <Chip
+                  label={statusMap[song.status].label}
+                  color={statusMap[song.status].color}
+                  size="small"
+                />
+              </CardContent>
+              <CardActions sx={{ justifyContent: "flex-end" }}>
+                {user?.role === "admin" && song.status === "pending" && (
+                  <>
+                    <Button
+                      size="small"
+                      color="success"
+                      onClick={() => handleApprove(song.id)}
+                    >
+                      {t("approve")}
+                    </Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => handleReject(song.id)}
+                    >
+                      {t("reject")}
+                    </Button>
+                  </>
+                )}
+                <IconButton
+                  aria-label="Editar"
+                  color="primary"
+                  onClick={() => handleOpenEditModal(song)}
+                >
+                  <EditIcon />
+                </IconButton>
+                <IconButton
+                  aria-label="Link"
+                  color="primary"
+                  component="a"
+                  href={song.link}
+                  target="_blank"
+                  disabled={!song.link}
+                >
+                  <LinkIcon />
+                </IconButton>
+                <IconButton
+                  aria-label="Excluir"
+                  color="error"
+                  onClick={() => setSongToDelete(song)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </CardActions>
+            </Card>
+          ))}
+        </Box>
+      </Box>
+
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <Pagination
+          count={pageCount}
+          page={page}
+          onChange={handlePageChange}
+          color="primary"
+          size={window.innerWidth < 600 ? "small" : "medium"}
+        />
+      </Box>
 
       <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <Box sx={modalStyle}>

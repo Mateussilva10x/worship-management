@@ -112,7 +112,6 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
       <Typography variant="body1" color="text.secondary" gutterBottom>
         {new Date(`${schedule.date}T00:00:00`).toLocaleString(i18n.language, {
           dateStyle: "full",
-          timeStyle: "short",
         })}
       </Typography>
       <Typography variant="body1">

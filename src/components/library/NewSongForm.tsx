@@ -115,6 +115,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
           variant="contained"
           color="primary"
           disabled={isSubmitting}
+          sx={{ minWidth: "100px" }}
         >
           {isSubmitting ? t("saving") : t("save")}
         </Button>

@@ -3,17 +3,34 @@ import { supabase } from '../supabaseClient';
 import type { Song, SongStatus } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
-export const useAllSongs = () => {
-  return useQuery<Song[], Error>({
-    queryKey: ['songs', 'all'], 
+const SONGS_PER_PAGE = 5;
+
+export const useAllSongs = (page: number, searchTerm: string) => {
+  return useQuery<{ songs: Song[], count: number }, Error>({
+    queryKey: ['songs', 'all', page, searchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase.from('songs').select('*').order('title');
+      let query = supabase
+        .from('songs')
+        .select('*', { count: 'exact' });
+
+      if (searchTerm) {
+        query = query.or(`title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%`);
+      }
+
+      const from = (page - 1) * SONGS_PER_PAGE;
+      const to = page * SONGS_PER_PAGE - 1;
+      query = query.range(from, to);
+
+      query = query.order('title', { ascending: true });
+
+      const { data, error, count } = await query;
+
       if (error) throw new Error(error.message);
-      return data || [];
+
+      return { songs: data || [], count: count || 0 };
     },
   });
 };
-
 
 export const useApprovedSongs = () => {
   return useQuery<Song[], Error>({
@@ -22,14 +39,13 @@ export const useApprovedSongs = () => {
       const { data, error } = await supabase
         .from('songs')
         .select('*')
-        .eq('status', 'approved') 
+        .eq('status', 'approved')
         .order('title');
       if (error) throw new Error(error.message);
       return data || [];
     },
   });
 };
-
 
 export const useCreateSong = () => {
   const queryClient = useQueryClient();

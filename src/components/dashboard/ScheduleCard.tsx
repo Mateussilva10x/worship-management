@@ -75,7 +75,14 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
           <Typography variant="subtitle1" gutterBottom>
             {t("teamStatus")}
           </Typography>
-          <Box display="flex" gap={2} flexWrap="wrap">
+          <Box
+            display="flex"
+            sx={{
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 1,
+              alignItems: { xs: "flex-start", sm: "center" },
+            }}
+          >
             <Chip
               icon={<CheckCircleIcon />}
               label={`${confirmedCount} ${t("confirmed")}`}
