@@ -7,6 +7,8 @@ import {
   Box,
   Button,
   Modal,
+  FormControlLabel,
+  Switch,
   CircularProgress,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
@@ -15,7 +17,6 @@ import {
   useSchedules,
   useCreateSchedule,
   useDeleteSchedule,
-  useUpdateMemberStatus,
   useUpdateScheduleSongs,
 } from "../hooks/useSchedule";
 import { useGroups } from "../hooks/useGroups";
@@ -24,12 +25,13 @@ import { useUsers } from "../hooks/useUsers";
 import ScheduleCard from "../components/dashboard/ScheduleCard";
 import AddIcon from "@mui/icons-material/Add";
 
-import type { Schedule, ParticipationStatus } from "../types";
+import type { Schedule } from "../types";
 
 import NewScheduleForm from "../components/dashboard/NewScheduleForm";
 import ScheduleDetailView from "../components/dashboard/ScheduleDetailView";
-import MemberScheduleCard from "../components/dashboard/MemberScheduleCard";
 import EditScheduleSongs from "../components/dashboard/EditScheduleSongs";
+import MemberScheduleDetailModal from "../components/dashboard/MemberScheduleDetailModal";
+import UnifiedScheduleCard from "../components/dashboard/UnifiedScheduleCard";
 
 const AdminDashboard = () => {
   const { t } = useTranslation();
@@ -160,50 +162,35 @@ const MemberDashboard = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const { showNotification } = useNotificationDispatch();
-  const { data: schedules = [], isLoading: schedulesLoading } = useSchedules();
+  const { data: allSchedules = [], isLoading: schedulesLoading } =
+    useSchedules();
   const { data: songs = [], isLoading: songsLoading } = useApprovedSongs();
   const { data: users = [], isLoading: usersLoading } = useUsers();
 
-  const updateMemberStatusMutation = useUpdateMemberStatus();
   const updateScheduleSongsMutation = useUpdateScheduleSongs();
 
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [showOnlyMySchedules, setShowOnlyMySchedules] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
+    null
+  );
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
 
-  const mySchedules = useMemo(() => {
-    if (!user || !schedules) return [];
-    return schedules.filter((s: { membersStatus: { memberId: string }[] }) =>
-      s.membersStatus.some(
-        (ms: { memberId: string }) => ms.memberId === user.id
-      )
-    );
-  }, [schedules, user]);
+  const userMap = useMemo(() => {
+    return new Map(users.map((u) => [u.id, u.name]));
+  }, [users]);
 
-  const handleStatusUpdate = async (
-    scheduleId: string,
-    newStatus: ParticipationStatus
-  ) => {
-    if (!user) return;
-    setUpdatingId(scheduleId);
-
-    await updateMemberStatusMutation.mutateAsync(
-      { scheduleId, memberId: user.id, newStatus },
-      {
-        onSuccess: () => {
-          showNotification("Status atualizado com sucesso!", "success");
-        },
-        onError: (err: any) => {
-          showNotification(
-            `Falha ao atualizar status: ${err.message}`,
-            "error"
-          );
-        },
-        onSettled: () => {
-          setUpdatingId(null);
-        },
-      }
+  const schedulesToDisplay = useMemo(() => {
+    const futureSchedules = allSchedules.filter(
+      (s) => new Date(s.date + "T23:59:59") >= new Date()
     );
-  };
+
+    if (showOnlyMySchedules && user) {
+      return futureSchedules.filter((s) =>
+        s.membersStatus.some((ms) => ms.memberId === user.id)
+      );
+    }
+    return futureSchedules;
+  }, [allSchedules, showOnlyMySchedules, user]);
 
   const handleSaveSongs = async (scheduleId: string, newSongIds: string[]) => {
     await updateScheduleSongsMutation.mutateAsync(
@@ -231,36 +218,51 @@ const MemberDashboard = () => {
   return (
     <Box>
       <Typography variant="h5" sx={{ mb: 2 }}>
-        {t("mySchedules")}
+        {showOnlyMySchedules ? t("mySchedules") : t("upcomingSchedules")}
       </Typography>
-      {mySchedules.length > 0 ? (
-        mySchedules.map((schedule: any) => {
-          const myStatus =
-            schedule.membersStatus.find((ms: any) => ms.memberId === user?.id)
-              ?.status || "pending";
-          const group = schedule.group;
-          const isLeader = group?.leader_id === user?.id;
+      <FormControlLabel
+        control={
+          <Switch
+            checked={showOnlyMySchedules}
+            onChange={(e) => setShowOnlyMySchedules(e.target.checked)}
+          />
+        }
+        label={t("seeOwnSchedules")}
+        sx={{ mb: 2 }}
+      />
+      {schedulesToDisplay.length > 0 ? (
+        schedulesToDisplay.map((schedule) => {
+          const isUserInSchedule = schedule.membersStatus.some(
+            (ms) => ms.memberId === user?.id
+          );
+          const leaderName = userMap.get(schedule.group?.leader_id || "");
 
           return (
-            <MemberScheduleCard
+            <UnifiedScheduleCard
               key={schedule.id}
               schedule={schedule}
-              groupName={group?.name || "Grupo Desconhecido"}
-              isLeader={isLeader}
-              myStatus={myStatus}
-              onStatusUpdate={(newStatus) =>
-                handleStatusUpdate(schedule.id, newStatus)
+              isUserInSchedule={isUserInSchedule}
+              leaderName={leaderName}
+              onClick={
+                isUserInSchedule
+                  ? () => setSelectedSchedule(schedule)
+                  : undefined
               }
-              isUpdating={
-                updateMemberStatusMutation.isPending &&
-                updatingId === schedule.id
-              }
-              onEditSongs={() => setEditingSchedule(schedule)}
             />
           );
         })
       ) : (
-        <Typography>{t("noSchedules")}</Typography>
+        <Typography>{t("noSchedulesFound")}</Typography>
+      )}
+
+      {selectedSchedule && (
+        <MemberScheduleDetailModal
+          open={!!selectedSchedule}
+          onClose={() => setSelectedSchedule(null)}
+          schedule={selectedSchedule}
+          songs={songs.filter((s) => selectedSchedule.songs.includes(s.id))}
+          user={user}
+        />
       )}
       {editingSchedule && (
         <Modal
