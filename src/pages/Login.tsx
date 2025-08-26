@@ -47,16 +47,9 @@ const LoginPage: React.FC = () => {
         <img
           src={logoIPC}
           alt="Logo da Igreja"
-          style={{ width: "85px", height: "auto", marginBottom: "4px" }}
+          style={{ width: "300px", height: "auto" }}
         />
-        <Typography component="h1" variant="h5">
-          Escalas Louvor IPC
-        </Typography>
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{ mt: 3, width: "100%" }}
-        >
+        <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
           <TextField
             margin="normal"
             required
