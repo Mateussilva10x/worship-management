@@ -8,7 +8,7 @@ import {
   Alert,
 } from "@mui/material";
 import { supabase } from "../supabaseClient";
-import logoIPC from "../assets/logo.png";
+import logoIPC from "../assets/logo.svg";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -46,7 +46,7 @@ const LoginPage: React.FC = () => {
         <img
           src={logoIPC}
           alt="Logo da Igreja"
-          style={{ width: "300px", height: "auto" }}
+          style={{ width: "450px", height: "auto" }}
         />
         <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
           <TextField
