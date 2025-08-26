@@ -304,7 +304,11 @@ const DashboardPage: React.FC = () => {
     );
   }
 
-  return user?.role === "admin" ? <AdminDashboard /> : <MemberDashboard />;
+  return user?.role === "worship_director" ? (
+    <AdminDashboard />
+  ) : (
+    <MemberDashboard />
+  );
 };
 
 const modalStyle = {

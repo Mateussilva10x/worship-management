@@ -1,9 +1,11 @@
 /**
  * @description Define o papel do usuário no sistema.
- * 'admin': Possui todas as permissões.
- * 'member': Possui permissões limitadas de membro de equipe.
+ * 'worship_director': Gerencia escalas, grupos e líderes.
+ * 'leader': Gerencia os membros do seu próprio grupo.
+ * 'member': Participa das escalas.
+ * 'admin': Papel de observador com permissão de leitura geral.
  */
-export type UserRole = "admin" | "member";
+export type UserRole = "worship_director" | "leader" | "member" | "admin";
 
 /**
  * @description Representa um usuário no sistema.
@@ -12,7 +14,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
+  role: UserRole; 
   must_change_password?: boolean;
   whatsapp?: string;
 }

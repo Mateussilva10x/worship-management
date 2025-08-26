@@ -23,16 +23,33 @@ import type { WorshipGroup } from "../types";
 import ConfirmationDialog from "../components/common/ConfirmationDialog";
 import { useTranslation } from "react-i18next";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
-import { useGroups, useCreateGroup, useDeleteGroup } from "../hooks/useGroups";
+import {
+  useCreateGroup,
+  useDeleteGroup,
+  useAllGroups,
+  useMyGroups,
+} from "../hooks/useGroups";
+import { useAuth } from "../contexts/AuthContext";
 
 const GroupsPage: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { showNotification } = useNotificationDispatch();
 
-  const { data: groups = [], isLoading } = useGroups();
+  const isDirector = user?.role === "worship_director";
+  const isLeader = user?.role === "leader";
+  const isAdminObserver = user?.role === "admin";
+
+  const { data: allGroups = [], isLoading: allLoading } = useAllGroups(
+    isDirector || isAdminObserver
+  );
+  const { data: myGroups = [], isLoading: myLoading } = useMyGroups(isLeader);
   const createGroupMutation = useCreateGroup();
   const deleteGroupMutation = useDeleteGroup();
+
+  const groups = isDirector || isAdminObserver ? allGroups : myGroups;
+  const isLoading = isDirector || isAdminObserver ? allLoading : myLoading;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<WorshipGroup | null>(null);
@@ -82,14 +99,15 @@ const GroupsPage: React.FC = () => {
         }}
       >
         <Typography variant="h4">{t("groupsPage")}</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setIsModalOpen(true)}
-          sx={{ whiteSpace: "nowrap", px: 4 }}
-        >
-          {t("newGroup")}
-        </Button>
+        {isDirector && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setIsModalOpen(true)}
+          >
+            {t("newGroup")}
+          </Button>
+        )}
       </Box>
 
       <Paper>
@@ -98,10 +116,18 @@ const GroupsPage: React.FC = () => {
             groups.map((group) => (
               <ListItem
                 key={group.id}
-                onClick={() => navigate(`/groups/${group.id}`)}
+                onClick={
+                  !isAdminObserver
+                    ? () => navigate(`/groups/${group.id}`)
+                    : undefined
+                }
                 sx={{
-                  cursor: "pointer",
-                  "&:hover": { backgroundColor: "action.hover" },
+                  cursor: isAdminObserver ? "default" : "pointer",
+                  "&:hover": {
+                    backgroundColor: isAdminObserver
+                      ? "transparent"
+                      : "action.hover",
+                  },
                 }}
               >
                 <ListItemAvatar>
@@ -113,17 +139,19 @@ const GroupsPage: React.FC = () => {
                   primary={group.name}
                   secondary={`${group.members.length} ${t("member(s)")}`}
                 />
-                <IconButton
-                  edge="end"
-                  aria-label="delete"
-                  color="error"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setGroupToDelete(group);
-                  }}
-                >
-                  <DeleteIcon />
-                </IconButton>
+                {isDirector && (
+                  <IconButton
+                    edge="end"
+                    aria-label="delete"
+                    color="error"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setGroupToDelete(group);
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                )}
               </ListItem>
             ))
           ) : (

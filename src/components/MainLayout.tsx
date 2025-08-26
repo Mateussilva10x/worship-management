@@ -109,7 +109,6 @@ const MainLayout: React.FC = () => {
       adminOnly: true,
     },
   ];
-
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
@@ -199,7 +198,11 @@ const MainLayout: React.FC = () => {
         <Divider />
         <List>
           {menuItems.map((item) => {
-            if (!item.adminOnly || (item.adminOnly && user?.role === "admin")) {
+            if (
+              !item.adminOnly ||
+              (item.adminOnly &&
+                (user?.role === "worship_director" || user?.role === "leader"))
+            ) {
               return (
                 <ListItem
                   key={item.text}
