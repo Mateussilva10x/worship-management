@@ -198,6 +198,7 @@ const MemberDashboard = () => {
       {
         onSuccess: () => {
           setEditingSchedule(null);
+          setSelectedSchedule(null);
           showNotification("Músicas da escala atualizadas!", "success");
         },
         onError: (err: any) => {
@@ -248,6 +249,10 @@ const MemberDashboard = () => {
                   ? () => setSelectedSchedule(schedule)
                   : undefined
               }
+              onEditSongs={() => {
+                setEditingSchedule(schedule);
+                setSelectedSchedule(null);
+              }}
             />
           );
         })
@@ -267,7 +272,10 @@ const MemberDashboard = () => {
       {editingSchedule && (
         <Modal
           open={!!editingSchedule}
-          onClose={() => setEditingSchedule(null)}
+          onClose={() => {
+            setEditingSchedule(null);
+            setSelectedSchedule(null);
+          }}
         >
           <Box sx={modalStyle}>
             <EditScheduleSongs
@@ -276,7 +284,10 @@ const MemberDashboard = () => {
               group={editingSchedule.group}
               users={users}
               onSave={handleSaveSongs}
-              onClose={() => setEditingSchedule(null)}
+              onClose={() => {
+                setEditingSchedule(null);
+                setSelectedSchedule(null);
+              }}
             />
           </Box>
         </Modal>

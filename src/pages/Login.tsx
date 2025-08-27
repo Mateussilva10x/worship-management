@@ -46,7 +46,12 @@ const LoginPage: React.FC = () => {
         <img
           src={logoIPC}
           alt="Logo da Igreja"
-          style={{ width: "450px", height: "auto" }}
+          style={{
+            maxWidth: "100%",
+            width: "500px",
+            height: "auto",
+            marginBottom: "4px",
+          }}
         />
         <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
           <TextField

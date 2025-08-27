@@ -15,6 +15,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole; 
+  positions?: string[];
   must_change_password?: boolean;
   whatsapp?: string;
 }

@@ -1,12 +1,25 @@
 import React, { useState } from "react";
-import { Box, Button, Typography, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  TextField,
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormLabel,
+  Divider,
+} from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { POSITION_KEYS } from "../../constants";
 
 interface NewUserFormProps {
   onSubmit: (formData: {
     name: string;
     email: string;
     whatsapp: string;
+    positions: string[];
   }) => Promise<void>;
   onCancel: () => void;
 }
@@ -17,12 +30,33 @@ const NewUserForm: React.FC<NewUserFormProps> = ({ onSubmit, onCancel }) => {
     name: "",
     email: "",
     whatsapp: "",
+    positions: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePositionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = event.target;
+    setFormData((prev) => {
+      const newPositions = checked
+        ? [...prev.positions, value]
+        : prev.positions.filter((p) => p !== value);
+      return { ...prev, positions: newPositions };
+    });
+  };
+
+  const handleSelectAllChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (event.target.checked) {
+      setFormData((prev) => ({ ...prev, positions: POSITION_KEYS }));
+    } else {
+      setFormData((prev) => ({ ...prev, positions: [] }));
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -34,6 +68,9 @@ const NewUserForm: React.FC<NewUserFormProps> = ({ onSubmit, onCancel }) => {
     await onSubmit(formData);
     setIsSubmitting(false);
   };
+
+  const areAllPositionsSelected =
+    formData.positions.length === POSITION_KEYS.length;
 
   return (
     <Box component="form" onSubmit={handleSubmit}>
@@ -69,8 +106,48 @@ const NewUserForm: React.FC<NewUserFormProps> = ({ onSubmit, onCancel }) => {
         required
         sx={{ mb: 2 }}
       />
+
+      <FormControlLabel
+        label={<strong>{t("allPositions")}</strong>}
+        control={
+          <Checkbox
+            checked={areAllPositionsSelected}
+            indeterminate={
+              !areAllPositionsSelected && formData.positions.length > 0
+            }
+            onChange={handleSelectAllChange}
+          />
+        }
+        sx={{ width: "100%" }}
+      />
+      <Divider sx={{ width: "100%", my: 1 }} />
+      <FormControl
+        component="fieldset"
+        variant="standard"
+        sx={{ mt: 2, mb: 2 }}
+      >
+        <FormLabel component="legend">Disponível para</FormLabel>
+        <FormGroup
+          sx={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}
+        >
+          {POSITION_KEYS.map((positionKey) => (
+            <FormControlLabel
+              key={positionKey}
+              control={
+                <Checkbox
+                  checked={formData.positions.includes(positionKey)}
+                  onChange={handlePositionChange}
+                  value={positionKey}
+                />
+              }
+              label={t(`positions.${positionKey}`)}
+              sx={{ minWidth: "150px" }}
+            />
+          ))}
+        </FormGroup>
+      </FormControl>
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
-        <Button onClick={onCancel} color="secondary" disabled={isSubmitting}>
+        <Button onClick={onCancel} color="secondary">
           {t("cancel")}
         </Button>
         <Button
