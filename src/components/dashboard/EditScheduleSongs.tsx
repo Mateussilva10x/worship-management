@@ -82,7 +82,6 @@ const EditScheduleSongs: React.FC<EditScheduleSongsProps> = ({
       <Typography variant="body2" color="text.secondary">
         {new Date(schedule.date).toLocaleString(i18n.language, {
           dateStyle: "full",
-          timeStyle: "short",
         })}
       </Typography>
       <Typography variant="body1" gutterBottom>

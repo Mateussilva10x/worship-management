@@ -1,25 +1,20 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
+import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/Login";
 import DashboardPage from "./pages/DashboardPage";
-
-import MainLayout from "./components/MainLayout";
 import MusicLibraryPage from "./pages/MusicLibraryPage";
 import GroupsPage from "./pages/GroupsPage";
 import GroupDetailPage from "./pages/GroupsDetailPage";
-import AuthGate from "./components/auth/AuthGate";
-import ChangePasswordPage from "./pages/ChangePasswordPage";
 import UsersPage from "./pages/UsersPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
+import MainLayout from "./components/MainLayout";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import RedirectIfAuth from "./components/auth/RedirectIfAuth";
+import AuthGate from "./components/auth/AuthGate";
 import { useNotificationState } from "./contexts/NotificationContext";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
   const { open, message, severity, handleClose } = useNotificationState();
@@ -33,7 +28,8 @@ function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route element={<AuthGate />}>
-              <Route path="/reset-password" element={<ChangePasswordPage />} />
+              <Route path="/" element={<HomePage />} />
+
               <Route element={<MainLayout />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/songs" element={<MusicLibraryPage />} />
@@ -41,10 +37,10 @@ function App() {
                 <Route path="/groups/:groupId" element={<GroupDetailPage />} />
                 <Route path="/users" element={<UsersPage />} />
               </Route>
+
+              <Route path="/reset-password" element={<ChangePasswordPage />} />
             </Route>
           </Route>
-
-          <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </Router>
       <Snackbar

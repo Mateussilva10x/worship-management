@@ -20,6 +20,7 @@ import type { User } from "../types";
 import { useTranslation } from "react-i18next";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
 import { useGroup, useUsers, useUpdateGroupDetails } from "../hooks/useGroups";
+import { POSITION_KEYS } from "../constants";
 
 const GroupDetailPage: React.FC = () => {
   const { t } = useTranslation();
@@ -77,7 +78,9 @@ const GroupDetailPage: React.FC = () => {
     );
   }
 
-  const memberOptions = users.filter((u) => u.role === "member");
+  const memberOptions = users.filter(
+    (u) => u.role === "member" || u.role === "leader"
+  );
 
   return (
     <Box>
@@ -98,6 +101,32 @@ const GroupDetailPage: React.FC = () => {
             if (!newValue.some((member) => member.id === leaderId)) {
               setLeaderId("");
             }
+          }}
+          renderOption={(props, option) => {
+            const translatedPositions = (() => {
+              const userPositionsCount = option.positions?.length || 0;
+
+              if (userPositionsCount === 0) {
+                return t("positions.noneDefined");
+              }
+              if (userPositionsCount === POSITION_KEYS.length) {
+                return t("positions.all");
+              }
+              return option
+                .positions!.map((key) => t(`positions.${key}`))
+                .join(", ");
+            })();
+
+            return (
+              <Box component="li" {...props}>
+                <Box>
+                  <Typography>{option.name}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {translatedPositions}
+                  </Typography>
+                </Box>
+              </Box>
+            );
           }}
           renderInput={(params) => (
             <TextField {...params} label={t("selectMembers")} />

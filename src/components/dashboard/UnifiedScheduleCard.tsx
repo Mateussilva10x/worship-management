@@ -1,7 +1,15 @@
 import React from "react";
 import type { Schedule, ParticipationStatus } from "../../types";
-import { Card, CardContent, Typography, Box, Chip } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Chip,
+  Button,
+} from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
+import EditIcon from "@mui/icons-material/Edit";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -10,6 +18,8 @@ interface UnifiedScheduleCardProps {
   isUserInSchedule: boolean;
   leaderName?: string;
   onClick?: () => void;
+  onEditSongs?: () => void;
+  isUpdating?: boolean;
 }
 
 const statusMap: Record<
@@ -25,6 +35,8 @@ const UnifiedScheduleCard: React.FC<UnifiedScheduleCardProps> = ({
   schedule,
   isUserInSchedule,
   onClick,
+  onEditSongs,
+  isUpdating,
 }) => {
   const { i18n, t } = useTranslation();
   const { user } = useAuth();
@@ -65,15 +77,29 @@ const UnifiedScheduleCard: React.FC<UnifiedScheduleCardProps> = ({
           pl={0.5}
         >
           <Typography color="text.secondary">
-            Equipe: {schedule.group?.name}
+            {t("team")} {schedule.group?.name}
           </Typography>
 
           {isUserInSchedule && (
-            <Chip
-              label={t(statusMap[myStatus].label)}
-              color={statusMap[myStatus].color}
-              size="small"
-            />
+            <Box display="flex" alignItems="center" gap={1}>
+              {user?.role === "leader" && (
+                <Button
+                  size="small"
+                  variant="text"
+                  startIcon={<EditIcon />}
+                  onClick={onEditSongs}
+                  disabled={isUpdating}
+                  sx={{ ml: 1 }}
+                >
+                  {t("songs")}
+                </Button>
+              )}
+              <Chip
+                label={t(statusMap[myStatus].label)}
+                color={statusMap[myStatus].color}
+                size="small"
+              />
+            </Box>
           )}
         </Box>
       </CardContent>

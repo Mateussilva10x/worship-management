@@ -43,7 +43,7 @@ const ChangePasswordPage: React.FC = () => {
       {
         onSuccess: (updatedUser) => {
           refreshAuthUser(updatedUser);
-          navigate("/dashboard");
+          navigate("/");
         },
         onError: (err: any) => {
           setError(err.message || "Ocorreu um erro ao atualizar a senha.");

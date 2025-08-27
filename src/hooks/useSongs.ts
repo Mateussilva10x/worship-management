@@ -53,7 +53,8 @@ export const useCreateSong = () => {
 
   return useMutation({
     mutationFn: async (newSongData: Omit<Song, 'id' | 'status'>) => {
-      const status: SongStatus = user?.role === 'admin' ? 'approved' : 'pending';
+      const status: SongStatus = user?.role === 'worship_director' ? 'approved' : 'pending';
+
       const { data, error } = await supabase
         .from('songs')
         .insert({ ...newSongData, status })
@@ -64,7 +65,6 @@ export const useCreateSong = () => {
       return data;
     },
     onSuccess: () => {
-      
       queryClient.invalidateQueries({ queryKey: ['songs'] });
     },
   });
