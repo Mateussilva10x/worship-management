@@ -150,7 +150,12 @@ const HomePage: React.FC = () => {
         <img
           src={logoIPC}
           alt="Logo IPC"
-          style={{ width: "600px", height: "auto" }}
+          style={{
+            maxWidth: "100%",
+            width: "500px",
+            height: "auto",
+            marginBottom: "4px",
+          }}
         />
 
         {isAuthenticated && (
