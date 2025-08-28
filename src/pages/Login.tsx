@@ -8,7 +8,8 @@ import {
   Alert,
 } from "@mui/material";
 import { supabase } from "../supabaseClient";
-import logoIPC from "../assets/logo.svg";
+import appLogo from "../assets/logo.svg";
+import logoIPC from "../assets/church-logo.svg";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -34,7 +35,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="sm">
       <Box
         sx={{
           marginTop: 8,
@@ -43,16 +44,37 @@ const LoginPage: React.FC = () => {
           alignItems: "center",
         }}
       >
-        <img
-          src={logoIPC}
-          alt="Logo da Igreja"
-          style={{
-            maxWidth: "100%",
-            width: "500px",
-            height: "auto",
-            marginBottom: "4px",
+        <Box
+          sx={{
+            mb: 2,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            flexWrap: "wrap",
           }}
-        />
+        >
+          <img
+            src={appLogo}
+            alt="Logo do app"
+            style={{
+              maxWidth: "100%",
+              width: "350px",
+              height: "auto",
+              marginBottom: "4px",
+            }}
+          />
+          <img
+            src={logoIPC}
+            alt="Logo da igreja"
+            style={{
+              maxWidth: "100%",
+              width: "200px",
+              height: "auto",
+              marginBottom: "4px",
+            }}
+          />
+        </Box>
         <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
           <TextField
             margin="normal"
