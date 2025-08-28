@@ -1,15 +1,13 @@
 import React from "react";
 import {
   Box,
-  Button,
   Container,
   Typography,
   Card,
   CardActionArea,
   CardContent,
-  Divider,
 } from "@mui/material";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import logoIPC from "../assets/logo.svg";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -17,15 +15,22 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import PeopleIcon from "@mui/icons-material/People";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { useTranslation } from "react-i18next";
 
 type MenuItemCardProps = {
   to: string;
   icon: React.ReactNode;
   title: string;
+  onClick?: () => void;
 };
 
-const MenuItemCard: React.FC<MenuItemCardProps> = ({ to, icon, title }) => (
+const MenuItemCard: React.FC<MenuItemCardProps> = ({
+  to,
+  icon,
+  title,
+  onClick,
+}) => (
   <Card
     component={RouterLink}
     to={to}
@@ -36,6 +41,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ to, icon, title }) => (
       flex: "1 1 150px",
       maxWidth: { xs: "calc(50% - 8px)", sm: "200px" },
     }}
+    onClick={onClick}
   >
     <CardActionArea
       sx={{
@@ -57,8 +63,11 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ to, icon, title }) => (
 
 const HomePage: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
-  const navigate = useNavigate();
   const { t } = useTranslation();
+
+  const handleLogout = () => {
+    logout();
+  };
 
   const menuItems = {
     worship_director: [
@@ -82,6 +91,12 @@ const HomePage: React.FC = () => {
         icon: <GroupAddIcon color="primary" />,
         title: t("users"),
       },
+      {
+        to: "/login",
+        icon: <LogoutIcon color="error" />,
+        title: t("logout"),
+        onclick: handleLogout,
+      },
     ],
     leader: [
       {
@@ -99,6 +114,12 @@ const HomePage: React.FC = () => {
         icon: <MusicNoteIcon color="primary" />,
         title: t("songs"),
       },
+      {
+        to: "/login",
+        icon: <LogoutIcon color="error" />,
+        title: t("logout"),
+        onclick: handleLogout,
+      },
     ],
     member: [
       {
@@ -110,6 +131,12 @@ const HomePage: React.FC = () => {
         to: "/songs",
         icon: <MusicNoteIcon color="primary" />,
         title: t("songs"),
+      },
+      {
+        to: "/login",
+        icon: <LogoutIcon color="error" />,
+        title: t("logout"),
+        onclick: handleLogout,
       },
     ],
     admin: [
@@ -128,15 +155,16 @@ const HomePage: React.FC = () => {
         icon: <PeopleIcon color="primary" />,
         title: t("groups"),
       },
+      {
+        to: "/login",
+        icon: <LogoutIcon color="error" />,
+        title: t("logout"),
+        onclick: handleLogout,
+      },
     ],
   };
 
   const itemsToRender = user ? menuItems[user.role] || [] : [];
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   return (
     <Container component="main" maxWidth="sm" sx={{ mt: 8, mb: 4 }}>
@@ -171,12 +199,6 @@ const HomePage: React.FC = () => {
             {itemsToRender.map((item) => (
               <MenuItemCard key={item.to} {...item} />
             ))}
-            <Divider sx={{ my: 4 }} />
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <Button variant="text" color="error" onClick={handleLogout}>
-                {t("logout")}
-              </Button>
-            </Box>
           </Box>
         )}
       </Box>
