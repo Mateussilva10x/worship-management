@@ -105,6 +105,7 @@ const resources = {
       },
       allPositions: "All Positions",
       schedules: "Schedules",
+      logout: "Logout",
       userCreatedSuccess:
         "User created successfully! Send the message via WhatsApp: <a href='{{whatsappUrl}}' target='_blank' rel='noopener noreferrer'>Send WhatsApp</a>",
     },
@@ -211,6 +212,7 @@ const resources = {
       },
       allPositions: "Todas as Posições",
       schedules: "Escalas",
+      logout: "Sair",
       userCreatedSuccess:
         "Usuário criado com sucesso! Envie a mensagem via WhatsApp: <a href='{{whatsappUrl}}' target='_blank' rel='noopener noreferrer'>Enviar WhatsApp</a>",
     },
