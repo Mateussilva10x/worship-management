@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useUpdateUserPassword } from "../hooks/useUsers";
+import { supabase } from "../supabaseClient";
 
 const ChangePasswordPage: React.FC = () => {
   const { t } = useTranslation();
@@ -23,6 +24,17 @@ const ChangePasswordPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    supabase.auth.onAuthStateChange(async (event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMessage(
+          "Sessão de recuperação iniciada. Por favor, defina sua nova senha."
+        );
+      }
+    });
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -38,18 +50,26 @@ const ChangePasswordPage: React.FC = () => {
     }
     if (!user) return;
 
-    await updateUserPasswordMutation.mutateAsync(
-      { userId: user.id, password: password },
-      {
-        onSuccess: (updatedUser) => {
-          refreshAuthUser(updatedUser);
-          navigate("/");
-        },
-        onError: (err: any) => {
-          setError(err.message || "Ocorreu um erro ao atualizar a senha.");
-        },
-      }
-    );
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+
+    if (updateError) {
+      setError(updateError.message);
+    } else if (user) {
+      const { data: updatedProfile } = await supabase
+        .from("profiles")
+        .update({ must_change_password: false })
+        .eq("id", user.id)
+        .select()
+        .single();
+
+      refreshAuthUser(updatedProfile);
+      navigate("/");
+    } else {
+      setMessage(
+        "Senha atualizada com sucesso! Redirecionando para o login..."
+      );
+      setTimeout(() => navigate("/login"), 3000);
+    }
   };
 
   return (
@@ -95,6 +115,11 @@ const ChangePasswordPage: React.FC = () => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             autoComplete="new-password"
           />
+          {message && !error && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              {message}
+            </Alert>
+          )}
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {error}

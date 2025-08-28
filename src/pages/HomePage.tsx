@@ -7,8 +7,8 @@ import {
   CardActionArea,
   CardContent,
 } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
-import logoIPC from "../assets/logo.svg";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import logoIPC from "../assets/church-logo.svg";
 import { useAuth } from "../contexts/AuthContext";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -22,15 +22,9 @@ type MenuItemCardProps = {
   to: string;
   icon: React.ReactNode;
   title: string;
-  onClick?: () => void;
 };
 
-const MenuItemCard: React.FC<MenuItemCardProps> = ({
-  to,
-  icon,
-  title,
-  onClick,
-}) => (
+const MenuItemCard: React.FC<MenuItemCardProps> = ({ to, icon, title }) => (
   <Card
     component={RouterLink}
     to={to}
@@ -41,7 +35,6 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
       flex: "1 1 150px",
       maxWidth: { xs: "calc(50% - 8px)", sm: "200px" },
     }}
-    onClick={onClick}
   >
     <CardActionArea
       sx={{
@@ -64,8 +57,10 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
 const HomePage: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
+    navigate("/login");
     logout();
   };
 
@@ -91,12 +86,6 @@ const HomePage: React.FC = () => {
         icon: <GroupAddIcon color="primary" />,
         title: t("users"),
       },
-      {
-        to: "/login",
-        icon: <LogoutIcon color="error" />,
-        title: t("logout"),
-        onclick: handleLogout,
-      },
     ],
     leader: [
       {
@@ -114,12 +103,6 @@ const HomePage: React.FC = () => {
         icon: <MusicNoteIcon color="primary" />,
         title: t("songs"),
       },
-      {
-        to: "/login",
-        icon: <LogoutIcon color="error" />,
-        title: t("logout"),
-        onclick: handleLogout,
-      },
     ],
     member: [
       {
@@ -131,12 +114,6 @@ const HomePage: React.FC = () => {
         to: "/songs",
         icon: <MusicNoteIcon color="primary" />,
         title: t("songs"),
-      },
-      {
-        to: "/login",
-        icon: <LogoutIcon color="error" />,
-        title: t("logout"),
-        onclick: handleLogout,
       },
     ],
     admin: [
@@ -154,12 +131,6 @@ const HomePage: React.FC = () => {
         to: "/groups",
         icon: <PeopleIcon color="primary" />,
         title: t("groups"),
-      },
-      {
-        to: "/login",
-        icon: <LogoutIcon color="error" />,
-        title: t("logout"),
-        onclick: handleLogout,
       },
     ],
   };
@@ -180,7 +151,7 @@ const HomePage: React.FC = () => {
           alt="Logo IPC"
           style={{
             maxWidth: "100%",
-            width: "500px",
+            width: "230px",
             height: "auto",
             marginBottom: "4px",
           }}
@@ -199,6 +170,32 @@ const HomePage: React.FC = () => {
             {itemsToRender.map((item) => (
               <MenuItemCard key={item.to} {...item} />
             ))}
+            <Card
+              sx={{
+                textDecoration: "none",
+                display: "flex",
+                flexDirection: "column",
+                flex: "1 1 150px",
+                maxWidth: { xs: "calc(50% - 8px)", sm: "200px" },
+              }}
+              onClick={handleLogout}
+            >
+              <CardActionArea
+                sx={{
+                  p: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  flexGrow: 1,
+                }}
+              >
+                <LogoutIcon color="error" />
+                <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
+                  <Typography component="div">{t("logout")}</Typography>
+                </CardContent>
+              </CardActionArea>
+            </Card>
           </Box>
         )}
       </Box>

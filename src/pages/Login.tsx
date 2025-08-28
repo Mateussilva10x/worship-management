@@ -6,10 +6,12 @@ import {
   Button,
   CircularProgress,
   Alert,
+  Grid,
+  Link,
 } from "@mui/material";
 import { supabase } from "../supabaseClient";
-import appLogo from "../assets/logo.svg";
 import logoIPC from "../assets/church-logo.svg";
+import { Link as RouterLink } from "react-router-dom";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -54,16 +56,6 @@ const LoginPage: React.FC = () => {
             flexWrap: "wrap",
           }}
         >
-          <img
-            src={appLogo}
-            alt="Logo do app"
-            style={{
-              maxWidth: "100%",
-              width: "350px",
-              height: "auto",
-              marginBottom: "4px",
-            }}
-          />
           <img
             src={logoIPC}
             alt="Logo da igreja"
@@ -120,6 +112,17 @@ const LoginPage: React.FC = () => {
               "Entrar"
             )}
           </Button>
+          <Grid container justifyContent="flex-end" sx={{ mt: 2 }}>
+            <Grid>
+              <Link
+                component={RouterLink}
+                to="/forgot-password"
+                variant="body2"
+              >
+                Esqueceu sua senha?
+              </Link>
+            </Grid>
+          </Grid>
         </Box>
       </Box>
     </Container>

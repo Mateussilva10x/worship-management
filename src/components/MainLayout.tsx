@@ -8,9 +8,6 @@ import {
   IconButton,
   Tooltip,
   AppBar,
-  Paper,
-  BottomNavigation,
-  BottomNavigationAction,
   Button,
   Menu,
   MenuItem,
@@ -168,44 +165,6 @@ const MainLayout: React.FC = () => {
         <Toolbar />
         <Outlet />
       </Box>
-
-      <Paper
-        sx={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          display: { xs: "block", md: "none" },
-        }}
-        elevation={3}
-      >
-        <BottomNavigation
-          showLabels
-          value={location.pathname}
-          onChange={(_event, newValue) => {
-            navigate(newValue);
-          }}
-        >
-          {itemsToRender.map((item) => (
-            <BottomNavigationAction
-              key={item.path}
-              label={item.label}
-              value={item.path}
-              icon={item.icon}
-              sx={{
-                minWidth: "auto",
-                padding: "0 4px",
-                "& .MuiBottomNavigationAction-label": {
-                  fontSize: "0.7rem",
-                  "&.Mui-selected": {
-                    fontSize: "0.8rem",
-                  },
-                },
-              }}
-            />
-          ))}
-        </BottomNavigation>
-      </Paper>
     </Box>
   );
 };
