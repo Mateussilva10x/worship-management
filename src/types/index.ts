@@ -33,9 +33,10 @@ export interface Song {
   id: string;
   title: string;
   artist: string;
-  version?: string;
+  version: string; 
   key: string;
-  link: string;
+  link: string;    
+  themes?: string[];
   status: SongStatus;
   submitted_by?: string;
 }
