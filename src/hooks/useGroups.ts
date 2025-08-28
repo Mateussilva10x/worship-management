@@ -131,80 +131,62 @@ export const useUpdateGroupDetails = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ groupId, details }: { groupId: string; details: { memberIds: string[]; leader_id: string } }) => {
-          const { memberIds, leader_id } = details;
+            const { memberIds, leader_id } = details;
+            const { data: currentGroupData } = await supabase
+                .from('groups')
+                .select('members:group_members(user_id)')
+                .eq('id', groupId)
+                .single();
 
-          const { data: currentGroupData } = await supabase
-            .from('groups')
-            .select('members:group_members(user_id)')
-            .eq('id', groupId)
-            .single();
+            const oldMemberIds = new Set(currentGroupData?.members.map((m: any) => m.user_id) || []);
+            const newMemberIds = new Set(memberIds);
 
-        const oldMemberIds = new Set(currentGroupData?.members.map((m: any) => m.user_id) || []);
-        const addedMemberIds = memberIds.filter(id => !oldMemberIds.has(id));
+            const addedMemberIds = memberIds.filter(id => !oldMemberIds.has(id));
+            const removedMemberIds = [...oldMemberIds].filter(id => !newMemberIds.has(id));
 
-        const { data: updatedGroupData, error: groupError } = await supabase
-            .from('groups')
-            .update({ leader_id: leader_id || null })
-            .eq('id', groupId)
-            .select()
-            .single();
-        if (groupError) throw groupError;
+            await supabase
+                .from('groups')
+                .update({ leader_id: leader_id || null })
+                .eq('id', groupId);
 
-        await supabase.from("group_members").delete().eq("group_id", groupId);
-        if (memberIds.length > 0) {
-            const membersToInsert = memberIds.map((userId) => ({ group_id: groupId, user_id: userId }));
-            const { error: membersError } = await supabase.from("group_members").insert(membersToInsert);
-            if (membersError) throw membersError;
-        }
-
-      
-        if (leader_id) {
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .update({ role: 'leader' })
-                .eq('id', leader_id);      
-
-            if (profileError) {
-                console.error("Falha ao promover o novo líder:", profileError);
-              
+            await supabase.from("group_members").delete().eq("group_id", groupId);
+            if (memberIds.length > 0) {
+                const membersToInsert = memberIds.map((userId) => ({ group_id: groupId, user_id: userId }));
+                await supabase.from("group_members").insert(membersToInsert);
             }
-        }
-        
-      
-        if (addedMemberIds.length > 0) {
+            
             const today = new Date().toISOString().split('T')[0];
-
             const { data: futureSchedules } = await supabase
                 .from('schedules')
                 .select('id')
                 .eq('group_id', groupId)
                 .gte('date', today);
-
+            
             if (futureSchedules && futureSchedules.length > 0) {
-                const participantsToInsert = futureSchedules.flatMap(schedule => 
-                    addedMemberIds.map(memberId => ({
-                        schedule_id: schedule.id,
-                        user_id: memberId,
-                        status: 'pending' as const
-                    }))
-                );
+                const scheduleIds = futureSchedules.map(s => s.id);
 
-                if (participantsToInsert.length > 0) {
-                    const { error: insertError } = await supabase.from('schedule_participants').insert(participantsToInsert);
-                    if (insertError) {
-                        console.error("Failed to add new members to existing schedules:", insertError);
-                    }
+                if (addedMemberIds.length > 0) {
+                    const participantsToInsert = scheduleIds.flatMap(scheduleId => 
+                        addedMemberIds.map(memberId => ({ schedule_id: scheduleId, user_id: memberId, status: 'pending' as const }))
+                    );
+                    await supabase.from('schedule_participants').insert(participantsToInsert);
+                }
+
+                if (removedMemberIds.length > 0) {
+                    await supabase
+                        .from('schedule_participants')
+                        .delete()
+                        .in('schedule_id', scheduleIds)
+                        .in('user_id', removedMemberIds);
                 }
             }
-        }
 
-        return { ...updatedGroupData, members: memberIds };
-    },
-    onSuccess: (_data, variables) => {
-        queryClient.invalidateQueries({ queryKey: ['groups'] });
-        queryClient.invalidateQueries({ queryKey: ['group', variables.groupId] });
-        queryClient.invalidateQueries({ queryKey: ['schedules'] });
-        queryClient.invalidateQueries({ queryKey: ['users'] });
-    }
-});
+            return { success: true };
+        },
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['groups'] });
+            queryClient.invalidateQueries({ queryKey: ['group', variables.groupId] });
+            queryClient.invalidateQueries({ queryKey: ['schedules'] });
+        }
+    });
 };

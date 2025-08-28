@@ -1,9 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '../supabaseClient';
 import type { Song, SongStatus } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
-const SONGS_PER_PAGE = 5;
+const SONGS_PER_PAGE = 15;
 
 export const useAllSongs = (page: number, searchTerm: string) => {
   return useQuery<{ songs: Song[], count: number }, Error>({
@@ -28,6 +28,46 @@ export const useAllSongs = (page: number, searchTerm: string) => {
       if (error) throw new Error(error.message);
 
       return { songs: data || [], count: count || 0 };
+    },
+  });
+};
+
+export const useInfiniteSongs = (searchTerm: string) => {
+  return useInfiniteQuery({
+    queryKey: ['songs', 'all', searchTerm], 
+    
+    queryFn: async ({ pageParam = 1 }) => {
+      let query = supabase
+        .from('songs')
+        .select('*', { count: 'exact' });
+
+      if (searchTerm) {
+        query = query.or(`title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%`);
+      }
+
+      const from = (pageParam - 1) * SONGS_PER_PAGE;
+      const to = pageParam * SONGS_PER_PAGE - 1;
+      query = query.range(from, to).order('title', { ascending: true });
+
+      const { data, error, count } = await query;
+
+      if (error) throw new Error(error.message);
+
+      return {
+        songs: data || [],
+        count: count || 0,
+        page: pageParam,
+      };
+    },
+
+    initialPageParam: 1,
+
+    getNextPageParam: (lastPage) => {
+      const totalPages = Math.ceil(lastPage.count / SONGS_PER_PAGE);
+      if (lastPage.page < totalPages) {
+        return lastPage.page + 1;
+      }
+      return undefined;
     },
   });
 };

@@ -192,6 +192,16 @@ const MainLayout: React.FC = () => {
               label={item.label}
               value={item.path}
               icon={item.icon}
+              sx={{
+                minWidth: "auto",
+                padding: "0 4px",
+                "& .MuiBottomNavigationAction-label": {
+                  fontSize: "0.7rem",
+                  "&.Mui-selected": {
+                    fontSize: "0.8rem",
+                  },
+                },
+              }}
             />
           ))}
         </BottomNavigation>

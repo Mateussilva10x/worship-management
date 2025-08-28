@@ -17,8 +17,6 @@ import {
   CircularProgress,
   Chip,
   Card,
-  CardContent,
-  CardActions,
   Pagination,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -31,29 +29,32 @@ import ConfirmationDialog from "../components/common/ConfirmationDialog";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
 import {
-  useAllSongs,
   useCreateSong,
   useDeleteSong,
   useUpdateSongStatus,
   useUpdateSong,
+  useInfiniteSongs,
 } from "../hooks/useSongs";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
 import { useDebounce } from "../hooks/useDebounce";
 
-const SONGS_PER_PAGE = 5;
+const SONGS_PER_PAGE = 15;
 
 const MusicLibraryPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { showNotification } = useNotificationDispatch();
 
-  const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  const { data, isLoading } = useAllSongs(page, debouncedSearchTerm);
-  const songs = data?.songs || [];
-  const count = data?.count || 0;
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteSongs(debouncedSearchTerm);
+
+  const songs = data?.pages.flatMap((page) => page.songs) ?? [];
+  const totalSongsCount = data?.pages[0]?.count ?? 0;
+  const pageCount = Math.ceil(totalSongsCount / SONGS_PER_PAGE);
+  const currentPage = data?.pages.length ?? 1;
 
   const createSongMutation = useCreateSong();
   const deleteSongMutation = useDeleteSong();
@@ -63,15 +64,6 @@ const MusicLibraryPage: React.FC = () => {
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
   const [songToEdit, setSongToEdit] = useState<Song | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const pageCount = Math.ceil(count / SONGS_PER_PAGE);
-
-  const handlePageChange = (
-    _event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
-    setPage(value);
-  };
 
   const handleOpenEditModal = (song: Song) => {
     setSongToEdit(song);
@@ -190,7 +182,6 @@ const MusicLibraryPage: React.FC = () => {
         value={searchTerm}
         onChange={(e) => {
           setSearchTerm(e.target.value);
-          setPage(1);
         }}
       />
 
@@ -230,30 +221,31 @@ const MusicLibraryPage: React.FC = () => {
                   <TableCell>{song.key}</TableCell>
                   <TableCell>
                     <Chip
-                      label={statusMap[song.status].label}
-                      color={statusMap[song.status].color}
+                      label={statusMap[song.status as SongStatus].label}
+                      color={statusMap[song.status as SongStatus].color}
                       size="small"
                     />
                   </TableCell>
                   <TableCell>
-                    {user?.role === "admin" && song.status === "pending" && (
-                      <>
-                        <Button
-                          size="small"
-                          color="success"
-                          onClick={() => handleApprove(song.id)}
-                        >
-                          {t("approve")}
-                        </Button>
-                        <Button
-                          size="small"
-                          color="error"
-                          onClick={() => handleReject(song.id)}
-                        >
-                          {t("reject")}
-                        </Button>
-                      </>
-                    )}
+                    {user?.role === "worship_director" &&
+                      song.status === "pending" && (
+                        <>
+                          <Button
+                            size="small"
+                            color="success"
+                            onClick={() => handleApprove(song.id)}
+                          >
+                            {t("approve")}
+                          </Button>
+                          <Button
+                            size="small"
+                            color="error"
+                            onClick={() => handleReject(song.id)}
+                          >
+                            {t("reject")}
+                          </Button>
+                        </>
+                      )}
                     <IconButton
                       aria-label="Abrir link"
                       color="primary"
@@ -276,7 +268,10 @@ const MusicLibraryPage: React.FC = () => {
                       aria-label="Excluir música"
                       color="error"
                       onClick={() => setSongToDelete(song)}
-                      disabled={user?.role !== "admin"}
+                      disabled={
+                        user?.role !== "worship_director" &&
+                        user?.role !== "admin"
+                      }
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -293,79 +288,133 @@ const MusicLibraryPage: React.FC = () => {
       </TableContainer>
 
       <Box sx={{ display: { xs: "block", md: "none" } }}>
-        <Box display="flex" flexDirection="column" gap={2}>
-          {filteredSongs.map((song) => (
+        <Box display="flex" flexDirection="column" gap={1.5}>
+          {songs.map((song) => (
             <Card key={song.id} variant="outlined">
-              <CardContent>
-                <Typography variant="h6" component="div">
-                  {song.title} {song.version && `(${song.version})`}
-                </Typography>
-                <Typography color="text.secondary" sx={{ mb: 1.5 }}>
-                  {song.artist} - Tom: {song.key}
-                </Typography>
-                <Chip
-                  label={statusMap[song.status].label}
-                  color={statusMap[song.status].color}
-                  size="small"
-                />
-              </CardContent>
-              <CardActions sx={{ justifyContent: "flex-end" }}>
-                {user?.role === "admin" && song.status === "pending" && (
-                  <>
-                    <Button
-                      size="small"
-                      color="success"
-                      onClick={() => handleApprove(song.id)}
+              <Box
+                sx={{ display: "flex", alignItems: "center", p: 1.5, gap: 1 }}
+              >
+                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                  <Typography variant="body1" fontWeight="bold" noWrap>
+                    {song.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" noWrap>
+                    {song.artist} {song.version && `(${song.version})`}
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      mt: 1,
+                      gap: 1,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{ bgcolor: "action.hover", px: 1, borderRadius: 1 }}
                     >
-                      {t("approve")}
-                    </Button>
-                    <Button
+                      {t("songKey")}: {song.key}
+                    </Typography>
+                    <Chip
+                      label={statusMap[song.status as SongStatus].label}
+                      color={statusMap[song.status as SongStatus].color}
                       size="small"
-                      color="error"
-                      onClick={() => handleReject(song.id)}
-                    >
-                      {t("reject")}
-                    </Button>
-                  </>
-                )}
-                <IconButton
-                  aria-label="Editar"
-                  color="primary"
-                  onClick={() => handleOpenEditModal(song)}
+                    />
+                  </Box>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexShrink: 0,
+                    ml: 1,
+                  }}
                 >
-                  <EditIcon />
-                </IconButton>
-                <IconButton
-                  aria-label="Link"
-                  color="primary"
-                  component="a"
-                  href={song.link}
-                  target="_blank"
-                  disabled={!song.link}
-                >
-                  <LinkIcon />
-                </IconButton>
-                <IconButton
-                  aria-label="Excluir"
-                  color="error"
-                  onClick={() => setSongToDelete(song)}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </CardActions>
+                  <IconButton
+                    size="small"
+                    aria-label="Link"
+                    component="a"
+                    href={song.link}
+                    target="_blank"
+                    disabled={!song.link}
+                    color="primary"
+                  >
+                    <LinkIcon fontSize="small" />
+                  </IconButton>
+                  {user?.role === "worship_director" &&
+                    (song.status === "pending" ? (
+                      <>
+                        <Button
+                          size="small"
+                          color="success"
+                          onClick={() => handleApprove(song.id)}
+                          sx={{ whiteSpace: "nowrap" }}
+                        >
+                          {t("approve")}
+                        </Button>
+                        <Button
+                          size="small"
+                          color="error"
+                          onClick={() => handleReject(song.id)}
+                          sx={{ whiteSpace: "nowrap", ml: 0.5 }}
+                        >
+                          {t("reject")}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <IconButton
+                          size="small"
+                          aria-label="Editar"
+                          onClick={() => handleOpenEditModal(song)}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          aria-label="Excluir"
+                          color="error"
+                          onClick={() => setSongToDelete(song)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </>
+                    ))}
+                </Box>
+              </Box>
             </Card>
           ))}
         </Box>
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <Pagination
-          count={pageCount}
-          page={page}
-          onChange={handlePageChange}
-          color="primary"
-          size={window.innerWidth < 600 ? "small" : "medium"}
-        />
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4, mb: 4 }}>
+        <Box sx={{ display: { xs: "block", md: "none" } }}>
+          {hasNextPage && (
+            <Button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              variant="outlined"
+            >
+              {isFetchingNextPage ? "Carregando..." : "Carregar Mais"}
+            </Button>
+          )}
+        </Box>
+        <Box sx={{ display: { xs: "none", md: "block" } }}>
+          {pageCount > 1 && (
+            <Pagination
+              count={pageCount}
+              page={currentPage}
+              onChange={(_event, value) => {
+                if (value > currentPage) {
+                  fetchNextPage();
+                }
+              }}
+              color="primary"
+            />
+          )}
+        </Box>
       </Box>
 
       <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>

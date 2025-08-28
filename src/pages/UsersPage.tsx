@@ -32,6 +32,8 @@ const modalStyle = {
   borderRadius: 2,
   boxShadow: 24,
   p: 4,
+  maxHeight: "90vh",
+  overflowY: "auto",
 };
 
 const UsersPage: React.FC = () => {
@@ -55,7 +57,7 @@ const UsersPage: React.FC = () => {
           : `55${numeroLimpo}`;
         const tempPassword = "senha123";
         const message = encodeURIComponent(
-          `Olá ${formData.name}! Sua conta no sistema "Escala Louvor IPC" foi criada. E-mail: ${formData.email} | Senha Temporária: ${tempPassword}`
+          `Olá ${formData.name}! Sua conta no sistema "New Worship Management" foi criada. E-mail: ${formData.email} | Senha Temporária: ${tempPassword}`
         );
         const whatsappUrl = `https://wa.me/${numeroFinal}?text=${message}`;
 
