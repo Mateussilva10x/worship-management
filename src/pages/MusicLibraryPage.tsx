@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -18,11 +18,17 @@ import {
   Chip,
   Card,
   Pagination,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Grid,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import LinkIcon from "@mui/icons-material/Link";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import NewSongForm from "../components/library/NewSongForm";
 import type { Song, SongStatus } from "../types";
 import ConfirmationDialog from "../components/common/ConfirmationDialog";
@@ -34,9 +40,10 @@ import {
   useUpdateSongStatus,
   useUpdateSong,
   useInfiniteSongs,
+  type SongFilters,
 } from "../hooks/useSongs";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
-import { useDebounce } from "../hooks/useDebounce";
+import SongDetailModal from "../components/library/SongDetailModal";
 
 const SONGS_PER_PAGE = 15;
 
@@ -45,11 +52,17 @@ const MusicLibraryPage: React.FC = () => {
   const { user } = useAuth();
   const { showNotification } = useNotificationDispatch();
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [filters, setFilters] = useState<{
+    title?: string;
+    artist?: string;
+    version?: string;
+    key?: string;
+    themes: string;
+  }>({ themes: "" });
+  const [appliedFilters, setAppliedFilters] = useState<SongFilters>({});
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteSongs(debouncedSearchTerm);
+    useInfiniteSongs(appliedFilters);
 
   const songs = data?.pages.flatMap((page) => page.songs) ?? [];
   const totalSongsCount = data?.pages[0]?.count ?? 0;
@@ -64,6 +77,7 @@ const MusicLibraryPage: React.FC = () => {
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
   const [songToEdit, setSongToEdit] = useState<Song | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [viewingSong, setViewingSong] = useState<Song | null>(null);
 
   const handleOpenEditModal = (song: Song) => {
     setSongToEdit(song);
@@ -73,6 +87,27 @@ const MusicLibraryPage: React.FC = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSongToEdit(null);
+  };
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSearch = () => {
+    const themesArray = filters.themes
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    setAppliedFilters({
+      ...filters,
+      themes: themesArray,
+    });
+  };
+
+  const handleClearFilters = () => {
+    setFilters({ themes: "" });
+    setAppliedFilters({});
   };
 
   const handleFormSubmit = async (formData: {
@@ -120,14 +155,6 @@ const MusicLibraryPage: React.FC = () => {
     }
   };
 
-  const filteredSongs = useMemo(
-    () =>
-      songs.filter((song) =>
-        song.title.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [songs, searchTerm]
-  );
-
   if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
@@ -174,16 +201,70 @@ const MusicLibraryPage: React.FC = () => {
         </Button>
       </Box>
 
-      <TextField
-        label={t("searchSongs")}
-        variant="outlined"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-        }}
-      />
+      <Accordion sx={{ mb: 3 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography>Filtros de Pesquisa</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box component="form" noValidate autoComplete="off">
+            <Grid container spacing={2}>
+              <Grid>
+                <TextField
+                  fullWidth
+                  name="title"
+                  label="Nome da Música"
+                  value={filters.title || ""}
+                  onChange={handleFilterChange}
+                />
+              </Grid>
+              <Grid>
+                <TextField
+                  fullWidth
+                  name="artist"
+                  label="Artista"
+                  value={filters.artist || ""}
+                  onChange={handleFilterChange}
+                />
+              </Grid>
+              <Grid>
+                <TextField
+                  fullWidth
+                  name="version"
+                  label="Versão"
+                  value={filters.version || ""}
+                  onChange={handleFilterChange}
+                />
+              </Grid>
+              <Grid>
+                <TextField
+                  fullWidth
+                  name="key"
+                  label="Tom"
+                  value={filters.key || ""}
+                  onChange={handleFilterChange}
+                />
+              </Grid>
+              <Grid>
+                <TextField
+                  fullWidth
+                  name="themes"
+                  label={t("songThemesFilter")}
+                  value={filters.themes}
+                  onChange={handleFilterChange}
+                />
+              </Grid>
+            </Grid>
+            <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+              <Button variant="contained" onClick={handleSearch}>
+                {t("search")}
+              </Button>
+              <Button variant="outlined" onClick={handleClearFilters}>
+                {t("clear")}
+              </Button>
+            </Box>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
 
       <TableContainer
         component={Paper}
@@ -207,7 +288,7 @@ const MusicLibraryPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredSongs.map((song) => (
+              {songs.map((song) => (
                 <TableRow key={song.id}>
                   <TableCell>
                     {song.title}
@@ -256,6 +337,13 @@ const MusicLibraryPage: React.FC = () => {
                       disabled={!song.link}
                     >
                       <LinkIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      aria-label="Ver detalhes"
+                      onClick={() => setViewingSong(song)}
+                    >
+                      <VisibilityIcon fontSize="small" />
                     </IconButton>
                     <IconButton
                       aria-label="Editar música"
@@ -367,6 +455,13 @@ const MusicLibraryPage: React.FC = () => {
                       <>
                         <IconButton
                           size="small"
+                          aria-label="Ver detalhes"
+                          onClick={() => setViewingSong(song)}
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
                           aria-label="Editar"
                           onClick={() => handleOpenEditModal(song)}
                         >
@@ -417,6 +512,10 @@ const MusicLibraryPage: React.FC = () => {
         </Box>
       </Box>
 
+      <SongDetailModal
+        song={viewingSong}
+        onClose={() => setViewingSong(null)}
+      />
       <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <Box sx={modalStyle}>
           <NewSongForm

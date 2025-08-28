@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Typography, TextField } from "@mui/material";
+import { Box, Button, Typography, TextField, Chip } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import type { Song } from "../../types";
 
@@ -10,6 +10,7 @@ interface NewSongFormProps {
     version: string;
     key: string;
     link: string;
+    themes: string[];
   }) => Promise<void>;
   onCancel: () => void;
   songToEdit?: Song | null;
@@ -27,8 +28,10 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
     version: "",
     key: "",
     link: "",
+    themes: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [themeInput, setThemeInput] = useState("");
 
   useEffect(() => {
     if (songToEdit) {
@@ -38,6 +41,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
         version: songToEdit.version || "",
         key: songToEdit.key,
         link: songToEdit.link,
+        themes: songToEdit.themes || [],
       });
     }
   }, [songToEdit]);
@@ -45,6 +49,28 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddTheme = () => {
+    const newTheme = themeInput.trim();
+    if (newTheme && !formData.themes.includes(newTheme)) {
+      setFormData((prev) => ({ ...prev, themes: [...prev.themes, newTheme] }));
+    }
+    setThemeInput(""); // Limpa o input
+  };
+
+  const handleThemeKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleAddTheme();
+    }
+  };
+
+  const handleDeleteTheme = (themeToDelete: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      themes: prev.themes.filter((theme) => theme !== themeToDelete),
+    }));
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -87,6 +113,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
         value={formData.version}
         onChange={handleChange}
         fullWidth
+        required
         sx={{ mb: 2 }}
       />
       <TextField
@@ -104,8 +131,30 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
         value={formData.link}
         onChange={handleChange}
         fullWidth
+        required
         sx={{ mb: 2 }}
       />
+      <TextField
+        name="themes"
+        label={t("songThemesCreate")}
+        fullWidth
+        value={themeInput}
+        onChange={(e) => setThemeInput(e.target.value)}
+        onKeyDown={handleThemeKeyDown}
+        sx={{ mb: 1 }}
+      />
+      <Box
+        sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, minHeight: "30px" }}
+      >
+        {formData.themes.map((theme) => (
+          <Chip
+            key={theme}
+            label={theme}
+            onDelete={() => handleDeleteTheme(theme)}
+            color="primary"
+          />
+        ))}
+      </Box>
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
         <Button onClick={onCancel} color="secondary" disabled={isSubmitting}>
           {t("cancel")}
@@ -114,7 +163,14 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
           type="submit"
           variant="contained"
           color="primary"
-          disabled={isSubmitting}
+          disabled={
+            isSubmitting ||
+            !formData.title ||
+            !formData.key ||
+            !formData.artist ||
+            !formData.version ||
+            !formData.link
+          }
           sx={{ minWidth: "100px" }}
         >
           {isSubmitting ? t("saving") : t("save")}
