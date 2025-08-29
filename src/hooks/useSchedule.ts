@@ -86,10 +86,20 @@ export const useCreateSchedule = () => {
 export const useUpdateMemberStatus = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ scheduleId, memberId, newStatus }: { scheduleId: string; memberId: string; newStatus: ParticipationStatus }) => {
+        mutationFn: async ({ scheduleId, memberId, newStatus, reason }: { 
+            scheduleId: string; 
+            memberId: string; 
+            newStatus: ParticipationStatus;
+            reason?: string; 
+        }) => {
+            const updateData: { status: ParticipationStatus; decline_reason?: string | null } = {
+                status: newStatus,
+                decline_reason: newStatus === 'declined' ? reason : null,
+            };
+
             const { data, error } = await supabase
                 .from('schedule_participants')
-                .update({ status: newStatus })
+                .update(updateData)
                 .match({ schedule_id: scheduleId, user_id: memberId })
                 .select()
                 .single();
@@ -97,8 +107,6 @@ export const useUpdateMemberStatus = () => {
             return data;
         },
         onSuccess: () => {
-            
-            
             queryClient.invalidateQueries({ queryKey: ['schedules'] });
         }
     });

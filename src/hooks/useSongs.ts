@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '../supabaseClient';
-import type { Song, SongStatus } from '../types';
+import type { Song, SongStatus, UserRole } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
 const SONGS_PER_PAGE = 15;
@@ -10,6 +11,7 @@ export interface SongFilters {
   artist?: string;
   version?: string;
   key?: string;
+  reference?: string;
   themes?: string[];
 }
 
@@ -40,8 +42,8 @@ export const useAllSongs = (page: number, searchTerm: string) => {
   });
 };
 
-export const useInfiniteSongs = (filters: SongFilters) => {
-  const queryKey = ['songs', 'infinite', filters];
+export const useInfiniteSongs = (filters: SongFilters, role?: UserRole) => {
+  const queryKey = ['songs', 'infinite', filters, role];
 
   return useInfiniteQuery({
     queryKey,
@@ -53,10 +55,15 @@ export const useInfiniteSongs = (filters: SongFilters) => {
       if (filters.title) query = query.ilike('title', `%${filters.title}%`);
       if (filters.artist) query = query.ilike('artist', `%${filters.artist}%`);
       if (filters.version) query = query.ilike('version', `%${filters.version}%`);
+      if (filters.reference) query = query.ilike('reference', `%${filters.reference}%`);
       if (filters.key) query = query.ilike('key', `%${filters.key}%`);
 
       if (filters.themes && filters.themes.length > 0) {
         query = query.contains('themes', filters.themes);
+      }
+
+       if (role === 'member' || role === 'leader') {
+        query = query.eq('status', 'approved');
       }
       
       const from = (pageParam - 1) * SONGS_PER_PAGE;
@@ -168,5 +175,20 @@ export const useDeleteSong = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['songs'] });
     },
+  });
+};
+
+export const useAllThemes = () => {
+  return useQuery<string[], Error>({
+    queryKey: ['themes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .rpc('get_all_themes'); 
+
+      if (error) throw new Error(error.message);
+      
+      return data?.map((item: any) => item.theme) || [];
+    },
+    staleTime: 1000 * 60 * 5, 
   });
 };

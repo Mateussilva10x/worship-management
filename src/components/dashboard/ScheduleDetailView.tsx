@@ -24,6 +24,8 @@ import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
 import DeleteIcon from "@mui/icons-material/Delete";
+import LinkIcon from "@mui/icons-material/Link";
+import EditIcon from "@mui/icons-material/Edit";
 import { generateSchedulePdf } from "../../utils/pdfGenerator";
 import ConfirmationDialog from "../common/ConfirmationDialog";
 import { useTranslation } from "react-i18next";
@@ -34,7 +36,10 @@ interface ScheduleDetailViewProps {
   users: User[];
   songs: Song[];
   onClose: () => void;
-  deleteSchedule: (scheduleId: string) => Promise<void>;
+  canEditSongs: boolean;
+  canDeleteSchedule: boolean;
+  onEditSongs: () => void;
+  onDelete: (scheduleId: string) => Promise<void>;
 }
 
 const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
@@ -43,7 +48,10 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
   users,
   songs,
   onClose,
-  deleteSchedule,
+  canEditSongs,
+  canDeleteSchedule,
+  onEditSongs,
+  onDelete,
 }) => {
   const { t, i18n } = useTranslation();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -80,7 +88,7 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
 
   const handleConfirmDelete = async () => {
     try {
-      await deleteSchedule(schedule.id);
+      await onDelete(schedule.id);
       setIsConfirmOpen(false);
       onClose();
     } catch (error) {
@@ -120,54 +128,96 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
 
       <Divider sx={{ my: 2 }} />
 
-      <Typography variant="subtitle1" gutterBottom>
-        {t("songs")}
-      </Typography>
-      <List dense>
-        {scheduleSongs.map((song) => (
-          <ListItem key={song.id}>
-            <ListItemAvatar>
-              <Avatar sx={{ bgcolor: "primary.main", width: 30, height: 30 }}>
-                <MusicNoteIcon fontSize="small" />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText primary={song.title} secondary={`Tom: ${song.key}`} />
-          </ListItem>
-        ))}
-      </List>
+      {scheduleSongs.length > 0 ? (
+        <>
+          <Typography variant="subtitle1" gutterBottom>
+            {t("songs")}
+          </Typography>
+          <List dense>
+            {scheduleSongs.map((song) => (
+              <ListItem
+                key={song.id}
+                secondaryAction={
+                  <IconButton
+                    edge="end"
+                    aria-label="Abrir link da música"
+                    component="a"
+                    href={song.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    disabled={!song.link}
+                  >
+                    <LinkIcon />
+                  </IconButton>
+                }
+              >
+                <ListItemAvatar>
+                  <Avatar
+                    sx={{ bgcolor: "primary.main", width: 30, height: 30 }}
+                  >
+                    <MusicNoteIcon fontSize="small" />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={song.title}
+                  secondary={`Tom: ${song.key}`}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </>
+      ) : (
+        <Typography variant="subtitle1" gutterBottom>
+          {t("noSongsToSchedule")}
+        </Typography>
+      )}
 
-      <Divider sx={{ my: 2 }} />
+      {canEditSongs && (
+        <>
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle1" gutterBottom>
+            {t("teamMembers")}
+          </Typography>
+          <List>
+            {memberDetails.map(({ user, status }) => (
+              <ListItem
+                key={user?.id}
+                secondaryAction={
+                  <Chip
+                    label={statusMap[status].label}
+                    color={statusMap[status].color}
+                    size="small"
+                  />
+                }
+              >
+                <ListItemText primary={user?.name || t("userNotFound")} />
+              </ListItem>
+            ))}
+          </List>
+          <Divider sx={{ my: 2 }} />
+        </>
+      )}
 
-      <Typography variant="subtitle1" gutterBottom>
-        {t("teamMembers")}
-      </Typography>
-      <List>
-        {memberDetails.map(({ user, status }) => (
-          <ListItem
-            key={user?.id}
-            secondaryAction={
-              <Chip
-                label={statusMap[status].label}
-                color={statusMap[status].color}
-                size="small"
-              />
-            }
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+        {canEditSongs && (
+          <Button
+            variant="contained"
+            startIcon={<EditIcon />}
+            onClick={onEditSongs}
           >
-            <ListItemText primary={user?.name || t("userNotFound")} />
-          </ListItem>
-        ))}
-      </List>
-      <Divider sx={{ my: 2 }} />
-
-      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-        <Button
-          variant="outlined"
-          color="error"
-          startIcon={<DeleteIcon />}
-          onClick={() => setIsConfirmOpen(true)}
-        >
-          {t("deleteSchedule")}
-        </Button>
+            {t("editSongs")}
+          </Button>
+        )}
+        {canDeleteSchedule && (
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={() => setIsConfirmOpen(true)}
+          >
+            {t("deleteSchedule")}
+          </Button>
+        )}
       </Box>
       <ConfirmationDialog
         open={isConfirmOpen}

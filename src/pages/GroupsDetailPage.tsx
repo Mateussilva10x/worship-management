@@ -8,18 +8,23 @@ import {
   Button,
   Autocomplete,
   TextField,
-  Snackbar,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Alert,
   CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  IconButton,
+  Divider,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import type { User } from "../types";
+import { useGroup, useUsers, useUpdateGroupDetails } from "../hooks/useGroups";
 import { useTranslation } from "react-i18next";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
-import { useGroup, useUsers, useUpdateGroupDetails } from "../hooks/useGroups";
 import { POSITION_KEYS } from "../constants";
 
 const GroupDetailPage: React.FC = () => {
@@ -27,119 +32,168 @@ const GroupDetailPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const { showNotification } = useNotificationDispatch();
+
   const { data: group, isLoading: isGroupLoading } = useGroup(groupId!);
-  const { data: users = [], isLoading: areUsersLoading } = useUsers();
+  const { data: allUsers = [], isLoading: areUsersLoading } = useUsers();
   const updateGroupMutation = useUpdateGroupDetails();
 
   const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
-  const [leaderId, setLeaderId] = useState<string>("");
-  const [saving, _setSaving] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [leader_id, setleader_id] = useState<string>("");
+  const [memberInput, setMemberInput] = useState("");
 
   useEffect(() => {
-    if (group) {
-      const currentMembers = users.filter((user) =>
-        group.members.includes(user.id)
+    if (group && allUsers.length > 0) {
+      const currentMembers = allUsers.filter((u) =>
+        group.members.includes(u.id)
       );
       setSelectedMembers(currentMembers);
-      setLeaderId(group.leader_id || "");
+      setleader_id(group.leader_id || "");
     }
-  }, [group, users]);
+  }, [group, allUsers]);
 
   const handleSave = async () => {
     if (!groupId) return;
     const memberIds = selectedMembers.map((member) => member.id);
-
     await updateGroupMutation.mutateAsync(
-      { groupId, details: { memberIds, leader_id: leaderId } },
+      { groupId, details: { memberIds, leader_id } },
       {
         onSuccess: () => {
           showNotification("Grupo atualizado com sucesso!", "success");
           navigate("/groups");
         },
-        onError: (err) => {
-          showNotification(`Falha ao salvar: ${err.message}`, "error");
-        },
+        onError: (err: any) =>
+          showNotification(`Falha ao salvar: ${err.message}`, "error"),
       }
     );
   };
 
-  const isLoading = isGroupLoading || areUsersLoading;
-
-  if (isLoading) {
-    return <CircularProgress />;
-  }
-
-  if (!group) {
-    return (
-      <Alert severity="error">
-        Grupo não encontrado ou você não tem permissão para vê-lo.
-      </Alert>
+  const handleRemoveMember = (memberToRemove: User) => {
+    setSelectedMembers((prev) =>
+      prev.filter((member) => member.id !== memberToRemove.id)
     );
-  }
+    if (leader_id === memberToRemove.id) {
+      setleader_id("");
+    }
+  };
 
-  const memberOptions = users.filter(
-    (u) => u.role === "member" || u.role === "leader"
+  const isLoading = isGroupLoading || areUsersLoading;
+  if (isLoading) return <CircularProgress />;
+  if (!group) return <Alert severity="error">Grupo não encontrado.</Alert>;
+
+  const memberOptions = allUsers.filter(
+    (u) =>
+      (u.role === "member" || u.role === "leader") &&
+      !selectedMembers.some((sm) => sm.id === u.id)
   );
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h5" gutterBottom>
         {t("editGroup")}: {group.name}
       </Typography>
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
           {t("teamMembers")}
         </Typography>
+
         <Autocomplete
-          multiple
+          disableClearable
           options={memberOptions}
           getOptionLabel={(option) => option.name}
-          value={selectedMembers}
+          inputValue={memberInput}
+          onInputChange={(_event, newInputValue, reason) => {
+            if (reason === "input") {
+              setMemberInput(newInputValue);
+            }
+          }}
           onChange={(_, newValue) => {
-            setSelectedMembers(newValue);
-            if (!newValue.some((member) => member.id === leaderId)) {
-              setLeaderId("");
+            if (newValue) {
+              setSelectedMembers((prev) => [...prev, newValue]);
+              setMemberInput("");
             }
           }}
           renderOption={(props, option) => {
-            const translatedPositions = (() => {
-              const userPositionsCount = option.positions?.length || 0;
+            let translatedPositions = t("positions.noneDefined");
+            const userPositionsCount = option.positions?.length || 0;
+            const totalPositionsCount = POSITION_KEYS.length;
 
-              if (userPositionsCount === 0) {
-                return t("positions.noneDefined");
-              }
-              if (userPositionsCount === POSITION_KEYS.length) {
-                return t("positions.all");
-              }
-              return option
-                .positions!.map((key) => t(`positions.${key}`))
+            if (userPositionsCount === totalPositionsCount) {
+              translatedPositions = t("positions.all");
+            } else if (userPositionsCount > 0) {
+              translatedPositions = option
+                .positions!.map((key) =>
+                  t(`positions.${key}`, { defaultValue: key })
+                )
                 .join(", ");
-            })();
+            }
 
             return (
               <Box component="li" {...props}>
-                <Box>
-                  <Typography>{option.name}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {translatedPositions}
-                  </Typography>
-                </Box>
+                <ListItemText
+                  primary={option.name}
+                  secondary={translatedPositions}
+                />
               </Box>
             );
           }}
           renderInput={(params) => (
-            <TextField {...params} label={t("selectMembers")} />
+            <TextField {...params} label={t("addMembers")} />
           )}
           isOptionEqualToValue={(option, value) => option.id === value.id}
+          sx={{ mb: 2 }}
         />
-        <FormControl fullWidth sx={{ mt: 3 }}>
+
+        <List>
+          {selectedMembers.map((member) => (
+            <ListItem
+              key={member.id}
+              secondaryAction={
+                <IconButton
+                  edge="end"
+                  aria-label="Remover"
+                  onClick={() => handleRemoveMember(member)}
+                >
+                  <DeleteIcon color="error" />
+                </IconButton>
+              }
+            >
+              <ListItemText
+                primary={member.name}
+                secondary={(() => {
+                  const userPositionsCount = member.positions?.length || 0;
+                  const totalPositionsCount = POSITION_KEYS.length;
+
+                  if (userPositionsCount === totalPositionsCount) {
+                    return t("positions.all", "Todas as Posições");
+                  }
+
+                  if (userPositionsCount === 0) {
+                    return t(
+                      "positions.noneDefined",
+                      "Nenhuma posição definida"
+                    );
+                  }
+
+                  return member
+                    .positions!.map((key) =>
+                      t(`positions.${key}`, { defaultValue: key })
+                    )
+                    .join(", ");
+                })()}
+              />
+            </ListItem>
+          ))}
+        </List>
+
+        <Divider sx={{ my: 2 }} />
+
+        <FormControl fullWidth sx={{ mt: 2 }}>
           <InputLabel id="leader-select-label">{t("teamLeader")}</InputLabel>
           <Select
             labelId="leader-select-label"
-            value={leaderId}
-            label={t("leader")}
-            onChange={(e) => setLeaderId(e.target.value as string)}
+            value={leader_id}
+            label={t("teamLeader")}
+            onChange={(e) => setleader_id(e.target.value as string)}
             disabled={selectedMembers.length === 0}
           >
             <MenuItem value="">
@@ -154,20 +208,18 @@ const GroupDetailPage: React.FC = () => {
         </FormControl>
 
         <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
-          <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? t("saving") : t("save")}
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={updateGroupMutation.isPending}
+          >
+            {updateGroupMutation.isPending ? t("saving") : t("save")}
           </Button>
           <Button variant="outlined" onClick={() => navigate("/groups")}>
             {t("cancel")}
           </Button>
         </Box>
       </Paper>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={() => setSnackbarOpen(false)}
-        message={t("groupUpdated")}
-      />
     </Box>
   );
 };

@@ -17,11 +17,11 @@ import {
   CircularProgress,
   Chip,
   Card,
-  Pagination,
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Grid,
+  Autocomplete,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import LinkIcon from "@mui/icons-material/Link";
@@ -41,33 +41,26 @@ import {
   useUpdateSong,
   useInfiniteSongs,
   type SongFilters,
+  useAllThemes,
 } from "../hooks/useSongs";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
 import SongDetailModal from "../components/library/SongDetailModal";
-
-const SONGS_PER_PAGE = 15;
 
 const MusicLibraryPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { showNotification } = useNotificationDispatch();
 
-  const [filters, setFilters] = useState<{
-    title?: string;
-    artist?: string;
-    version?: string;
-    key?: string;
-    themes: string;
-  }>({ themes: "" });
+  const [filters, setFilters] = useState<SongFilters>({});
   const [appliedFilters, setAppliedFilters] = useState<SongFilters>({});
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteSongs(appliedFilters);
+    useInfiniteSongs(appliedFilters, user?.role);
 
   const songs = data?.pages.flatMap((page) => page.songs) ?? [];
-  const totalSongsCount = data?.pages[0]?.count ?? 0;
-  const pageCount = Math.ceil(totalSongsCount / SONGS_PER_PAGE);
-  const currentPage = data?.pages.length ?? 1;
+
+  const isManagement =
+    user?.role === "worship_director" || user?.role === "admin";
 
   const createSongMutation = useCreateSong();
   const deleteSongMutation = useDeleteSong();
@@ -78,6 +71,7 @@ const MusicLibraryPage: React.FC = () => {
   const [songToEdit, setSongToEdit] = useState<Song | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewingSong, setViewingSong] = useState<Song | null>(null);
+  const { data: themeOptions = [] } = useAllThemes();
 
   const handleOpenEditModal = (song: Song) => {
     setSongToEdit(song);
@@ -94,19 +88,11 @@ const MusicLibraryPage: React.FC = () => {
   };
 
   const handleSearch = () => {
-    const themesArray = filters.themes
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
-
-    setAppliedFilters({
-      ...filters,
-      themes: themesArray,
-    });
+    setAppliedFilters(filters);
   };
 
   const handleClearFilters = () => {
-    setFilters({ themes: "" });
+    setFilters({});
     setAppliedFilters({});
   };
 
@@ -203,57 +189,91 @@ const MusicLibraryPage: React.FC = () => {
 
       <Accordion sx={{ mb: 3 }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>Filtros de Pesquisa</Typography>
+          <Typography>{t("searchFilters")}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Box component="form" noValidate autoComplete="off">
             <Grid container spacing={2}>
-              <Grid>
+              <Grid sx={{ width: { xs: "100%", sm: "50%", md: "33.33%" } }}>
                 <TextField
                   fullWidth
                   name="title"
-                  label="Nome da Música"
+                  label={t("songTitle")}
                   value={filters.title || ""}
                   onChange={handleFilterChange}
+                  size="small"
                 />
               </Grid>
-              <Grid>
+
+              <Grid sx={{ width: { xs: "100%", sm: "50%", md: "33.33%" } }}>
                 <TextField
                   fullWidth
                   name="artist"
-                  label="Artista"
+                  label={t("artist")}
                   value={filters.artist || ""}
                   onChange={handleFilterChange}
+                  size="small"
                 />
               </Grid>
-              <Grid>
+
+              <Grid sx={{ width: { xs: "100%", sm: "50%", md: "33.33%" } }}>
                 <TextField
                   fullWidth
                   name="version"
-                  label="Versão"
+                  label={t("version")}
                   value={filters.version || ""}
                   onChange={handleFilterChange}
+                  size="small"
                 />
               </Grid>
-              <Grid>
+
+              <Grid sx={{ width: { xs: "100%", sm: "50%", md: "33.33%" } }}>
                 <TextField
                   fullWidth
                   name="key"
-                  label="Tom"
+                  label={t("songKey")}
                   value={filters.key || ""}
                   onChange={handleFilterChange}
+                  size="small"
                 />
               </Grid>
-              <Grid>
+
+              <Grid sx={{ width: { xs: "100%", sm: "50%", md: "33.33%" } }}>
                 <TextField
                   fullWidth
-                  name="themes"
-                  label={t("songThemesFilter")}
-                  value={filters.themes}
+                  name="reference"
+                  label={t("songBibleReference")}
+                  value={filters.reference || ""}
                   onChange={handleFilterChange}
+                  size="small"
+                />
+              </Grid>
+
+              <Grid sx={{ width: { xs: "100%", sm: "50%", md: "33.33%" } }}>
+                <Autocomplete
+                  multiple
+                  freeSolo
+                  disableClearable
+                  options={themeOptions}
+                  value={filters.themes || []}
+                  onChange={(_event, newValue) => {
+                    setFilters((prev) => ({ ...prev, themes: newValue }));
+                  }}
+                  getOptionLabel={(option) => {
+                    return t(`themes.${option}`, { defaultValue: option });
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={t("songThemes")}
+                      placeholder={t("selectThemes")}
+                      size="small"
+                    />
+                  )}
                 />
               </Grid>
             </Grid>
+
             <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
               <Button variant="contained" onClick={handleSearch}>
                 {t("search")}
@@ -281,7 +301,11 @@ const MusicLibraryPage: React.FC = () => {
                 <TableCell sx={{ fontWeight: "bold" }}>
                   {t("songKey")}
                 </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>{t("status")}</TableCell>
+                {isManagement && (
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    {t("status")}
+                  </TableCell>
+                )}
                 <TableCell sx={{ fontWeight: "bold" }}>
                   {t("actions")}
                 </TableCell>
@@ -300,14 +324,27 @@ const MusicLibraryPage: React.FC = () => {
                   </TableCell>
                   <TableCell>{song.artist}</TableCell>
                   <TableCell>{song.key}</TableCell>
+                  {isManagement && (
+                    <TableCell>
+                      <Chip
+                        label={statusMap[song.status as SongStatus].label}
+                        color={statusMap[song.status as SongStatus].color}
+                        size="small"
+                      />
+                    </TableCell>
+                  )}
                   <TableCell>
-                    <Chip
-                      label={statusMap[song.status as SongStatus].label}
-                      color={statusMap[song.status as SongStatus].color}
+                    <IconButton
                       size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
+                      aria-label="Link"
+                      component="a"
+                      href={song.link}
+                      target="_blank"
+                      disabled={!song.link}
+                      color="primary"
+                    >
+                      <LinkIcon fontSize="small" />
+                    </IconButton>
                     {user?.role === "worship_director" &&
                       song.status === "pending" && (
                         <>
@@ -315,6 +352,7 @@ const MusicLibraryPage: React.FC = () => {
                             size="small"
                             color="success"
                             onClick={() => handleApprove(song.id)}
+                            sx={{ whiteSpace: "nowrap" }}
                           >
                             {t("approve")}
                           </Button>
@@ -322,47 +360,40 @@ const MusicLibraryPage: React.FC = () => {
                             size="small"
                             color="error"
                             onClick={() => handleReject(song.id)}
+                            sx={{ whiteSpace: "nowrap", ml: 0.5 }}
                           >
                             {t("reject")}
                           </Button>
                         </>
                       )}
-                    <IconButton
-                      aria-label="Abrir link"
-                      color="primary"
-                      component="a"
-                      href={song.link}
-                      target={song.link ? "_blank" : undefined}
-                      rel={song.link ? "noopener noreferrer" : undefined}
-                      disabled={!song.link}
-                    >
-                      <LinkIcon />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      aria-label="Ver detalhes"
-                      onClick={() => setViewingSong(song)}
-                    >
-                      <VisibilityIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      aria-label="Editar música"
-                      color="primary"
-                      onClick={() => handleOpenEditModal(song)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      aria-label="Excluir música"
-                      color="error"
-                      onClick={() => setSongToDelete(song)}
-                      disabled={
-                        user?.role !== "worship_director" &&
-                        user?.role !== "admin"
-                      }
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+                    <>
+                      <IconButton
+                        size="small"
+                        aria-label="Ver detalhes"
+                        onClick={() => setViewingSong(song)}
+                      >
+                        <VisibilityIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        aria-label="Editar"
+                        color="primary"
+                        onClick={() => handleOpenEditModal(song)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      {user?.role === "admin" ||
+                        (user?.role === "worship_director" && (
+                          <IconButton
+                            size="small"
+                            aria-label="Excluir"
+                            color="error"
+                            onClick={() => setSongToDelete(song)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        ))}
+                    </>
                   </TableCell>
                 </TableRow>
               ))}
@@ -404,11 +435,14 @@ const MusicLibraryPage: React.FC = () => {
                     >
                       {t("songKey")}: {song.key}
                     </Typography>
-                    <Chip
-                      label={statusMap[song.status as SongStatus].label}
-                      color={statusMap[song.status as SongStatus].color}
-                      size="small"
-                    />
+                    {isManagement && (
+                      <Chip
+                        label={statusMap[song.status as SongStatus].label}
+                        color={statusMap[song.status as SongStatus].color}
+                        size="small"
+                        sx={{ mt: 1 }}
+                      />
+                    )}
                   </Box>
                 </Box>
 
@@ -432,7 +466,7 @@ const MusicLibraryPage: React.FC = () => {
                     <LinkIcon fontSize="small" />
                   </IconButton>
                   {user?.role === "worship_director" &&
-                    (song.status === "pending" ? (
+                    song.status === "pending" && (
                       <>
                         <Button
                           size="small"
@@ -451,22 +485,25 @@ const MusicLibraryPage: React.FC = () => {
                           {t("reject")}
                         </Button>
                       </>
-                    ) : (
-                      <>
-                        <IconButton
-                          size="small"
-                          aria-label="Ver detalhes"
-                          onClick={() => setViewingSong(song)}
-                        >
-                          <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          aria-label="Editar"
-                          onClick={() => handleOpenEditModal(song)}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
+                    )}
+                  <>
+                    <IconButton
+                      size="small"
+                      aria-label="Ver detalhes"
+                      onClick={() => setViewingSong(song)}
+                    >
+                      <VisibilityIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      aria-label="Editar"
+                      color="primary"
+                      onClick={() => handleOpenEditModal(song)}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    {user?.role === "admin" ||
+                      (user?.role === "worship_director" && (
                         <IconButton
                           size="small"
                           aria-label="Excluir"
@@ -475,8 +512,8 @@ const MusicLibraryPage: React.FC = () => {
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
-                      </>
-                    ))}
+                      ))}
+                  </>
                 </Box>
               </Box>
             </Card>
@@ -485,7 +522,7 @@ const MusicLibraryPage: React.FC = () => {
       </Box>
 
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4, mb: 4 }}>
-        <Box sx={{ display: { xs: "block", md: "none" } }}>
+        <Box sx={{ display: { xs: "block" } }}>
           {hasNextPage && (
             <Button
               onClick={() => fetchNextPage()}
@@ -494,20 +531,6 @@ const MusicLibraryPage: React.FC = () => {
             >
               {isFetchingNextPage ? "Carregando..." : "Carregar Mais"}
             </Button>
-          )}
-        </Box>
-        <Box sx={{ display: { xs: "none", md: "block" } }}>
-          {pageCount > 1 && (
-            <Pagination
-              count={pageCount}
-              page={currentPage}
-              onChange={(_event, value) => {
-                if (value > currentPage) {
-                  fetchNextPage();
-                }
-              }}
-              color="primary"
-            />
           )}
         </Box>
       </Box>

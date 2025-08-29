@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -7,9 +5,9 @@ import {
   Box,
   Button,
   Modal,
+  CircularProgress,
   FormControlLabel,
   Switch,
-  CircularProgress,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
@@ -19,45 +17,62 @@ import {
   useDeleteSchedule,
   useUpdateScheduleSongs,
 } from "../hooks/useSchedule";
-import { useGroups } from "../hooks/useGroups";
+import { useAllGroups } from "../hooks/useGroups";
 import { useApprovedSongs } from "../hooks/useSongs";
 import { useUsers } from "../hooks/useUsers";
 import ScheduleCard from "../components/dashboard/ScheduleCard";
 import AddIcon from "@mui/icons-material/Add";
-
 import type { Schedule } from "../types";
-
 import NewScheduleForm from "../components/dashboard/NewScheduleForm";
 import ScheduleDetailView from "../components/dashboard/ScheduleDetailView";
 import EditScheduleSongs from "../components/dashboard/EditScheduleSongs";
-import MemberScheduleDetailModal from "../components/dashboard/MemberScheduleDetailModal";
-import UnifiedScheduleCard from "../components/dashboard/UnifiedScheduleCard";
+import UpdateStatusModal from "../components/dashboard/UpdateStatusModal";
 
-const AdminDashboard = () => {
+const DashboardPage: React.FC = () => {
   const { t } = useTranslation();
-  const { data: schedules = [], isLoading: schedulesLoading } = useSchedules();
-  const { data: groups = [], isLoading: groupsLoading } = useGroups();
+  const { user } = useAuth();
+  const { showNotification } = useNotificationDispatch();
+
+  const isDirector = user?.role === "worship_director";
+  const isManagement =
+    user?.role === "worship_director" || user?.role === "admin";
+  const isMemberOrLeader = user?.role === "member" || user?.role === "leader";
+
+  const { data: allSchedules = [], isLoading: schedulesLoading } =
+    useSchedules();
+  const { data: groups = [], isLoading: groupsLoading } =
+    useAllGroups(isManagement);
   const { data: songs = [], isLoading: songsLoading } = useApprovedSongs();
   const { data: users = [], isLoading: usersLoading } = useUsers();
-  const { showNotification } = useNotificationDispatch();
 
   const createScheduleMutation = useCreateSchedule();
   const deleteScheduleMutation = useDeleteSchedule();
+  const updateScheduleSongsMutation = useUpdateScheduleSongs();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [viewingSchedule, setViewingSchedule] = useState<Schedule | null>(null);
+  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [statusUpdateSchedule, setStatusUpdateSchedule] =
+    useState<Schedule | null>(null);
 
-  const handleOpenCreateModal = () => setIsCreateModalOpen(true);
-  const handleCloseCreateModal = () => setIsCreateModalOpen(false);
-  const handleViewDetails = (schedule: Schedule) =>
-    setViewingSchedule(schedule);
-  const handleCloseDetailsModal = () => setViewingSchedule(null);
+  const [showOnlyMySchedules, setShowOnlyMySchedules] =
+    useState(isMemberOrLeader);
 
-  const handleCreateSchedule = async (formData: {
-    date: string;
-    worshipGroupId: string;
-    songs: string[];
-  }) => {
+  const schedulesToDisplay = useMemo(() => {
+    const futureSchedules = allSchedules.filter(
+      (s) => new Date(s.date + "T23:59:59") >= new Date()
+    );
+
+    if (isMemberOrLeader && showOnlyMySchedules && user) {
+      return futureSchedules.filter((s) =>
+        s.membersStatus.some((ms) => ms.memberId === user.id)
+      );
+    }
+
+    return futureSchedules;
+  }, [allSchedules, showOnlyMySchedules, user, isMemberOrLeader]);
+
+  const handleCreateSchedule = async (formData: any) => {
     await createScheduleMutation.mutateAsync(formData, {
       onSuccess: () => {
         setIsCreateModalOpen(false);
@@ -68,7 +83,6 @@ const AdminDashboard = () => {
       },
     });
   };
-
   const handleDeleteSchedule = async (scheduleId: string) => {
     await deleteScheduleMutation.mutateAsync(scheduleId, {
       onSuccess: () => {
@@ -80,10 +94,22 @@ const AdminDashboard = () => {
       },
     });
   };
+  const handleSaveSongs = async (scheduleId: string, newSongIds: string[]) => {
+    await updateScheduleSongsMutation.mutateAsync(
+      { scheduleId, songIds: newSongIds },
+      {
+        onSuccess: () => {
+          setEditingSchedule(null);
+          showNotification("Músicas da escala atualizadas!", "success");
+        },
+        onError: (err: any) =>
+          showNotification(`Falha ao salvar músicas: ${err.message}`, "error"),
+      }
+    );
+  };
 
   const isLoading =
     schedulesLoading || groupsLoading || songsLoading || usersLoading;
-
   if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
@@ -100,225 +126,127 @@ const AdminDashboard = () => {
           justifyContent: "space-between",
           alignItems: "center",
           mb: 3,
+          flexWrap: "wrap",
+          gap: 2,
         }}
       >
-        <Typography variant="h5" sx={{ mb: 2 }}>
-          {t("upcomingSchedules")}
+        <Typography variant="h5">
+          {isMemberOrLeader && showOnlyMySchedules
+            ? t("mySchedules")
+            : t("upcomingSchedules")}
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleOpenCreateModal}
-        >
-          {t("newSchedule")}
-        </Button>
+
+        {isDirector && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            {t("newSchedule")}
+          </Button>
+        )}
+
+        {isMemberOrLeader && (
+          <FormControlLabel
+            control={
+              <Switch
+                checked={showOnlyMySchedules}
+                onChange={(e) => setShowOnlyMySchedules(e.target.checked)}
+              />
+            }
+            label={t("seeOwnSchedules")}
+          />
+        )}
       </Box>
-      {schedules.length > 0 ? (
-        schedules.map((schedule: Schedule) => (
+
+      {schedulesToDisplay.map((schedule: Schedule) => {
+        const isUserInSchedule = user
+          ? schedule.membersStatus.some((ms) => ms.memberId === user.id)
+          : false;
+        const myStatus =
+          isUserInSchedule && user
+            ? schedule.membersStatus.find((ms) => ms.memberId === user.id)
+                ?.status
+            : undefined;
+
+        return (
           <ScheduleCard
             key={schedule.id}
             schedule={schedule}
-            onClick={() => handleViewDetails(schedule)}
-            data-testid={`schedule-card-${schedule.id}`}
+            onClick={() => setViewingSchedule(schedule)}
+            myStatus={myStatus}
+            onStatusClick={
+              isUserInSchedule
+                ? () => setStatusUpdateSchedule(schedule)
+                : undefined
+            }
           />
-        ))
-      ) : (
-        <Typography>{t("noSchedulesFound")}</Typography>
-      )}
+        );
+      })}
+
+      <UpdateStatusModal
+        schedule={statusUpdateSchedule}
+        onClose={() => setStatusUpdateSchedule(null)}
+      />
       <Modal
         open={isCreateModalOpen}
-        onClose={handleCloseCreateModal}
-        aria-labelledby="create-schedule-modal-title"
+        onClose={() => setIsCreateModalOpen(false)}
       >
         <Box sx={modalStyle}>
           <NewScheduleForm
             groups={groups}
             songs={songs}
             onSubmit={handleCreateSchedule}
-            onCancel={handleCloseCreateModal}
+            onCancel={() => setIsCreateModalOpen(false)}
           />
         </Box>
       </Modal>
 
       {viewingSchedule && (
-        <Modal open={!!viewingSchedule} onClose={handleCloseDetailsModal}>
+        <Modal
+          open={!!viewingSchedule}
+          onClose={() => setViewingSchedule(null)}
+        >
           <Box sx={modalStyle}>
             <ScheduleDetailView
               schedule={viewingSchedule}
               group={viewingSchedule.group}
               users={users}
-              songs={songs}
-              onClose={handleCloseDetailsModal}
-              deleteSchedule={handleDeleteSchedule}
+              songs={songs.filter((s) => viewingSchedule.songs.includes(s.id))}
+              onClose={() => setViewingSchedule(null)}
+              canEditSongs={
+                user?.role === "worship_director" ||
+                user?.id === viewingSchedule.group?.leader_id
+              }
+              canDeleteSchedule={user?.role === "worship_director"}
+              onEditSongs={() => {
+                setEditingSchedule(viewingSchedule);
+                setViewingSchedule(null);
+              }}
+              onDelete={handleDeleteSchedule}
             />
           </Box>
         </Modal>
       )}
-    </Box>
-  );
-};
 
-const MemberDashboard = () => {
-  const { user } = useAuth();
-  const { t } = useTranslation();
-  const { showNotification } = useNotificationDispatch();
-  const { data: allSchedules = [], isLoading: schedulesLoading } =
-    useSchedules();
-  const { data: songs = [], isLoading: songsLoading } = useApprovedSongs();
-  const { data: users = [], isLoading: usersLoading } = useUsers();
-
-  const updateScheduleSongsMutation = useUpdateScheduleSongs();
-
-  const [showOnlyMySchedules, setShowOnlyMySchedules] = useState(false);
-  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
-    null
-  );
-  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
-
-  const userMap = useMemo(() => {
-    return new Map(users.map((u) => [u.id, u.name]));
-  }, [users]);
-
-  const schedulesToDisplay = useMemo(() => {
-    const futureSchedules = allSchedules.filter(
-      (s) => new Date(s.date + "T23:59:59") >= new Date()
-    );
-
-    if (showOnlyMySchedules && user) {
-      return futureSchedules.filter((s) =>
-        s.membersStatus.some((ms) => ms.memberId === user.id)
-      );
-    }
-    return futureSchedules;
-  }, [allSchedules, showOnlyMySchedules, user]);
-
-  const handleSaveSongs = async (scheduleId: string, newSongIds: string[]) => {
-    await updateScheduleSongsMutation.mutateAsync(
-      { scheduleId, songIds: newSongIds },
-      {
-        onSuccess: () => {
-          setEditingSchedule(null);
-          setSelectedSchedule(null);
-          showNotification("Músicas da escala atualizadas!", "success");
-        },
-        onError: (err: any) => {
-          showNotification(`Falha ao salvar músicas: ${err.message}`, "error");
-        },
-      }
-    );
-  };
-
-  const isLoading = schedulesLoading || songsLoading || usersLoading;
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-  return (
-    <Box>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        {showOnlyMySchedules ? t("mySchedules") : t("upcomingSchedules")}
-      </Typography>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={showOnlyMySchedules}
-            onChange={(e) => setShowOnlyMySchedules(e.target.checked)}
-          />
-        }
-        label={t("seeOwnSchedules")}
-        sx={{ mb: 2 }}
-      />
-      {schedulesToDisplay.length > 0 ? (
-        schedulesToDisplay.map((schedule) => {
-          const isUserInSchedule = schedule.membersStatus.some(
-            (ms) => ms.memberId === user?.id
-          );
-          const leaderName = userMap.get(schedule.group?.leader_id || "");
-
-          return (
-            <UnifiedScheduleCard
-              key={schedule.id}
-              schedule={schedule}
-              isUserInSchedule={isUserInSchedule}
-              leaderName={leaderName}
-              onClick={
-                isUserInSchedule
-                  ? () => setSelectedSchedule(schedule)
-                  : undefined
-              }
-              onEditSongs={() => {
-                setEditingSchedule(schedule);
-                setSelectedSchedule(null);
-              }}
-            />
-          );
-        })
-      ) : (
-        <Typography>{t("noSchedulesFound")}</Typography>
-      )}
-
-      {selectedSchedule && (
-        <MemberScheduleDetailModal
-          open={!!selectedSchedule}
-          onClose={() => setSelectedSchedule(null)}
-          schedule={selectedSchedule}
-          songs={songs.filter((s) => selectedSchedule.songs.includes(s.id))}
-          user={user}
-        />
-      )}
       {editingSchedule && (
         <Modal
           open={!!editingSchedule}
-          onClose={() => {
-            setEditingSchedule(null);
-            setSelectedSchedule(null);
-          }}
+          onClose={() => setEditingSchedule(null)}
         >
           <Box sx={modalStyle}>
             <EditScheduleSongs
               schedule={editingSchedule}
               allSongs={songs}
-              group={editingSchedule.group}
               users={users}
               onSave={handleSaveSongs}
-              onClose={() => {
-                setEditingSchedule(null);
-                setSelectedSchedule(null);
-              }}
+              onClose={() => setEditingSchedule(null)}
+              group={editingSchedule.group}
             />
           </Box>
         </Modal>
       )}
     </Box>
-  );
-};
-
-const DashboardPage: React.FC = () => {
-  const { user } = useAuth();
-  const { loading: authLoading } = useAuth();
-
-  if (authLoading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "80vh",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  return user?.role === "worship_director" ? (
-    <AdminDashboard />
-  ) : (
-    <MemberDashboard />
   );
 };
 
@@ -332,6 +260,8 @@ const modalStyle = {
   borderRadius: 2,
   boxShadow: 24,
   p: 4,
+  maxHeight: "90vh",
+  overflowY: "auto",
 };
 
 export default DashboardPage;
