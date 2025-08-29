@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Typography, TextField, Chip } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  TextField,
+  Autocomplete,
+} from "@mui/material";
 import { useTranslation } from "react-i18next";
 import type { Song } from "../../types";
+import { SUGGESTED_THEMES } from "../../constants";
 
 interface NewSongFormProps {
   onSubmit: (formData: {
@@ -10,6 +17,7 @@ interface NewSongFormProps {
     version: string;
     key: string;
     link: string;
+    reference: string;
     themes: string[];
   }) => Promise<void>;
   onCancel: () => void;
@@ -28,10 +36,10 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
     version: "",
     key: "",
     link: "",
+    reference: "",
     themes: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [themeInput, setThemeInput] = useState("");
 
   useEffect(() => {
     if (songToEdit) {
@@ -41,6 +49,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
         version: songToEdit.version || "",
         key: songToEdit.key,
         link: songToEdit.link,
+        reference: songToEdit.reference || "",
         themes: songToEdit.themes || [],
       });
     }
@@ -49,28 +58,6 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleAddTheme = () => {
-    const newTheme = themeInput.trim();
-    if (newTheme && !formData.themes.includes(newTheme)) {
-      setFormData((prev) => ({ ...prev, themes: [...prev.themes, newTheme] }));
-    }
-    setThemeInput(""); // Limpa o input
-  };
-
-  const handleThemeKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      handleAddTheme();
-    }
-  };
-
-  const handleDeleteTheme = (themeToDelete: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      themes: prev.themes.filter((theme) => theme !== themeToDelete),
-    }));
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -135,26 +122,35 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
         sx={{ mb: 2 }}
       />
       <TextField
-        name="themes"
-        label={t("songThemesCreate")}
+        name="reference"
+        label={t("songBibleReference")}
+        value={formData.reference}
+        onChange={handleChange}
         fullWidth
-        value={themeInput}
-        onChange={(e) => setThemeInput(e.target.value)}
-        onKeyDown={handleThemeKeyDown}
-        sx={{ mb: 1 }}
+        sx={{ mb: 2 }}
       />
-      <Box
-        sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, minHeight: "30px" }}
-      >
-        {formData.themes.map((theme) => (
-          <Chip
-            key={theme}
-            label={theme}
-            onDelete={() => handleDeleteTheme(theme)}
-            color="primary"
+      <Autocomplete
+        multiple
+        freeSolo
+        disableClearable
+        options={SUGGESTED_THEMES}
+        value={formData.themes}
+        onChange={(_event, newValue) => {
+          setFormData((prev) => ({ ...prev, themes: [...new Set(newValue)] }));
+        }}
+        getOptionLabel={(option) => {
+          return t(`themes.${option}`, { defaultValue: option });
+        }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            variant="outlined"
+            label={t("songThemes")}
+            placeholder={t("songThemesCreate")}
           />
-        ))}
-      </Box>
+        )}
+        sx={{ mt: 2 }}
+      />
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
         <Button onClick={onCancel} color="secondary" disabled={isSubmitting}>
           {t("cancel")}

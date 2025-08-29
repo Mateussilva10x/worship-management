@@ -71,7 +71,9 @@ const SongDetailModal: React.FC<SongDetailModalProps> = ({ song, onClose }) => {
         </Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
           {song.themes && song.themes.length > 0 ? (
-            song.themes.map((theme) => <Chip key={theme} label={theme} />)
+            song.themes.map((theme) => (
+              <Chip key={theme} label={t(`themes.${theme}`)} />
+            ))
           ) : (
             <Typography variant="body2" color="text.secondary">
               {t("noThemes")}

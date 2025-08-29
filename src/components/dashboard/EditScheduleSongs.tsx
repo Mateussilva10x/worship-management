@@ -95,14 +95,38 @@ const EditScheduleSongs: React.FC<EditScheduleSongsProps> = ({
       </Typography>
       <Autocomplete
         multiple
+        freeSolo
+        disableClearable
         options={allSongs}
-        getOptionLabel={(option) => option.title}
+        getOptionLabel={(option) => {
+          if (typeof option === "string") {
+            return option;
+          }
+          return option.title;
+        }}
         value={selectedSongs}
         onChange={(_, newValue) => {
-          setSelectedSongs(newValue);
+          const newValuesAsSongs = newValue.map((option) => {
+            if (typeof option === "string") {
+              return {
+                id: `new-${option}`,
+                title: option,
+                artist: "",
+                version: "",
+                key: "",
+                link: "",
+              } as Song;
+            }
+            return option;
+          });
+          setSelectedSongs(newValuesAsSongs);
         }}
         renderInput={(params) => (
-          <TextField {...params} label={t("selectSongs")} />
+          <TextField
+            {...params}
+            label={t("selectSongs")}
+            placeholder={t("selectOrSearchSongs")}
+          />
         )}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         sx={{ mb: 2 }}
