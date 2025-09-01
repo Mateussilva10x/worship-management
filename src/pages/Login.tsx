@@ -12,8 +12,10 @@ import {
 import { supabase } from "../supabaseClient";
 import logoIPC from "../assets/church-logo.svg";
 import { Link as RouterLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const LoginPage: React.FC = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -73,7 +75,7 @@ const LoginPage: React.FC = () => {
             required
             fullWidth
             id="email"
-            label="Endereço de E-mail"
+            label="E-mail"
             name="email"
             autoComplete="email"
             autoFocus
@@ -86,7 +88,7 @@ const LoginPage: React.FC = () => {
             required
             fullWidth
             name="password"
-            label="Senha"
+            label={t("password")}
             type="password"
             id="password"
             autoComplete="current-password"
@@ -109,7 +111,7 @@ const LoginPage: React.FC = () => {
             {loading ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
-              "Entrar"
+              t("login")
             )}
           </Button>
           <Grid container justifyContent="flex-end" sx={{ mt: 2 }}>
@@ -119,7 +121,7 @@ const LoginPage: React.FC = () => {
                 to="/forgot-password"
                 variant="body2"
               >
-                Esqueceu sua senha?
+                {t("forgotPassword")}
               </Link>
             </Grid>
           </Grid>
