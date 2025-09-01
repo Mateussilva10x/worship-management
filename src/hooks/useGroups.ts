@@ -131,22 +131,21 @@ export const useUpdateGroupDetails = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ groupId, details }: { groupId: string; details: { memberIds: string[]; leader_id: string } }) => {
-            const { memberIds, leader_id } = details;
-            const { data: currentGroupData } = await supabase
+            const { memberIds, leader_id: newLeaderId } = details;
+
+            const { data: currentGroupData, error: currentGroupError } = await supabase
                 .from('groups')
-                .select('members:group_members(user_id)')
+                .select('leader_id, members:group_members(user_id)')
                 .eq('id', groupId)
                 .single();
-
+            
+            if (currentGroupError) throw currentGroupError;
+            const oldLeaderId = currentGroupData?.leader_id;
             const oldMemberIds = new Set(currentGroupData?.members.map((m: any) => m.user_id) || []);
-            const newMemberIds = new Set(memberIds);
-
-            const addedMemberIds = memberIds.filter(id => !oldMemberIds.has(id));
-            const removedMemberIds = [...oldMemberIds].filter(id => !newMemberIds.has(id));
 
             await supabase
                 .from('groups')
-                .update({ leader_id: leader_id || null })
+                .update({ leader_id: newLeaderId || null })
                 .eq('id', groupId);
 
             await supabase.from("group_members").delete().eq("group_id", groupId);
@@ -155,6 +154,35 @@ export const useUpdateGroupDetails = () => {
                 await supabase.from("group_members").insert(membersToInsert);
             }
             
+            if (newLeaderId) {
+                const { error: promoteError } = await supabase
+                    .from('profiles')
+                    .update({ role: 'leader' })
+                    .eq('id', newLeaderId);
+                if (promoteError) console.error("Falha ao promover novo líder:", promoteError);
+            }
+            
+            if (oldLeaderId && oldLeaderId !== newLeaderId) {
+                const { count, error: countError } = await supabase
+                    .from('groups')
+                    .select('id', { count: 'exact' })
+                    .eq('leader_id', oldLeaderId);
+                
+                if (countError) console.error("Falha ao verificar outros grupos do líder antigo:", countError);
+                
+                if (count === 0) {
+                    const { error: demoteError } = await supabase
+                        .from('profiles')
+                        .update({ role: 'member' })
+                        .eq('id', oldLeaderId);
+                    if (demoteError) console.error("Falha ao rebaixar líder antigo:", demoteError);
+                }
+            }
+
+            const newMemberIds = new Set(memberIds);
+            const addedMemberIds = memberIds.filter(id => !oldMemberIds.has(id));
+            const removedMemberIds = [...oldMemberIds].filter(id => !newMemberIds.has(id));
+
             const today = new Date().toISOString().split('T')[0];
             const { data: futureSchedules } = await supabase
                 .from('schedules')
@@ -187,6 +215,7 @@ export const useUpdateGroupDetails = () => {
             queryClient.invalidateQueries({ queryKey: ['groups'] });
             queryClient.invalidateQueries({ queryKey: ['group', variables.groupId] });
             queryClient.invalidateQueries({ queryKey: ['schedules'] });
+            queryClient.invalidateQueries({ queryKey: ['users'] });
         }
     });
 };
