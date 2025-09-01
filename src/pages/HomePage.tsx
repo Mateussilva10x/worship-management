@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Container,
@@ -6,6 +6,10 @@ import {
   Card,
   CardActionArea,
   CardContent,
+  IconButton,
+  Menu,
+  MenuItem,
+  Tooltip,
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import logoIPC from "../assets/church-logo.svg";
@@ -16,6 +20,7 @@ import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import PeopleIcon from "@mui/icons-material/People";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import LogoutIcon from "@mui/icons-material/Logout";
+import LanguageIcon from "@mui/icons-material/Language";
 import { useTranslation } from "react-i18next";
 
 type MenuItemCardProps = {
@@ -23,6 +28,11 @@ type MenuItemCardProps = {
   icon: React.ReactNode;
   title: string;
 };
+
+const languages = [
+  { code: "pt", name: "Português", flag: "🇧🇷" },
+  { code: "en", name: "English", flag: "🇺🇸" },
+];
 
 const MenuItemCard: React.FC<MenuItemCardProps> = ({ to, icon, title }) => (
   <Card
@@ -56,12 +66,28 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ to, icon, title }) => (
 
 const HomePage: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
 
   const handleLogout = () => {
     navigate("/login");
     logout();
+  };
+
+  const handleLanguageMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleLanguageMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLanguageChange = (langCode: string) => {
+    i18n.changeLanguage(langCode);
+    handleLanguageMenuClose();
   };
 
   const menuItems = {
@@ -139,6 +165,28 @@ const HomePage: React.FC = () => {
 
   return (
     <Container component="main" maxWidth="sm" sx={{ mt: 8, mb: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
+        <Tooltip title={t("changeLanguage", "Mudar Idioma")}>
+          <IconButton onClick={handleLanguageMenuOpen} color="inherit">
+            <LanguageIcon />
+          </IconButton>
+        </Tooltip>
+        <Menu
+          anchorEl={anchorEl}
+          open={menuOpen}
+          onClose={handleLanguageMenuClose}
+        >
+          {languages.map((lang) => (
+            <MenuItem
+              key={lang.code}
+              onClick={() => handleLanguageChange(lang.code)}
+              selected={i18n.language === lang.code}
+            >
+              <Typography sx={{ mr: 1.5 }}>{lang.flag}</Typography> {lang.name}
+            </MenuItem>
+          ))}
+        </Menu>
+      </Box>
       <Box
         sx={{
           display: "flex",
