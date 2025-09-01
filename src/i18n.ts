@@ -134,6 +134,7 @@ const resources = {
       addMembers: "Add member to group",
       login: "Login",
       forgotPassword: "Forgot Password",
+      editSongs: "Edit Songs",
       userCreatedSuccess:
         "User created successfully! Send the message via WhatsApp: <a href='{{whatsappUrl}}' target='_blank' rel='noopener noreferrer'>Send WhatsApp</a>",
     },
@@ -269,6 +270,7 @@ const resources = {
       addMembers: "Adicionar membro ao grupo",
       login: "Entrar",
       forgotPassword: "Esqueci minha senha",
+      editSongs: "Editar Músicas",
       userCreatedSuccess:
         "Usuário criado com sucesso! Envie a mensagem via WhatsApp: <a href='{{whatsappUrl}}' target='_blank' rel='noopener noreferrer'>Enviar WhatsApp</a>",
     },
