@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { WorshipGroup, Song } from "../../types";
+import type { WorshipGroup } from "../../types";
 import {
   Box,
   Button,
@@ -8,8 +8,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  OutlinedInput,
-  Chip,
   type SelectChangeEvent,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -21,12 +19,10 @@ import { useTranslation } from "react-i18next";
 interface FormData {
   date: Date | null;
   worshipGroupId: string;
-  songs: string[];
 }
 
 interface NewScheduleFormProps {
   groups: WorshipGroup[];
-  songs: Song[];
   onSubmit: (
     formData: Omit<FormData, "date"> & { date: string }
   ) => Promise<void>;
@@ -35,7 +31,6 @@ interface NewScheduleFormProps {
 
 const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
   groups,
-  songs,
   onSubmit,
   onCancel,
 }) => {
@@ -43,7 +38,6 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
   const [formData, setFormData] = useState<FormData>({
     date: new Date(),
     worshipGroupId: "",
-    songs: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -97,34 +91,6 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
             {groups.map((group) => (
               <MenuItem key={group.id} value={group.id}>
                 {group.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel id="song-select-label">{t("songs")}</InputLabel>
-          <Select
-            labelId="song-select-label"
-            name="songs"
-            multiple
-            value={formData.songs}
-            onChange={handleSelectChange}
-            input={<OutlinedInput label={t("songs")} />}
-            renderValue={(selected) => (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                {(selected as string[]).map((value) => (
-                  <Chip
-                    key={value}
-                    label={songs.find((s) => s.id === value)?.title || ""}
-                  />
-                ))}
-              </Box>
-            )}
-          >
-            {songs.map((song) => (
-              <MenuItem key={song.id} value={song.id}>
-                {song.title}
               </MenuItem>
             ))}
           </Select>

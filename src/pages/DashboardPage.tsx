@@ -195,7 +195,6 @@ const DashboardPage: React.FC = () => {
         <Box sx={modalStyle}>
           <NewScheduleForm
             groups={groups}
-            songs={songs}
             onSubmit={handleCreateSchedule}
             onCancel={() => setIsCreateModalOpen(false)}
           />
@@ -214,10 +213,7 @@ const DashboardPage: React.FC = () => {
               users={users}
               songs={songs.filter((s) => viewingSchedule.songs.includes(s.id))}
               onClose={() => setViewingSchedule(null)}
-              canEditSongs={
-                user?.role === "worship_director" ||
-                user?.id === viewingSchedule.group?.leader_id
-              }
+              canEditSongs={user?.id === viewingSchedule.group?.leader_id}
               canDeleteSchedule={user?.role === "worship_director"}
               onEditSongs={() => {
                 setEditingSchedule(viewingSchedule);

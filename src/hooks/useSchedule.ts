@@ -42,7 +42,7 @@ export const useCreateSchedule = () => {
     const { data: groups } = useGroups(); 
 
     return useMutation({
-        mutationFn: async (scheduleData: { date: string; worshipGroupId: string; songs: string[] }) => {
+        mutationFn: async (scheduleData: { date: string; worshipGroupId: string; }) => {
             const group = groups?.find((g) => g.id === scheduleData.worshipGroupId);
             if (!group) throw new Error("Grupo selecionado não foi encontrado.");
 
@@ -62,16 +62,6 @@ export const useCreateSchedule = () => {
             }));
             if (participantsToInsert.length > 0) {
                 const { error } = await supabase.from('schedule_participants').insert(participantsToInsert);
-                if (error) throw error;
-            }
-
-            
-            if (scheduleData.songs.length > 0) {
-                const songsToInsert = scheduleData.songs.map((songId) => ({
-                    schedule_id: newSchedule.id,
-                    song_id: songId,
-                }));
-                const { error } = await supabase.from('schedule_songs').insert(songsToInsert);
                 if (error) throw error;
             }
 
