@@ -266,7 +266,7 @@ const MusicLibraryPage: React.FC = () => {
                     <TextField
                       {...params}
                       label={t("songThemes")}
-                      placeholder={t("selectThemes")}
+                      placeholder={t("selectTheme")}
                       size="small"
                     />
                   )}
@@ -539,11 +539,18 @@ const MusicLibraryPage: React.FC = () => {
         song={viewingSong}
         onClose={() => setViewingSong(null)}
       />
-      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <Modal
+        open={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false), setSongToEdit(null);
+        }}
+      >
         <Box sx={modalStyle}>
           <NewSongForm
             onSubmit={handleFormSubmit}
-            onCancel={() => setIsModalOpen(false)}
+            onCancel={() => {
+              setIsModalOpen(false), setSongToEdit(null);
+            }}
             songToEdit={songToEdit}
           />
         </Box>
