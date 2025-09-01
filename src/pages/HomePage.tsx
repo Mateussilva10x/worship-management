@@ -165,28 +165,6 @@ const HomePage: React.FC = () => {
 
   return (
     <Container component="main" maxWidth="sm" sx={{ mt: 8, mb: 4 }}>
-      <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
-        <Tooltip title={t("changeLanguage", "Mudar Idioma")}>
-          <IconButton onClick={handleLanguageMenuOpen} color="inherit">
-            <LanguageIcon />
-          </IconButton>
-        </Tooltip>
-        <Menu
-          anchorEl={anchorEl}
-          open={menuOpen}
-          onClose={handleLanguageMenuClose}
-        >
-          {languages.map((lang) => (
-            <MenuItem
-              key={lang.code}
-              onClick={() => handleLanguageChange(lang.code)}
-              selected={i18n.language === lang.code}
-            >
-              <Typography sx={{ mr: 1.5 }}>{lang.flag}</Typography> {lang.name}
-            </MenuItem>
-          ))}
-        </Menu>
-      </Box>
       <Box
         sx={{
           display: "flex",
@@ -204,6 +182,37 @@ const HomePage: React.FC = () => {
             marginBottom: "4px",
           }}
         />
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            width: "100%",
+            mb: 2,
+          }}
+        >
+          <Tooltip title={t("changeLanguage", "Mudar Idioma")}>
+            <IconButton onClick={handleLanguageMenuOpen} color="inherit">
+              <LanguageIcon />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={anchorEl}
+            open={menuOpen}
+            onClose={handleLanguageMenuClose}
+          >
+            {languages.map((lang) => (
+              <MenuItem
+                key={lang.code}
+                onClick={() => handleLanguageChange(lang.code)}
+                selected={i18n.language === lang.code}
+              >
+                <Typography sx={{ mr: 1.5 }}>{lang.flag}</Typography>{" "}
+                {lang.name}
+              </MenuItem>
+            ))}
+          </Menu>
+        </Box>
 
         {isAuthenticated && (
           <Box

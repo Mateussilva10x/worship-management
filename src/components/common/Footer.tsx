@@ -91,7 +91,14 @@ const Footer: React.FC = () => {
           </BottomNavigation>
         )}
 
-        <Box sx={{ bgcolor: "background.paper", py: 0.5 }}>
+        <Box
+          sx={{
+            bgcolor: "background.paper",
+            py: 0.5,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
           <Copyright />
         </Box>
       </Paper>
