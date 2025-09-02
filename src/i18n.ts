@@ -100,7 +100,7 @@ const resources = {
         "keyboard": "Keyboard",
         "piano": "Piano",
         "main_vocal": "Main Vocal",
-        "background_vocal": "Background Vocal",
+        "background_vocal": "Backing Vocals",
         "noneDefined": "No positions defined",
         "all": "All Positions"
       },
@@ -235,7 +235,7 @@ const resources = {
         "keyboard": "Teclado",
         "piano": "Piano",
         "main_vocal": "Vocal Principal",
-        "background_vocal": "Backing Vocal",
+        "background_vocal": "Backing Vocals",
         "noneDefined": "Nenhuma posição definida",
         "all": "Todas as Posições"
       },
