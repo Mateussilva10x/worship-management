@@ -374,14 +374,16 @@ const MusicLibraryPage: React.FC = () => {
                       >
                         <VisibilityIcon fontSize="small" />
                       </IconButton>
-                      <IconButton
-                        size="small"
-                        aria-label="Editar"
-                        color="primary"
-                        onClick={() => handleOpenEditModal(song)}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
+                      {user?.role !== "member" && (
+                        <IconButton
+                          size="small"
+                          aria-label="Editar"
+                          color="primary"
+                          onClick={() => handleOpenEditModal(song)}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      )}
                       {user?.role === "admin" ||
                         (user?.role === "worship_director" && (
                           <IconButton
