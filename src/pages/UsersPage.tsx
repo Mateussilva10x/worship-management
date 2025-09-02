@@ -19,7 +19,7 @@ import AddIcon from "@mui/icons-material/Add";
 
 import NewUserForm from "../components/users/NewUserForm";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { useUsers, useCreateUser } from "../hooks/useUsers";
 
 const modalStyle = {
@@ -62,7 +62,19 @@ const UsersPage: React.FC = () => {
         const whatsappUrl = `https://wa.me/${numeroFinal}?text=${message}`;
 
         showNotification(
-          t("userCreatedSuccess", { whatsappUrl: whatsappUrl }),
+          <Trans
+            i18nKey="userCreatedSuccess"
+            components={{
+              1: (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "inherit", fontWeight: "bold" }}
+                />
+              ),
+            }}
+          />,
           "success"
         );
         setIsModalOpen(false);

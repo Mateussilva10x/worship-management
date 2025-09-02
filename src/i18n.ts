@@ -135,8 +135,7 @@ const resources = {
       login: "Login",
       forgotPassword: "Forgot Password",
       editSongs: "Edit Songs",
-      userCreatedSuccess:
-        "User created successfully! Send the message via WhatsApp: <a href='{{whatsappUrl}}' target='_blank' rel='noopener noreferrer'>Send WhatsApp</a>",
+      userCreatedSuccess: "User created successfully! Send the message via WhatsApp: <1>Send WhatsApp</1>",
     },
   },
   pt: {
@@ -271,8 +270,7 @@ const resources = {
       login: "Entrar",
       forgotPassword: "Esqueci minha senha",
       editSongs: "Editar Músicas",
-      userCreatedSuccess:
-        "Usuário criado com sucesso! Envie a mensagem via WhatsApp: <a href='{{whatsappUrl}}' target='_blank' rel='noopener noreferrer'>Enviar WhatsApp</a>",
+      userCreatedSuccess: "Usuário criado com sucesso! Envie a mensagem via WhatsApp: <1>Enviar WhatsApp</1>",
     },
   },
 };

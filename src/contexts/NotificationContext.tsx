@@ -9,12 +9,12 @@ import React, {
 import type { AlertColor } from "@mui/material/Alert";
 
 interface NotificationContextType {
-  showNotification: (message: string, severity?: AlertColor) => void;
+  showNotification: (message: React.ReactNode, severity?: AlertColor) => void;
 }
 
 interface NotificationState {
   open: boolean;
-  message: string;
+  message: React.ReactNode;
   severity: AlertColor;
   handleClose: (event?: SyntheticEvent | Event, reason?: string) => void;
 }
@@ -30,7 +30,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<React.ReactNode>("");
   const [severity, setSeverity] = useState<AlertColor>("success");
 
   const handleClose = (_?: SyntheticEvent | Event, reason?: string) => {
@@ -41,7 +41,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const showNotification = (
-    newMessage: string,
+    newMessage: React.ReactNode,
     newSeverity: AlertColor = "success"
   ) => {
     setMessage(newMessage);
