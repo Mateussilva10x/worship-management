@@ -57,7 +57,7 @@ const UsersPage: React.FC = () => {
           : `55${numeroLimpo}`;
         const tempPassword = "senha123";
         const message = encodeURIComponent(
-          `Olá ${formData.name}! Sua conta no sistema "New Worship Management" foi criada. E-mail: ${formData.email} | Senha Temporária: ${tempPassword}, link do sistema: https://nwmanagement-ipc.vercel.app/login`
+          `Olá ${formData.name}! Sua conta no sistema "New Worship Management" foi criada. E-mail: ${formData.email} | Senha Temporária: ${tempPassword}, URL: https://nwmanagement.vercel.app/login`
         );
         const whatsappUrl = `https://wa.me/${numeroFinal}?text=${message}`;
 
