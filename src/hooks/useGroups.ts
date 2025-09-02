@@ -143,42 +143,30 @@ export const useUpdateGroupDetails = () => {
             const oldLeaderId = currentGroupData?.leader_id;
             const oldMemberIds = new Set(currentGroupData?.members.map((m: any) => m.user_id) || []);
 
-            await supabase
+            const { data: updatedGroupData, error: groupError } = await supabase
                 .from('groups')
                 .update({ leader_id: newLeaderId || null })
-                .eq('id', groupId);
+                .eq('id', groupId)
+                .select()
+                .single();
+            if (groupError) throw groupError;
 
             await supabase.from("group_members").delete().eq("group_id", groupId);
             if (memberIds.length > 0) {
                 const membersToInsert = memberIds.map((userId) => ({ group_id: groupId, user_id: userId }));
                 await supabase.from("group_members").insert(membersToInsert);
             }
-            
-            if (newLeaderId) {
-                const { error: promoteError } = await supabase
-                    .from('profiles')
-                    .update({ role: 'leader' })
-                    .eq('id', newLeaderId);
-                if (promoteError) console.error("Falha ao promover novo líder:", promoteError);
+
+            if (newLeaderId && newLeaderId !== oldLeaderId) {
+                await supabase.from('profiles').update({ role: 'leader' }).eq('id', newLeaderId);
             }
-            
             if (oldLeaderId && oldLeaderId !== newLeaderId) {
-                const { count, error: countError } = await supabase
-                    .from('groups')
-                    .select('id', { count: 'exact' })
-                    .eq('leader_id', oldLeaderId);
-                
-                if (countError) console.error("Falha ao verificar outros grupos do líder antigo:", countError);
-                
+                const { count } = await supabase.from('groups').select('id', { count: 'exact' }).eq('leader_id', oldLeaderId);
                 if (count === 0) {
-                    const { error: demoteError } = await supabase
-                        .from('profiles')
-                        .update({ role: 'member' })
-                        .eq('id', oldLeaderId);
-                    if (demoteError) console.error("Falha ao rebaixar líder antigo:", demoteError);
+                    await supabase.from('profiles').update({ role: 'member' }).eq('id', oldLeaderId);
                 }
             }
-
+            
             const newMemberIds = new Set(memberIds);
             const addedMemberIds = memberIds.filter(id => !oldMemberIds.has(id));
             const removedMemberIds = [...oldMemberIds].filter(id => !newMemberIds.has(id));
@@ -209,7 +197,7 @@ export const useUpdateGroupDetails = () => {
                 }
             }
 
-            return { success: true };
+            return { ...updatedGroupData, members: memberIds };
         },
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['groups'] });

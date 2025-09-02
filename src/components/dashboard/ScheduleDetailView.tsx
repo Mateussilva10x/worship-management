@@ -29,6 +29,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import { generateSchedulePdf } from "../../utils/pdfGenerator";
 import ConfirmationDialog from "../common/ConfirmationDialog";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface ScheduleDetailViewProps {
   schedule: Schedule;
@@ -53,6 +54,7 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
   onEditSongs,
   onDelete,
 }) => {
+  const { user } = useAuth();
   const { t, i18n } = useTranslation();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
@@ -172,7 +174,7 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
         </Typography>
       )}
 
-      {canEditSongs && (
+      {user?.role !== "member" && (
         <>
           <Divider sx={{ my: 2 }} />
           <Typography variant="subtitle1" gutterBottom>
