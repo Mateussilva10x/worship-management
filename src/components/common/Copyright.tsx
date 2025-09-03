@@ -14,7 +14,7 @@ const Copyright: React.FC<CopyrightProps> = ({ sx }) => {
         align="center"
         sx={sx}
       >
-        {`© ${new Date().getFullYear()} New Worship Management - v${__APP_VERSION__}`}
+        {`© ${new Date().getFullYear()} Worship Management - v${__APP_VERSION__}`}
       </Typography>
     </Box>
   );
