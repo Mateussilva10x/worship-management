@@ -105,7 +105,7 @@ const MainLayout: React.FC = () => {
             component="div"
             sx={{ flexGrow: 1, ml: location.pathname === "/" ? 0 : 2 }}
           >
-            New Worship Management
+            Worship Management
           </Typography>
 
           <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
