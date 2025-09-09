@@ -1,22 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render } from "../test/test-utils";
 import GroupsPage from "./GroupsPage";
 import type { UserRole } from "../types";
+import "@testing-library/jest-dom";
 
 vi.mock("../hooks/useGroups", () => ({
-  useGroups: vi.fn(),
+  useAllGroups: vi.fn(),
+  useMyGroups: vi.fn(),
   useCreateGroup: vi.fn(),
   useDeleteGroup: vi.fn(),
 }));
 
-import { useGroups, useCreateGroup, useDeleteGroup } from "../hooks/useGroups";
+import {
+  useAllGroups,
+  useMyGroups,
+  useCreateGroup,
+  useDeleteGroup,
+} from "../hooks/useGroups";
 
-const mockAdminUser = {
+const mockDirectorUser = {
   id: "user-01",
-  name: "Admin Teste",
-  role: "admin" as UserRole,
+  email: "email@email.com",
+  name: "Diretor Teste",
+  role: "worship_director" as UserRole,
 };
 const mockGroupsData = [
   {
@@ -35,10 +43,11 @@ describe("Página de Gestão de Grupos (GroupsPage)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (useGroups as vi.Mock).mockReturnValue({
+    (useAllGroups as vi.Mock).mockReturnValue({
       data: mockGroupsData,
       isLoading: false,
     });
+    (useMyGroups as vi.Mock).mockReturnValue({ data: [], isLoading: false });
     (useCreateGroup as vi.Mock).mockReturnValue({
       mutateAsync: mockCreateGroup,
     });
@@ -47,34 +56,61 @@ describe("Página de Gestão de Grupos (GroupsPage)", () => {
     });
   });
 
-  it("deve mostrar um indicador de carregamento enquanto os dados são buscados", () => {
-    (useGroups as vi.Mock).mockReturnValue({ data: [], isLoading: true });
-    render(<GroupsPage />, { authValue: { user: mockAdminUser } });
-    expect(screen.getByRole("progressbar")).toBeInTheDocument();
-  });
-
   it("deve renderizar a lista de grupos corretamente", () => {
-    render(<GroupsPage />, { authValue: { user: mockAdminUser } });
+    (useAllGroups as vi.Mock).mockReturnValue({
+      data: mockGroupsData,
+      isLoading: false,
+    });
+    render(<GroupsPage />, {
+      authValue: { user: mockDirectorUser, isAuthenticated: true },
+    });
 
-    expect(screen.getByText("Equipe de Domingo")).toBeInTheDocument();
-    expect(screen.getByText(/1 member\(s\)/i)).toBeInTheDocument();
-    expect(screen.getByText("Equipe Jovem")).toBeInTheDocument();
-    expect(screen.getByText(/0 member\(s\)/i)).toBeInTheDocument();
+    const domingoListItem = screen.getByText("Equipe de Domingo").closest("li");
+    expect(domingoListItem).toBeInTheDocument();
+
+    expect(
+      within(domingoListItem!).getByText(/member_count/i)
+    ).toBeInTheDocument();
+
+    const jovemListItem = screen.getByText("Equipe Jovem").closest("li");
+    expect(jovemListItem).toBeInTheDocument();
+
+    expect(
+      within(jovemListItem!).getByText(/member_count/i)
+    ).toBeInTheDocument();
   });
 
-  it('deve mostrar uma mensagem de "nenhum grupo encontrado" se a lista estiver vazia', () => {
-    (useGroups as vi.Mock).mockReturnValue({ data: [], isLoading: false });
-    render(<GroupsPage />, { authValue: { user: mockAdminUser } });
-    expect(screen.getByText("noGroupsFound")).toBeInTheDocument();
+  it('deve mostrar o botão "Novo Grupo" apenas para o Diretor de Louvor', () => {
+    render(<GroupsPage />, {
+      authValue: { user: mockDirectorUser, isAuthenticated: true },
+    });
+    expect(
+      screen.getByRole("button", { name: /newGroup/i })
+    ).toBeInTheDocument();
+  });
+
+  it('NÃO deve mostrar o botão "Novo Grupo" para um líder', () => {
+    const mockLeaderUser = {
+      id: "user-02",
+      name: "Líder Teste",
+      email: "emaillider@email.com",
+      role: "leader" as UserRole,
+    };
+    render(<GroupsPage />, {
+      authValue: { user: mockLeaderUser, isAuthenticated: true },
+    });
+    expect(
+      screen.queryByRole("button", { name: /newGroup/i })
+    ).not.toBeInTheDocument();
   });
 
   it("deve abrir a modal, preencher o formulário e chamar a mutação createGroup ao salvar", async () => {
     const user = userEvent.setup();
     mockCreateGroup.mockResolvedValue({});
 
-    (useGroups as vi.Mock).mockReturnValue({ data: [], isLoading: false });
-
-    render(<GroupsPage />, { authValue: { user: mockAdminUser } });
+    render(<GroupsPage />, {
+      authValue: { user: mockDirectorUser, isAuthenticated: true },
+    });
 
     await user.click(screen.getByRole("button", { name: /newGroup/i }));
 

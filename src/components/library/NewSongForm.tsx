@@ -73,7 +73,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
 
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom id="song-form-modal-title">
         {songToEdit ? t("editSong") : t("newSongFormTitle")}
       </Typography>
       <TextField

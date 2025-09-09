@@ -275,7 +275,11 @@ const MusicLibraryPage: React.FC = () => {
             </Grid>
 
             <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-              <Button variant="contained" onClick={handleSearch}>
+              <Button
+                variant="contained"
+                onClick={handleSearch}
+                data-testid="search-filters-search-button"
+              >
                 {t("search")}
               </Button>
               <Button variant="outlined" onClick={handleClearFilters}>
@@ -548,8 +552,9 @@ const MusicLibraryPage: React.FC = () => {
         onClose={() => {
           setIsModalOpen(false), setSongToEdit(null);
         }}
+        aria-labelledby="song-form-modal-title"
       >
-        <Box sx={modalStyle}>
+        <Box sx={modalStyle} data-testid="song-form-modal">
           <NewSongForm
             onSubmit={handleFormSubmit}
             onCancel={() => {

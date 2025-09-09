@@ -137,7 +137,13 @@ const GroupsPage: React.FC = () => {
                 </ListItemAvatar>
                 <ListItemText
                   primary={group.name}
-                  secondary={`${group.members.length} ${t("member(s)")}`}
+                  secondary={
+                    group.members.length > 1
+                      ? t("member_count_plural", {
+                          count: group.members.length,
+                        })
+                      : t("member_count", { count: group.members.length })
+                  }
                 />
                 {isDirector && (
                   <IconButton
