@@ -1,4 +1,4 @@
-# 🎵 Praise Schedule (v1.0)
+# 🎵 Worship Management (v1.0)
 
 **A Worship Schedule Management System for Churches**
 
@@ -12,7 +12,7 @@
 
 ## 📖 Project Description
 
-**Praise Schedule** is a modern web application designed to streamline the organization and communication of church worship team schedules. Inspired by systems like Planning Center, the goal is to provide an intuitive and centralized tool for administrators, leaders, and team members, optimizing the process of creating schedules, managing RSVPs, and setting song lists.
+**Worship Management** is a modern web application designed to streamline the organization and communication of church worship team schedules. Inspired by systems like Planning Center, the goal is to provide an intuitive and centralized tool for administrators, leaders, and team members, optimizing the process of creating schedules, managing RSVPs, and setting song lists.
 
 This application was built from the ground up with a focus on a robust architecture, mobile-first responsiveness, and a clean, pleasant user experience, using dark mode by default.
 
