@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import logoIPC from "../assets/church-logo.svg";
+import logoIPC from "../assets/church-logo.png";
 import { useAuth } from "../contexts/AuthContext";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";

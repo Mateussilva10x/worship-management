@@ -10,7 +10,7 @@ import {
   Link,
 } from "@mui/material";
 import { supabase } from "../supabaseClient";
-import logoIPC from "../assets/church-logo.svg";
+import logoIPC from "../assets/church-logo.png";
 import { Link as RouterLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
