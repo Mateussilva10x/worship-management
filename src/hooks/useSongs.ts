@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '../supabaseClient';
 import type { Song, SongStatus, UserRole } from '../types';
@@ -187,7 +187,7 @@ export const useAllThemes = () => {
 
       if (error) throw new Error(error.message);
       
-      return data?.map((item: any) => item.theme) || [];
+     return data || [];
     },
     staleTime: 1000 * 60 * 5, 
   });
