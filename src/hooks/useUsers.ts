@@ -68,3 +68,20 @@ export const useUpdateUserPassword = () => {
         }
     })
 }
+
+export const useAdminResetPassword = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userIdToReset, newPassword }: { userIdToReset: string, newPassword: string }) => {
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+        body: { userIdToReset, newPassword },
+      });
+
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+};

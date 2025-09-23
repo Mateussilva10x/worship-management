@@ -14,13 +14,22 @@ import {
   TableHead,
   TableRow,
   CircularProgress,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import LockResetIcon from "@mui/icons-material/LockReset";
 
 import NewUserForm from "../components/users/NewUserForm";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
 import { Trans, useTranslation } from "react-i18next";
-import { useUsers, useCreateUser } from "../hooks/useUsers";
+import {
+  useUsers,
+  useCreateUser,
+  useAdminResetPassword,
+} from "../hooks/useUsers";
+import type { User } from "../types";
+import AdminResetPasswordModal from "../components/users/AdminResetPasswordModal";
 
 const modalStyle = {
   position: "absolute" as const,
@@ -41,8 +50,10 @@ const UsersPage: React.FC = () => {
   const { data: users = [], isLoading } = useUsers();
   const { showNotification } = useNotificationDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userToReset, setUserToReset] = useState<User | null>(null);
 
   const createUserMutation = useCreateUser();
+  const adminResetPasswordMutation = useAdminResetPassword();
 
   const handleCreateUser = async (formData: {
     name: string;
@@ -83,6 +94,23 @@ const UsersPage: React.FC = () => {
         showNotification(err.message, "error");
       },
     });
+  };
+
+  const handleConfirmResetPassword = async (
+    userId: string,
+    newPassword: string
+  ) => {
+    await adminResetPasswordMutation.mutateAsync(
+      { userIdToReset: userId, newPassword },
+      {
+        onSuccess: () => {
+          showNotification("Senha redefinida com sucesso!", "success");
+          setUserToReset(null);
+        },
+        onError: (err: any) =>
+          showNotification(`Erro: ${err.message}`, "error"),
+      }
+    );
   };
 
   if (isLoading) {
@@ -135,6 +163,13 @@ const UsersPage: React.FC = () => {
                     <TableCell sx={{ textTransform: "capitalize" }}>
                       {user.role}
                     </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Resetar Senha">
+                        <IconButton onClick={() => setUserToReset(user)}>
+                          <LockResetIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -155,6 +190,13 @@ const UsersPage: React.FC = () => {
           />
         </Box>
       </Modal>
+
+      <AdminResetPasswordModal
+        open={!!userToReset}
+        onClose={() => setUserToReset(null)}
+        user={userToReset}
+        onSubmit={handleConfirmResetPassword}
+      />
     </Box>
   );
 };
