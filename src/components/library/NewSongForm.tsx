@@ -16,7 +16,8 @@ interface NewSongFormProps {
     artist: string;
     version: string;
     key: string;
-    link: string;
+    chart_link: string;
+    song_link: string;
     reference: string;
     themes: string[];
   }) => Promise<void>;
@@ -35,7 +36,8 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
     artist: "",
     version: "",
     key: "",
-    link: "",
+    chart_link: "",
+    song_link: "",
     reference: "",
     themes: [] as string[],
   });
@@ -48,7 +50,8 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
         artist: songToEdit.artist,
         version: songToEdit.version || "",
         key: songToEdit.key,
-        link: songToEdit.link,
+        chart_link: songToEdit.chart_link,
+        song_link: songToEdit.song_link || "",
         reference: songToEdit.reference || "",
         themes: songToEdit.themes || [],
       });
@@ -113,9 +116,18 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
         sx={{ mb: 2 }}
       />
       <TextField
-        name="link"
+        name="chart_link"
         label={t("songLink")}
-        value={formData.link}
+        value={formData.chart_link}
+        onChange={handleChange}
+        fullWidth
+        required
+        sx={{ mb: 2 }}
+      />
+      <TextField
+        name="song_link"
+        label={t("songLink")}
+        value={formData.song_link}
         onChange={handleChange}
         fullWidth
         required
@@ -165,7 +177,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
             !formData.key ||
             !formData.artist ||
             !formData.version ||
-            !formData.link
+            !formData.chart_link
           }
           sx={{ minWidth: "100px" }}
         >
