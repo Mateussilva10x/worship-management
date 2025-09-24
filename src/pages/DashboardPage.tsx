@@ -8,6 +8,8 @@ import {
   CircularProgress,
   FormControlLabel,
   Switch,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNotificationDispatch } from "../contexts/NotificationContext";
@@ -54,23 +56,39 @@ const DashboardPage: React.FC = () => {
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const [statusUpdateSchedule, setStatusUpdateSchedule] =
     useState<Schedule | null>(null);
+  const [viewMode, setViewMode] = useState<"upcoming" | "past">("upcoming");
 
   const [showOnlyMySchedules, setShowOnlyMySchedules] =
     useState(isMemberOrLeader);
 
   const schedulesToDisplay = useMemo(() => {
-    const futureSchedules = allSchedules.filter(
-      (s) => new Date(s.date + "T23:59:59") >= new Date()
-    );
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let filteredSchedules = allSchedules;
+
+    if (viewMode === "upcoming") {
+      filteredSchedules = allSchedules
+        .filter((s) => new Date(s.date + "T00:00:00") >= today)
+        .sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+    } else {
+      filteredSchedules = allSchedules
+        .filter((s) => new Date(s.date + "T00:00:00") < today)
+        .sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+    }
 
     if (isMemberOrLeader && showOnlyMySchedules && user) {
-      return futureSchedules.filter((s) =>
+      return filteredSchedules.filter((s) =>
         s.membersStatus.some((ms) => ms.memberId === user.id)
       );
     }
 
-    return futureSchedules;
-  }, [allSchedules, showOnlyMySchedules, user, isMemberOrLeader]);
+    return filteredSchedules;
+  }, [allSchedules, showOnlyMySchedules, user, isMemberOrLeader, viewMode]);
 
   const handleCreateSchedule = async (formData: any) => {
     await createScheduleMutation.mutateAsync(formData, {
@@ -130,33 +148,63 @@ const DashboardPage: React.FC = () => {
           gap: 2,
         }}
       >
-        <Typography variant="h5">
-          {isMemberOrLeader && showOnlyMySchedules
-            ? t("mySchedules")
-            : t("upcomingSchedules")}
-        </Typography>
+        <Box>
+          <Typography variant="h5">
+            {viewMode === "upcoming"
+              ? t("upcomingSchedules")
+              : t("pastSchedules")}
+          </Typography>
+          {isMemberOrLeader && (
+            <Typography variant="caption">
+              {showOnlyMySchedules ? t("mySchedules") : t("allSchedules")}
+            </Typography>
+          )}
+        </Box>
 
-        {isDirector && (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setIsCreateModalOpen(true)}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            flexWrap: "wrap",
+          }}
+        >
+          <ToggleButtonGroup
+            color="primary"
+            value={viewMode}
+            exclusive
+            onChange={(_event, newMode) => {
+              if (newMode) setViewMode(newMode);
+            }}
+            aria-label="Visualização de escalas"
+            size="small"
           >
-            {t("newSchedule")}
-          </Button>
-        )}
+            <ToggleButton value="upcoming">{t("next")}</ToggleButton>
+            <ToggleButton value="past">{t("past")}</ToggleButton>
+          </ToggleButtonGroup>
 
-        {isMemberOrLeader && (
-          <FormControlLabel
-            control={
-              <Switch
-                checked={showOnlyMySchedules}
-                onChange={(e) => setShowOnlyMySchedules(e.target.checked)}
-              />
-            }
-            label={t("seeOwnSchedules")}
-          />
-        )}
+          {isDirector && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              {t("newSchedule")}
+            </Button>
+          )}
+
+          {isMemberOrLeader && (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showOnlyMySchedules}
+                  onChange={(e) => setShowOnlyMySchedules(e.target.checked)}
+                />
+              }
+              label={t("seeOwnSchedules")}
+            />
+          )}
+        </Box>
       </Box>
 
       {schedulesToDisplay.map((schedule: Schedule) => {
