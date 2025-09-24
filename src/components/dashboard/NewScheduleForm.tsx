@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import type { WorshipGroup } from "../../types";
+import React, { useEffect, useState } from "react";
+import type { Schedule, WorshipGroup } from "../../types";
 import {
   Box,
   Button,
@@ -27,12 +27,14 @@ interface NewScheduleFormProps {
     formData: Omit<FormData, "date"> & { date: string }
   ) => Promise<void>;
   onCancel: () => void;
+  scheduleToEdit?: Schedule | null;
 }
 
 const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
   groups,
   onSubmit,
   onCancel,
+  scheduleToEdit,
 }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState<FormData>({
@@ -41,6 +43,14 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (scheduleToEdit) {
+      setFormData({
+        date: new Date(`${scheduleToEdit.date}T12:00:00`),
+        worshipGroupId: scheduleToEdit.group.id,
+      });
+    }
+  }, [scheduleToEdit]);
   const handleSelectChange = (event: SelectChangeEvent<string | string[]>) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -67,7 +77,7 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
       <Box component="form" onSubmit={handleSubmit}>
         <Typography variant="h6" gutterBottom>
-          {t("createNewSchedule")}
+          {scheduleToEdit ? t("editSchedule") : t("createNewSchedule")}
         </Typography>
 
         <DatePicker
