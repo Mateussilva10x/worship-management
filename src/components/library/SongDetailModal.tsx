@@ -6,7 +6,6 @@ import {
   IconButton,
   Divider,
   Chip,
-  Link,
   Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";

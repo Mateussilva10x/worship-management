@@ -117,7 +117,7 @@ const NewSongForm: React.FC<NewSongFormProps> = ({
       />
       <TextField
         name="chart_link"
-        label={t("songLink")}
+        label={t("chortLink")}
         value={formData.chart_link}
         onChange={handleChange}
         fullWidth
