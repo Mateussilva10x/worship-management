@@ -25,7 +25,6 @@ import {
   Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import LinkIcon from "@mui/icons-material/Link";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -478,17 +477,32 @@ const MusicLibraryPage: React.FC = () => {
                     ml: 1,
                   }}
                 >
-                  <IconButton
-                    size="small"
-                    aria-label="Link"
-                    component="a"
-                    href={song.link}
-                    target="_blank"
-                    disabled={!song.link}
-                    color="primary"
-                  >
-                    <LinkIcon fontSize="small" />
-                  </IconButton>
+                  <Tooltip title="Ver Cifra">
+                    <IconButton
+                      size="small"
+                      component="a"
+                      href={song.chart_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      disabled={!song.chart_link}
+                      color="primary"
+                    >
+                      <LibraryMusicIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Ouvir Música">
+                    <IconButton
+                      size="small"
+                      component="a"
+                      href={song.song_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      disabled={!song.song_link}
+                      color="primary"
+                    >
+                      <YouTubeIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                   {user?.role === "worship_director" &&
                     song.status === "pending" && (
                       <>

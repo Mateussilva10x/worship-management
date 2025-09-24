@@ -114,7 +114,7 @@ const EditScheduleSongs: React.FC<EditScheduleSongsProps> = ({
                 artist: "",
                 version: "",
                 key: "",
-                link: "",
+                chart_link: "",
               } as Song;
             }
             return option;
