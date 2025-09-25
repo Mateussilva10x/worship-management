@@ -18,14 +18,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
-        <DataProvider>
-          <NotificationProvider>
-            <AuthProvider>
+        <AuthProvider>
+          <DataProvider>
+            <NotificationProvider>
               <CssBaseline />
               <App />
-            </AuthProvider>
-          </NotificationProvider>
-        </DataProvider>
+            </NotificationProvider>
+          </DataProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>
