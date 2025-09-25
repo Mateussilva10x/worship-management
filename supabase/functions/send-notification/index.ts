@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       .from('profiles')
       .select('onesignal_subscription_id')
       .in('id', targetUserIds)
-      .not('onesignal_subscription_id', 'is', null); // Apenas utilizadores com um ID válido
+      .not('onesignal_subscription_id', 'is', null);
 
     if (profileError) {
       throw new Error(`Error fetching user profiles: ${profileError.message}`);

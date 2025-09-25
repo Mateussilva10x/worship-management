@@ -315,19 +315,42 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const targetMembers = group.members;
       if (targetMembers.length > 0) {
-        await supabase.functions.invoke("send-notification", {
-          body: {
-            targetUserIds: targetMembers,
-            title: "Nova Escala!",
-            message: `Você foi escalado com a equipe "${
-              group.name
-            }" para o dia ${new Date(scheduleData.date).toLocaleDateString()}.`,
-            url: `${window.location.origin}/dashboard`,
-          },
-        });
+        console.log(
+          `[OneSignal] A preparar para invocar a função 'send-notification' para ${targetMembers.length} membro(s).`
+        );
+
+        const { data, error: invokeError } = await supabase.functions.invoke(
+          "send-notification",
+          {
+            body: {
+              targetUserIds: targetMembers,
+              title: "Nova Escala!",
+              message: `Você foi escalado com a equipe "${
+                group.name
+              }" para o dia ${new Date(
+                scheduleData.date
+              ).toLocaleDateString()}.`,
+              url: `${window.location.origin}/dashboard`,
+            },
+          }
+        );
+
+        if (invokeError) {
+          throw invokeError;
+        }
+
+        console.log("[OneSignal] Função invocada com sucesso. Resposta:", data);
+      } else {
+        console.log("[OneSignal] Nenhum membro no grupo para notificar.");
       }
-    } catch (error) {
-      console.error("Failed to send notification:", error);
+    } catch (error: any) {
+      console.error(
+        "[OneSignal] ERRO CRÍTICO ao invocar a Supabase Function:",
+        error
+      );
+      alert(
+        `A escala foi criada, mas falhou ao enviar a notificação. Erro: ${error.message}`
+      );
     }
     return finalScheduleObject;
   };
