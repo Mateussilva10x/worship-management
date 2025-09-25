@@ -15,6 +15,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { ptBR } from "date-fns/locale/pt-BR";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useTranslation } from "react-i18next";
+import { useData } from "../../contexts/DataContext";
 
 interface FormData {
   date: Date | null;
@@ -23,9 +24,10 @@ interface FormData {
 
 interface NewScheduleFormProps {
   groups: WorshipGroup[];
-  onSubmit: (
-    formData: Omit<FormData, "date"> & { date: string }
-  ) => Promise<void>;
+  onSubmit: (formData: {
+    date: string;
+    worshipGroupId: string;
+  }) => Promise<void>;
   onCancel: () => void;
   scheduleToEdit?: Schedule | null;
 }
@@ -37,6 +39,7 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
   scheduleToEdit,
 }) => {
   const { t } = useTranslation();
+  const { updateScheduleGroup, updateScheduleDate } = useData();
   const [formData, setFormData] = useState<FormData>({
     date: new Date(),
     worshipGroupId: "",
@@ -46,11 +49,12 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
   useEffect(() => {
     if (scheduleToEdit) {
       setFormData({
-        date: new Date(`${scheduleToEdit.date}T12:00:00`),
+        date: new Date(scheduleToEdit.date),
         worshipGroupId: scheduleToEdit.group.id,
       });
     }
   }, [scheduleToEdit]);
+
   const handleSelectChange = (event: SelectChangeEvent<string | string[]>) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -58,19 +62,41 @@ const NewScheduleForm: React.FC<NewScheduleFormProps> = ({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setIsSubmitting(true);
-
-    if (!formData.date) {
-      setIsSubmitting(false);
+    if (!formData.date || !formData.worshipGroupId) {
       return;
     }
-    const date = new Date(formData.date);
-    const timezoneOffset = date.getTimezoneOffset() * 60000;
-    const dateWithoutTimezone = new Date(date.getTime() - timezoneOffset);
-    const formattedDate = dateWithoutTimezone.toISOString().split("T")[0];
+    setIsSubmitting(true);
 
-    await onSubmit({ ...formData, date: formattedDate });
-    setIsSubmitting(false);
+    const dateISO = formData.date.toISOString();
+
+    try {
+      if (scheduleToEdit) {
+        const hasGroupChanged =
+          scheduleToEdit.group.id !== formData.worshipGroupId;
+        const hasDateChanged =
+          new Date(scheduleToEdit.date).toISOString() !== dateISO;
+
+        if (hasGroupChanged) {
+          await updateScheduleGroup(scheduleToEdit.id, formData.worshipGroupId);
+          if (hasDateChanged) {
+            await updateScheduleDate(scheduleToEdit.id, dateISO);
+          }
+        } else if (hasDateChanged) {
+          await updateScheduleDate(scheduleToEdit.id, dateISO);
+        }
+      } else {
+        await onSubmit({
+          date: dateISO,
+          worshipGroupId: formData.worshipGroupId,
+        });
+      }
+      onCancel();
+    } catch (error) {
+      console.error("Falha ao salvar a escala:", error);
+      alert("Ocorreu um erro ao salvar a escala.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

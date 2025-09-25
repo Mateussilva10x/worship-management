@@ -55,6 +55,11 @@ interface DataContextType {
   deleteSong: (songId: string) => Promise<void>;
   deleteGroup: (groupId: string) => Promise<void>;
   deleteSchedule: (scheduleId: string) => Promise<void>;
+  updateScheduleGroup: (
+    scheduleId: string,
+    newGroupId: string
+  ) => Promise<void>;
+  updateScheduleDate: (scheduleId: string, newDate: string) => Promise<void>;
 }
 
 export const DataContext = createContext<DataContextType | undefined>(
@@ -327,6 +332,62 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     return finalScheduleObject;
   };
 
+  const updateScheduleDate = async (scheduleId: string, newDate: string) => {
+    const { error } = await supabase
+      .from("schedules")
+      .update({ date: newDate })
+      .eq("id", scheduleId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    setSchedules((prev) =>
+      prev.map((s) => (s.id === scheduleId ? { ...s, date: newDate } : s))
+    );
+  };
+
+  const updateScheduleGroup = async (
+    scheduleId: string,
+    newGroupId: string
+  ) => {
+    const { data, error } = await supabase.functions.invoke(
+      "update-schedule-group",
+      {
+        body: {
+          schedule_id: scheduleId,
+          new_group_id: newGroupId,
+        },
+      }
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    const returnedSchedule = data.data;
+
+    const transformedSchedule = {
+      id: returnedSchedule.id,
+      date: returnedSchedule.date,
+      created_at: returnedSchedule.created_at,
+      group: returnedSchedule.group,
+      songs: returnedSchedule.schedule_songs.map((song: any) => song.song_id),
+      membersStatus: returnedSchedule.schedule_participants.map((p: any) => ({
+        memberId: p.user_id,
+        status: p.status,
+      })),
+    };
+
+    setSchedules((prevSchedules) =>
+      prevSchedules.map((schedule) =>
+        schedule.id === scheduleId
+          ? (transformedSchedule as unknown as Schedule)
+          : schedule
+      )
+    );
+  };
+
   const deleteSchedule = async (scheduleId: string): Promise<void> => {
     const { error } = await supabase
       .from("schedules")
@@ -423,6 +484,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     deleteSong,
     deleteGroup,
     deleteSchedule,
+    updateScheduleGroup,
+    updateScheduleDate,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
