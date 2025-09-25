@@ -43,6 +43,7 @@ interface ScheduleDetailViewProps {
   canDeleteSchedule: boolean;
   onEditSongs: () => void;
   onDelete: (scheduleId: string) => Promise<void>;
+  onEdit: () => void;
 }
 
 const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
@@ -55,6 +56,7 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
   canDeleteSchedule,
   onEditSongs,
   onDelete,
+  onEdit,
 }) => {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
@@ -230,14 +232,23 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
           </Button>
         )}
         {canDeleteSchedule && (
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={() => setIsConfirmOpen(true)}
-          >
-            {t("deleteSchedule")}
-          </Button>
+          <>
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon />}
+              onClick={onEdit}
+            >
+              {t("editSchedule")}
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={() => setIsConfirmOpen(true)}
+            >
+              {t("deleteSchedule")}
+            </Button>
+          </>
         )}
       </Box>
       <ConfirmationDialog
