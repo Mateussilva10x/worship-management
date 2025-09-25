@@ -43,12 +43,8 @@ export const useCreateSchedule = () => {
 
   return useMutation({
     mutationFn: async (scheduleData: { date: string; worshipGroupId: string; }) => {
-      console.log("[useCreateSchedule] Mutation iniciada com:", scheduleData);
-
       const group = groups?.find((g) => g.id === scheduleData.worshipGroupId);
-      if (!group) {
-        throw new Error("Grupo selecionado não foi encontrado.");
-      }
+      if (!group) throw new Error("Grupo selecionado não foi encontrado.");
 
       const { data: newSchedule, error: scheduleError } = await supabase
         .from('schedules')
@@ -56,8 +52,6 @@ export const useCreateSchedule = () => {
         .select()
         .single();
       if (scheduleError) throw scheduleError;
-
-      console.log("[useCreateSchedule] Escala criada com sucesso:", newSchedule);
 
       const participantsToInsert = group.members.map((memberId) => ({
         schedule_id: newSchedule.id,
@@ -68,12 +62,10 @@ export const useCreateSchedule = () => {
         const { error } = await supabase.from('schedule_participants').insert(participantsToInsert);
         if (error) throw error;
       }
-      console.log("[useCreateSchedule] Participantes inseridos.");
+
       try {
         const targetMembers = group.members;
         if (targetMembers.length > 0) {
-          console.log(`[OneSignal] A invocar a função 'send-notification' para ${targetMembers.length} membro(s).`);
-        
           const { error: invokeError } = await supabase.functions.invoke('send-notification', {
             body: {
               targetUserIds: targetMembers,
@@ -82,25 +74,18 @@ export const useCreateSchedule = () => {
               url: `${window.location.origin}/dashboard`
             },
           });
-
-          if (invokeError) {
-            throw invokeError;
-          }
-          console.log('[OneSignal] Função invocada com sucesso.');
+          if (invokeError) throw invokeError;
         }
       } catch (error) {
-
         console.error("[OneSignal] AVISO: A escala foi criada, mas a notificação falhou:", error);
       }
 
       return newSchedule;
     },
     onSuccess: () => {
-      console.log("[useCreateSchedule] Mutação bem-sucedida. A invalidar queries...");
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
     },
     onError: (error) => {
-
         console.error("[useCreateSchedule] Erro na mutação:", error);
         alert(`Falha ao criar a escala: ${error.message}`);
     }

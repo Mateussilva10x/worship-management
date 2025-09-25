@@ -38,9 +38,6 @@ const OneSignalManager = (): null => {
     effectRan.current = true;
 
     if (!VITE_ONESIGNAL_APP_ID) {
-      console.error(
-        "OneSignal App ID não foi definido nas variáveis de ambiente."
-      );
       return;
     }
 
@@ -54,22 +51,13 @@ const OneSignalManager = (): null => {
         isOneSignalInitialized = true;
 
         OneSignal.User.PushSubscription.addEventListener("change", async () => {
-          console.log("Evento 'change' da subscrição disparado!");
-
           const {
             data: { user },
           } = await supabase.auth.getUser();
           const subscriptionId = OneSignal.User.PushSubscription.id;
 
-          console.log("Utilizador autenticado ID:", user?.id);
-          console.log("OneSignal Subscription ID capturado:", subscriptionId);
-
           if (subscriptionId && user) {
-            console.log(
-              `A tentar atualizar o perfil ${user.id} com o ID ${subscriptionId}`
-            );
-
-            const { data, error } = await supabase
+            const { error } = await supabase
               .from("profiles")
               .update({ onesignal_subscription_id: subscriptionId })
               .eq("id", user.id);
@@ -77,7 +65,6 @@ const OneSignalManager = (): null => {
             if (error) {
               console.error("ERRO ao atualizar o perfil no Supabase:", error);
             } else {
-              console.log("SUCESSO: Perfil atualizado no Supabase.", data);
             }
           } else {
             console.warn(
