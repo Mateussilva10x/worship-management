@@ -11,6 +11,7 @@ interface NotificationPayload {
 }
 
 Deno.serve(async (req) => {
+  console.log(`[send-notification] Função invocada às: ${new Date().toISOString()}`);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -83,6 +84,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (err) {
+    console.error("[send-notification] ERRO CAPTURADO:", err);
     return new Response(String(err?.message ?? err), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
