@@ -265,54 +265,67 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     worshipGroupId: string;
     songs: string[];
   }) => {
-    const group = groups.find((g) => g.id === scheduleData.worshipGroupId);
-    if (!group) throw new Error("Grupo selecionado não foi encontrado.");
-
-    const { data: newScheduleData, error: scheduleError } = await supabase
-      .from("schedules")
-      .insert({
-        date: scheduleData.date,
-        group_id: scheduleData.worshipGroupId,
-      })
-      .select()
-      .single();
-    if (scheduleError) throw scheduleError;
-
-    const participantsToInsert = group.members.map((memberId) => ({
-      schedule_id: newScheduleData.id,
-      user_id: memberId,
-      status: "pending" as ParticipationStatus,
-    }));
-    if (participantsToInsert.length > 0) {
-      const { error } = await supabase
-        .from("schedule_participants")
-        .insert(participantsToInsert);
-      if (error) throw error;
-    }
-
-    if (scheduleData.songs.length > 0) {
-      const songsToInsert = scheduleData.songs.map((songId) => ({
-        schedule_id: newScheduleData.id,
-        song_id: songId,
-      }));
-      const { error } = await supabase
-        .from("schedule_songs")
-        .insert(songsToInsert);
-      if (error) throw error;
-    }
-
-    const finalScheduleObject: Schedule = {
-      ...newScheduleData,
-      group: group,
-      songs: scheduleData.songs,
-      membersStatus: participantsToInsert.map((p) => ({
-        memberId: p.user_id,
-        status: p.status,
-      })),
-    };
-
-    setSchedules((prev) => [finalScheduleObject, ...prev]);
     try {
+      console.log("[createSchedule] A iniciar a criação da escala...");
+
+      const group = groups.find((g) => g.id === scheduleData.worshipGroupId);
+      if (!group) {
+        throw new Error("Grupo selecionado não foi encontrado.");
+      }
+
+      const { data: newScheduleData, error: scheduleError } = await supabase
+        .from("schedules")
+        .insert({
+          date: scheduleData.date,
+          group_id: scheduleData.worshipGroupId,
+        })
+        .select()
+        .single();
+
+      if (scheduleError) throw scheduleError;
+      console.log(
+        "[createSchedule] Escala inserida com sucesso na base de dados."
+      );
+
+      const participantsToInsert = group.members.map((memberId) => ({
+        schedule_id: newScheduleData.id,
+        user_id: memberId,
+        status: "pending" as ParticipationStatus,
+      }));
+
+      if (participantsToInsert.length > 0) {
+        const { error } = await supabase
+          .from("schedule_participants")
+          .insert(participantsToInsert);
+        if (error) throw error;
+        console.log("[createSchedule] Participantes inseridos com sucesso.");
+      }
+
+      if (scheduleData.songs.length > 0) {
+        const songsToInsert = scheduleData.songs.map((songId) => ({
+          schedule_id: newScheduleData.id,
+          song_id: songId,
+        }));
+        const { error } = await supabase
+          .from("schedule_songs")
+          .insert(songsToInsert);
+        if (error) throw error;
+        console.log("[createSchedule] Músicas inseridas com sucesso.");
+      }
+
+      const finalScheduleObject: Schedule = {
+        ...newScheduleData,
+        group: group,
+        songs: scheduleData.songs,
+        membersStatus: participantsToInsert.map((p) => ({
+          memberId: p.user_id,
+          status: p.status,
+        })),
+      };
+
+      setSchedules((prev) => [finalScheduleObject, ...prev]);
+      console.log("[createSchedule] Estado local atualizado.");
+
       const targetMembers = group.members;
       if (targetMembers.length > 0) {
         console.log(
@@ -335,24 +348,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
           }
         );
 
-        if (invokeError) {
-          throw invokeError;
-        }
-
+        if (invokeError) throw invokeError;
         console.log("[OneSignal] Função invocada com sucesso. Resposta:", data);
-      } else {
-        console.log("[OneSignal] Nenhum membro no grupo para notificar.");
       }
+
+      return finalScheduleObject;
     } catch (error: any) {
       console.error(
-        "[OneSignal] ERRO CRÍTICO ao invocar a Supabase Function:",
+        "[createSchedule] ERRO DURANTE A CRIAÇÃO DA ESCALA:",
         error
       );
-      alert(
-        `A escala foi criada, mas falhou ao enviar a notificação. Erro: ${error.message}`
-      );
+      alert(`Ocorreu um erro ao criar a escala: ${error}`);
+      return Promise.reject(error);
     }
-    return finalScheduleObject;
   };
 
   const updateScheduleDate = async (scheduleId: string, newDate: string) => {
