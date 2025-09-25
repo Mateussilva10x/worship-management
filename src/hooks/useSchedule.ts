@@ -38,41 +38,74 @@ export const useSchedules = () => {
 };
 
 export const useCreateSchedule = () => {
-    const queryClient = useQueryClient();
-    const { data: groups } = useGroups(); 
+  const queryClient = useQueryClient();
+  const { data: groups } = useGroups();
 
-    return useMutation({
-        mutationFn: async (scheduleData: { date: string; worshipGroupId: string; }) => {
-            const group = groups?.find((g) => g.id === scheduleData.worshipGroupId);
-            if (!group) throw new Error("Grupo selecionado não foi encontrado.");
+  return useMutation({
+    mutationFn: async (scheduleData: { date: string; worshipGroupId: string; }) => {
+      console.log("[useCreateSchedule] Mutation iniciada com:", scheduleData);
 
-            
-            const { data: newSchedule, error: scheduleError } = await supabase
-                .from('schedules')
-                .insert({ date: scheduleData.date, group_id: scheduleData.worshipGroupId })
-                .select()
-                .single();
-            if (scheduleError) throw scheduleError;
+      const group = groups?.find((g) => g.id === scheduleData.worshipGroupId);
+      if (!group) {
+        throw new Error("Grupo selecionado não foi encontrado.");
+      }
 
-            
-            const participantsToInsert = group.members.map((memberId) => ({
-                schedule_id: newSchedule.id,
-                user_id: memberId,
-                status: 'pending' as ParticipationStatus,
-            }));
-            if (participantsToInsert.length > 0) {
-                const { error } = await supabase.from('schedule_participants').insert(participantsToInsert);
-                if (error) throw error;
-            }
+      const { data: newSchedule, error: scheduleError } = await supabase
+        .from('schedules')
+        .insert({ date: scheduleData.date, group_id: scheduleData.worshipGroupId })
+        .select()
+        .single();
+      if (scheduleError) throw scheduleError;
 
-            return newSchedule;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['schedules'] });
-        },
-    });
+      console.log("[useCreateSchedule] Escala criada com sucesso:", newSchedule);
+
+      const participantsToInsert = group.members.map((memberId) => ({
+        schedule_id: newSchedule.id,
+        user_id: memberId,
+        status: 'pending' as ParticipationStatus,
+      }));
+      if (participantsToInsert.length > 0) {
+        const { error } = await supabase.from('schedule_participants').insert(participantsToInsert);
+        if (error) throw error;
+      }
+      console.log("[useCreateSchedule] Participantes inseridos.");
+      try {
+        const targetMembers = group.members;
+        if (targetMembers.length > 0) {
+          console.log(`[OneSignal] A invocar a função 'send-notification' para ${targetMembers.length} membro(s).`);
+        
+          const { error: invokeError } = await supabase.functions.invoke('send-notification', {
+            body: {
+              targetUserIds: targetMembers,
+              title: 'Nova Escala!',
+              message: `Você foi escalado com a equipe "${group.name}" para o dia ${new Date(scheduleData.date).toLocaleDateString()}.`,
+              url: `${window.location.origin}/dashboard`
+            },
+          });
+
+          if (invokeError) {
+            throw invokeError;
+          }
+          console.log('[OneSignal] Função invocada com sucesso.');
+        }
+      } catch (error) {
+
+        console.error("[OneSignal] AVISO: A escala foi criada, mas a notificação falhou:", error);
+      }
+
+      return newSchedule;
+    },
+    onSuccess: () => {
+      console.log("[useCreateSchedule] Mutação bem-sucedida. A invalidar queries...");
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+    },
+    onError: (error) => {
+
+        console.error("[useCreateSchedule] Erro na mutação:", error);
+        alert(`Falha ao criar a escala: ${error.message}`);
+    }
+  });
 };
-
 export const useUpdateMemberStatus = () => {
     const queryClient = useQueryClient();
     return useMutation({
