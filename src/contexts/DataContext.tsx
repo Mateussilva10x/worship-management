@@ -307,6 +307,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     };
 
     setSchedules((prev) => [finalScheduleObject, ...prev]);
+    try {
+      const targetMembers = group.members;
+      if (targetMembers.length > 0) {
+        await supabase.functions.invoke("send-notification", {
+          body: {
+            targetUserIds: targetMembers,
+            title: "Nova Escala!",
+            message: `Você foi escalado com a equipe "${
+              group.name
+            }" para o dia ${new Date(scheduleData.date).toLocaleDateString()}.`,
+            url: `${window.location.origin}/dashboard`,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Failed to send notification:", error);
+    }
     return finalScheduleObject;
   };
 
