@@ -46,7 +46,8 @@ const resources = {
       confirmDeleteSongMessage:
         'Are you sure you want to delete the song "{{songTitle}}"? This action cannot be undone.',
       newSongFormTitle: "Add New Song",
-      songLink: "Song or Chord Link",
+      chordLink: "Chord Link",
+      songLnk: "Song Link",
       mySchedules: "My Schedules",
       noSchedules: "You are not in any upcoming schedules.",
       selectSongs: "Select Songs",
@@ -182,7 +183,8 @@ const resources = {
       confirmDeleteSongMessage:
         'Você tem certeza que deseja excluir a música "{{songTitle}}"? Esta ação não pode ser desfeita.',
       newSongFormTitle: "Adicionar Nova Música",
-      songLink: "Link da Música ou Cifra",
+      chordLink: "Link da Cifra",
+      songLnk: "Link da Música",
       mySchedules: "Minhas Escalas",
       noSchedules: "Você não está em nenhuma escala futura.",
       selectSongs: "Selecionar Músicas",

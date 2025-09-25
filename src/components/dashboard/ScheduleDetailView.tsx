@@ -19,12 +19,14 @@ import {
   Chip,
   IconButton,
   Button,
+  Tooltip,
 } from "@mui/material";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
 import DeleteIcon from "@mui/icons-material/Delete";
-import LinkIcon from "@mui/icons-material/Link";
+import LibraryMusicIcon from "@mui/icons-material/LibraryMusic";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 import EditIcon from "@mui/icons-material/Edit";
 import { generateSchedulePdf } from "../../utils/pdfGenerator";
 import ConfirmationDialog from "../common/ConfirmationDialog";
@@ -140,17 +142,34 @@ const ScheduleDetailView: React.FC<ScheduleDetailViewProps> = ({
               <ListItem
                 key={song.id}
                 secondaryAction={
-                  <IconButton
-                    edge="end"
-                    aria-label="Abrir link da música"
-                    component="a"
-                    href={song.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    disabled={!song.link}
-                  >
-                    <LinkIcon />
-                  </IconButton>
+                  <>
+                    <Tooltip title="Ver Cifra">
+                      <IconButton
+                        size="small"
+                        component="a"
+                        href={song.chart_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        disabled={!song.chart_link}
+                        color="primary"
+                      >
+                        <LibraryMusicIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Ouvir Música">
+                      <IconButton
+                        size="small"
+                        component="a"
+                        href={song.song_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        disabled={!song.song_link}
+                        color="primary"
+                      >
+                        <YouTubeIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </>
                 }
               >
                 <ListItemAvatar>

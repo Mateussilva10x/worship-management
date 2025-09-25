@@ -22,14 +22,16 @@ import {
   AccordionSummary,
   Grid,
   Autocomplete,
+  Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import LinkIcon from "@mui/icons-material/Link";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import NewSongForm from "../components/library/NewSongForm";
+import LibraryMusicIcon from "@mui/icons-material/LibraryMusic";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 import type { Song, SongStatus } from "../types";
 import ConfirmationDialog from "../components/common/ConfirmationDialog";
 import { useTranslation } from "react-i18next";
@@ -101,7 +103,7 @@ const MusicLibraryPage: React.FC = () => {
     artist: string;
     version: string;
     key: string;
-    link: string;
+    chart_link: string;
   }) => {
     if (songToEdit) {
       await updateSongMutation.mutateAsync(
@@ -338,17 +340,32 @@ const MusicLibraryPage: React.FC = () => {
                     </TableCell>
                   )}
                   <TableCell>
-                    <IconButton
-                      size="small"
-                      aria-label="Link"
-                      component="a"
-                      href={song.link}
-                      target="_blank"
-                      disabled={!song.link}
-                      color="primary"
-                    >
-                      <LinkIcon fontSize="small" />
-                    </IconButton>
+                    <Tooltip title="Ver Cifra">
+                      <IconButton
+                        size="small"
+                        component="a"
+                        href={song.chart_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        disabled={!song.chart_link}
+                        color="primary"
+                      >
+                        <LibraryMusicIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Ouvir Música">
+                      <IconButton
+                        size="small"
+                        component="a"
+                        href={song.song_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        disabled={!song.song_link}
+                        color="primary"
+                      >
+                        <YouTubeIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                     {user?.role === "worship_director" &&
                       song.status === "pending" && (
                         <>
@@ -460,17 +477,32 @@ const MusicLibraryPage: React.FC = () => {
                     ml: 1,
                   }}
                 >
-                  <IconButton
-                    size="small"
-                    aria-label="Link"
-                    component="a"
-                    href={song.link}
-                    target="_blank"
-                    disabled={!song.link}
-                    color="primary"
-                  >
-                    <LinkIcon fontSize="small" />
-                  </IconButton>
+                  <Tooltip title="Ver Cifra">
+                    <IconButton
+                      size="small"
+                      component="a"
+                      href={song.chart_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      disabled={!song.chart_link}
+                      color="primary"
+                    >
+                      <LibraryMusicIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Ouvir Música">
+                    <IconButton
+                      size="small"
+                      component="a"
+                      href={song.song_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      disabled={!song.song_link}
+                      color="primary"
+                    >
+                      <YouTubeIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                   {user?.role === "worship_director" &&
                     song.status === "pending" && (
                       <>
