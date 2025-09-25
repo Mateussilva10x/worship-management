@@ -18,6 +18,7 @@ import {
   useCreateSchedule,
   useDeleteSchedule,
   useUpdateScheduleSongs,
+  useUpdateSchedule,
 } from "../hooks/useSchedule";
 import { useAllGroups } from "../hooks/useGroups";
 import { useApprovedSongs } from "../hooks/useSongs";
@@ -50,13 +51,16 @@ const DashboardPage: React.FC = () => {
   const createScheduleMutation = useCreateSchedule();
   const deleteScheduleMutation = useDeleteSchedule();
   const updateScheduleSongsMutation = useUpdateScheduleSongs();
+  const updateScheduleMutation = useUpdateSchedule();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [viewingSchedule, setViewingSchedule] = useState<Schedule | null>(null);
-  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [editingScheduleSongs, setEditingScheduleSongs] =
+    useState<Schedule | null>(null);
   const [statusUpdateSchedule, setStatusUpdateSchedule] =
     useState<Schedule | null>(null);
   const [viewMode, setViewMode] = useState<"upcoming" | "past">("upcoming");
+  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
 
   const [showOnlyMySchedules, setShowOnlyMySchedules] =
     useState(isMemberOrLeader);
@@ -117,11 +121,26 @@ const DashboardPage: React.FC = () => {
       { scheduleId, songIds: newSongIds },
       {
         onSuccess: () => {
-          setEditingSchedule(null);
+          setEditingScheduleSongs(null);
           showNotification("Músicas da escala atualizadas!", "success");
         },
         onError: (err: any) =>
           showNotification(`Falha ao salvar músicas: ${err.message}`, "error"),
+      }
+    );
+  };
+
+  const handleUpdateSchedule = async (formData: any) => {
+    if (!editingSchedule) return;
+
+    await updateScheduleMutation.mutateAsync(
+      { scheduleId: editingSchedule.id, scheduleData: formData },
+      {
+        onSuccess: () => {
+          showNotification("Escala atualizada com sucesso!", "success");
+          setEditingSchedule(null);
+        },
+        onError: (err) => showNotification(`Erro: ${err.message}`, "error"),
       }
     );
   };
@@ -237,14 +256,23 @@ const DashboardPage: React.FC = () => {
         onClose={() => setStatusUpdateSchedule(null)}
       />
       <Modal
-        open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        open={isCreateModalOpen || !!editingSchedule}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setEditingSchedule(null);
+        }}
       >
         <Box sx={modalStyle}>
           <NewScheduleForm
             groups={groups}
-            onSubmit={handleCreateSchedule}
-            onCancel={() => setIsCreateModalOpen(false)}
+            onSubmit={
+              editingSchedule ? handleUpdateSchedule : handleCreateSchedule
+            }
+            onCancel={() => {
+              setIsCreateModalOpen(false);
+              setEditingSchedule(null);
+            }}
+            scheduleToEdit={editingSchedule}
           />
         </Box>
       </Modal>
@@ -264,28 +292,32 @@ const DashboardPage: React.FC = () => {
               canEditSongs={user?.id === viewingSchedule.group?.leader_id}
               canDeleteSchedule={user?.role === "worship_director"}
               onEditSongs={() => {
-                setEditingSchedule(viewingSchedule);
+                setEditingScheduleSongs(viewingSchedule);
                 setViewingSchedule(null);
               }}
               onDelete={handleDeleteSchedule}
+              onEdit={() => {
+                setEditingSchedule(viewingSchedule);
+                setViewingSchedule(null);
+              }}
             />
           </Box>
         </Modal>
       )}
 
-      {editingSchedule && (
+      {editingScheduleSongs && (
         <Modal
-          open={!!editingSchedule}
-          onClose={() => setEditingSchedule(null)}
+          open={!!editingScheduleSongs}
+          onClose={() => setEditingScheduleSongs(null)}
         >
           <Box sx={modalStyle}>
             <EditScheduleSongs
-              schedule={editingSchedule}
+              schedule={editingScheduleSongs}
               allSongs={songs}
               users={users}
               onSave={handleSaveSongs}
-              onClose={() => setEditingSchedule(null)}
-              group={editingSchedule.group}
+              onClose={() => setEditingScheduleSongs(null)}
+              group={editingScheduleSongs.group}
             />
           </Box>
         </Modal>

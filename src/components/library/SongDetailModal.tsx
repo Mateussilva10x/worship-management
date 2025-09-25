@@ -6,10 +6,11 @@ import {
   IconButton,
   Divider,
   Chip,
-  Link,
+  Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import LinkIcon from "@mui/icons-material/Link";
+import LibraryMusicIcon from "@mui/icons-material/LibraryMusic";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 import type { Song } from "../../types";
 import { useTranslation } from "react-i18next";
 
@@ -56,14 +57,34 @@ const SongDetailModal: React.FC<SongDetailModalProps> = ({ song, onClose }) => {
           <Typography variant="body2">
             <strong>{t("songKey")}:</strong> {song.key}
           </Typography>
-          <Link
-            href={song.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ display: "flex", alignItems: "center" }}
-          >
-            <LinkIcon fontSize="small" sx={{ mr: 0.5 }} /> {t("songLink")}
-          </Link>
+          <Box sx={{ display: "flex" }}>
+            <Tooltip title="Ver Cifra">
+              <IconButton
+                size="small"
+                component="a"
+                href={song.chart_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                disabled={!song.chart_link}
+                color="primary"
+              >
+                <LibraryMusicIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Ouvir Música">
+              <IconButton
+                size="small"
+                component="a"
+                href={song.song_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                disabled={!song.song_link}
+                color="primary"
+              >
+                <YouTubeIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
 
         <Typography variant="subtitle1" gutterBottom>

@@ -18,6 +18,7 @@ import Alert from "@mui/material/Alert";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import { Box } from "@mui/material";
 import Footer from "./components/common/Footer";
+import OneSignalManager from "./components/OneSignalManager";
 
 function App() {
   const { open, message, severity, handleClose } = useNotificationState();
@@ -27,6 +28,7 @@ function App() {
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
         <Router>
+          <OneSignalManager />
           <Box component="main" sx={{ flexGrow: 1 }}>
             <Routes>
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />

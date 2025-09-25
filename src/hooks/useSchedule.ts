@@ -135,3 +135,29 @@ export const useDeleteSchedule = () => {
         },
     });
 };
+
+export const useUpdateSchedule = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ scheduleId, scheduleData }: { 
+        scheduleId: string, 
+        scheduleData: { date: string; worshipGroupId: string; } 
+    }) => {
+      const { data, error } = await supabase
+        .from('schedules')
+        .update({
+          date: scheduleData.date,
+          group_id: scheduleData.worshipGroupId,
+        })
+        .eq('id', scheduleId)
+        .select()
+        .single();
+
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+    },
+  });
+};
