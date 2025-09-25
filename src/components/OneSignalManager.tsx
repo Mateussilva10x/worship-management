@@ -54,13 +54,35 @@ const OneSignalManager = (): null => {
         isOneSignalInitialized = true;
 
         OneSignal.User.PushSubscription.addEventListener("change", async () => {
-          const { data } = await supabase.auth.getUser();
+          console.log("Evento 'change' da subscrição disparado!");
+
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
           const subscriptionId = OneSignal.User.PushSubscription.id;
-          if (subscriptionId && data.user) {
-            await supabase
+
+          console.log("Utilizador autenticado ID:", user?.id);
+          console.log("OneSignal Subscription ID capturado:", subscriptionId);
+
+          if (subscriptionId && user) {
+            console.log(
+              `A tentar atualizar o perfil ${user.id} com o ID ${subscriptionId}`
+            );
+
+            const { data, error } = await supabase
               .from("profiles")
               .update({ onesignal_subscription_id: subscriptionId })
-              .eq("id", data.user.id);
+              .eq("id", user.id);
+
+            if (error) {
+              console.error("ERRO ao atualizar o perfil no Supabase:", error);
+            } else {
+              console.log("SUCESSO: Perfil atualizado no Supabase.", data);
+            }
+          } else {
+            console.warn(
+              "Não foi possível atualizar: utilizador não logado ou ID de subscrição em falta."
+            );
           }
         });
       }
