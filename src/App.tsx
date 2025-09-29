@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+} from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/Login";
@@ -19,7 +24,28 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import { Box } from "@mui/material";
 import Footer from "./components/common/Footer";
 import OneSignalManager from "./components/OneSignalManager";
+import { supabase } from "./supabaseClient";
+import { useEffect } from "react";
 
+const AuthEventHandler = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        navigate("/reset-password");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  return null;
+};
 function App() {
   const { open, message, severity, handleClose } = useNotificationState();
   return (
@@ -29,9 +55,11 @@ function App() {
       >
         <Router>
           <OneSignalManager />
+          <AuthEventHandler />
           <Box component="main" sx={{ flexGrow: 1 }}>
             <Routes>
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ChangePasswordPage />} />
               <Route element={<RedirectIfAuth />}>
                 <Route path="/login" element={<LoginPage />} />
               </Route>
@@ -50,11 +78,6 @@ function App() {
                     />
                     <Route path="/users" element={<UsersPage />} />
                   </Route>
-
-                  <Route
-                    path="/reset-password"
-                    element={<ChangePasswordPage />}
-                  />
                 </Route>
               </Route>
             </Routes>
