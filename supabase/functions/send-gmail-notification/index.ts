@@ -1,6 +1,7 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'; // Import direto
-import { corsHeaders } from '../../_shared/cors.ts'; // Manter caminho relativo para ficheiros locais
-import nodemailer from 'https://esm.sh/nodemailer@6.9.14';
+/// <reference types="https://esm.sh/@supabase/functions-js@2" />
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { corsHeaders } from '../../_shared/cors.ts'; 
+import nodemailer from 'https://esm.sh/nodemailer@6.9.14?target=deno&deno-std=0.132.0&no-check';
 
 interface NotificationPayload {
   targetUserIds?: string[];
