@@ -64,70 +64,58 @@ export const useCreateSchedule = () => {
       }
 
       try {
-      const targetMembers = group.members;
-      if (targetMembers.length > 0) {
-        console.log(`[Gmail] Preparando para enviar e-mail para ${targetMembers.length} membro(s).`);
+        const targetMembers = group.members;
+        if (targetMembers.length > 0) {
+          console.log(`[Resend] Preparando para enviar e-mail para ${targetMembers.length} membro(s).`);
 
-        
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .select('id, name') 
-          .in('id', targetMembers);
+          const scheduleDateFormatted = new Date(scheduleData.date).toLocaleDateString('pt-BR', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
 
-        if (profileError) {
-          console.warn("[Gmail] Não foi possível buscar nomes dos membros para personalizar e-mail:", profileError);
-        }
-        const scheduleDateFormatted = new Date(scheduleData.date).toLocaleDateString('pt-BR', {
-          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
-
-        const emailHtml = `
-          <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-            <div style="background-color: #2E7D32; color: white; padding: 20px; text-align: center;">
-              <h1 style="margin: 0;">Nova Escala Adicionada!</h1>
-            </div>
-            <div style="padding: 20px; background-color: #fcf8e3; color: #333;">
-              <p>Olá membro da equipe,</p>
-              <p>Uma nova escala foi adicionada:</p>
-              <div style="background-color: #fff; padding: 15px; border-radius: 5px; border: 1px solid #eee; margin: 15px 0;">
-                <p><strong>Grupo:</strong> ${group.name}</p>
-                <p><strong>Data:</strong> ${scheduleDateFormatted}</p>
+          const emailHtml = `
+            <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+              <div style="background-color: #2E7D32; color: white; padding: 20px; text-align: center;">
+                <h1 style="margin: 0;">Nova Escala Adicionada!</h1>
               </div>
-              <p>Por favor, aceda à plataforma para confirmar ou recusar a sua participação.</p>
-              <div style="text-align: center; margin-top: 25px;">
-                <a href="${window.location.origin}/dashboard" style="background-color: #2E7D32; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 16px;">
-                  Acessar Aplicação
-                </a>
+              <div style="padding: 20px; background-color: #fcf8e3; color: #333;">
+                <p>Olá membro da equipe,</p>
+                <p>Uma nova escala foi adicionada para a sua equipe:</p>
+                <div style="background-color: #fff; padding: 15px; border-radius: 5px; border: 1px solid #eee; margin: 15px 0;">
+                  <p><strong>Equipa:</strong> ${group.name}</p>
+                  <p><strong>Data:</strong> ${scheduleDateFormatted}</p>
+                </div>
+                <p>Por favor, aceda à plataforma para confirmar ou recusar a sua participação.</p>
+                <div style="text-align: center; margin-top: 25px;">
+                  <a href="${window.location.origin}/dashboard" style="background-color: #2E7D32; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 16px;">
+                    Acessar Aplicação
+                  </a>
+                </div>
+                <br>
+                <p>Que Deus abençoe!</p>
+                <p><strong>Worship Management IPC</strong></p>
               </div>
-              <br>
-              <p>Que Deus abençoe!</p>
-              <p><strong>Equipe Worship Management</strong></p>
             </div>
-          </div>
-        `;
+          `;
 
-        
-        const { error: invokeError } = await supabase.functions.invoke('send-gmail-notification', {
-          body: {
-            targetUserIds: targetMembers,
-            subject: `Nova Escala: ${group.name} - ${new Date(scheduleData.date).toLocaleDateString()}`,
-            htmlBody: emailHtml, 
-          },
-        });
+          
+          const { error: invokeError } = await supabase.functions.invoke('send-resend-notification', { 
+            body: {
+              targetUserIds: targetMembers,
+              subject: `Nova Escala: ${group.name} - ${new Date(scheduleData.date).toLocaleDateString()}`,
+              htmlBody: emailHtml,
+            },
+          });
 
-        if (invokeError) {
-          throw invokeError;
+          if (invokeError) {
+            throw invokeError;
+          }
+          console.log('[Resend] Função invocada com sucesso.');
+
+        } else {
+          console.log('[Resend] Nenhum membro no grupo para notificar.');
         }
-        console.log('[Gmail] Função invocada com sucesso.');
-
-      } else {
-        console.log('[Gmail] Nenhum membro no grupo para notificar.');
-      }
-    } catch (error) {
-      
-      console.error("[Gmail] AVISO: A escala foi criada, mas a notificação por e-mail falhou:", error);
-      
-      
+      } catch (error) {
+      console.error("[Resend] AVISO: A escala foi criada, mas a notificação por e-mail falhou:", error);
     }
       return newSchedule;
     },

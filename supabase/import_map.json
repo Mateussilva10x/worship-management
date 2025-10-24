@@ -2,16 +2,6 @@
   "imports": {
     "functions-js": "https://esm.sh/@supabase/functions-js@2",
     "supabase-js": "https://esm.sh/@supabase/supabase-js@2",
-    "cors": "./_shared/cors.ts",
-    "nodemailer": "https://esm.sh/nodemailer@6.9.14?target=deno&deno-std=0.132.0&no-check",
-    "node:buffer": "https://esm.sh/buffer@6.0.3",
-    "node:crypto": "https://deno.land/std@0.177.0/node/crypto.ts",
-    "node:events": "https://deno.land/std@0.177.0/node/events.ts",
-    "node:stream": "https://deno.land/std@0.177.0/node/stream.ts",
-    "node:util": "https://deno.land/std@0.177.0/node/util.ts",
-    "node:os": "https://deno.land/std@0.177.0/node/os.ts",
-    "node:string_decoder": "https://deno.land/std@0.177.0/node/string_decoder.ts",
-    "node:dns": "https://deno.land/std@0.177.0/node/dns.ts",
-    "node:net": "https://deno.land/std@0.177.0/node/net.ts"
+    "cors": "./_shared/cors.ts"
   }
 }
