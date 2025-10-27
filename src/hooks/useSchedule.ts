@@ -86,7 +86,7 @@ export const useCreateSchedule = () => {
                 </div>
                 <p>Por favor, aceda à plataforma para confirmar ou recusar a sua participação.</p>
                 <div style="text-align: center; margin-top: 25px;">
-                  <a href="${window.location.origin}/dashboard" style="background-color: #2E7D32; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 16px;">
+                  <a href="wmanagement.vercel.app/dashboard" style="background-color: #2E7D32; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 16px;">
                     Acessar Aplicação
                   </a>
                 </div>
