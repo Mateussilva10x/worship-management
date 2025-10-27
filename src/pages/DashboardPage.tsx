@@ -8,6 +8,8 @@ import {
   CircularProgress,
   FormControlLabel,
   Switch,
+  Tabs,
+  Tab,
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
@@ -30,6 +32,29 @@ import NewScheduleForm from "../components/dashboard/NewScheduleForm";
 import ScheduleDetailView from "../components/dashboard/ScheduleDetailView";
 import EditScheduleSongs from "../components/dashboard/EditScheduleSongs";
 import UpdateStatusModal from "../components/dashboard/UpdateStatusModal";
+import SwapRequestsList from "../components/dashboard/SwapRequestList";
+import RequestSwapModal from "../components/dashboard/RequestSwapModal";
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`dashboard-tabpanel-${index}`}
+      aria-labelledby={`dashboard-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 const DashboardPage: React.FC = () => {
   const { t } = useTranslation();
@@ -40,6 +65,7 @@ const DashboardPage: React.FC = () => {
   const isManagement =
     user?.role === "worship_director" || user?.role === "admin";
   const isMemberOrLeader = user?.role === "member" || user?.role === "leader";
+  const isLeader = user?.role === "leader";
 
   const { data: allSchedules = [], isLoading: schedulesLoading } =
     useSchedules();
@@ -61,9 +87,27 @@ const DashboardPage: React.FC = () => {
     useState<Schedule | null>(null);
   const [viewMode, setViewMode] = useState<"upcoming" | "past">("upcoming");
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [swapRequestModalOpen, setSwapRequestModalOpen] = useState(false);
+  const [initiatingSwapSchedule, setInitiatingSwapSchedule] =
+    useState<Schedule | null>(null);
 
   const [showOnlyMySchedules, setShowOnlyMySchedules] =
     useState(isMemberOrLeader);
+
+  const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
+    setSelectedTab(newValue);
+  };
+
+  const handleOpenSwapRequestModal = (schedule: Schedule) => {
+    setInitiatingSwapSchedule(schedule);
+    setSwapRequestModalOpen(true);
+  };
+
+  const handleCloseSwapRequestModal = () => {
+    setInitiatingSwapSchedule(null);
+    setSwapRequestModalOpen(false);
+  };
 
   const schedulesToDisplay = useMemo(() => {
     const today = new Date();
@@ -162,18 +206,20 @@ const DashboardPage: React.FC = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 3,
+          mb: 1,
           flexWrap: "wrap",
           gap: 2,
         }}
       >
         <Box>
           <Typography variant="h5">
-            {viewMode === "upcoming"
-              ? t("upcomingSchedules")
-              : t("pastSchedules")}
+            {selectedTab === 0
+              ? viewMode === "upcoming"
+                ? t("upcomingSchedules")
+                : t("pastSchedules")
+              : t("swapRequests")}
           </Typography>
-          {isMemberOrLeader && (
+          {isMemberOrLeader && selectedTab === 0 && (
             <Typography variant="caption">
               {showOnlyMySchedules ? t("mySchedules") : t("allSchedules")}
             </Typography>
@@ -188,19 +234,21 @@ const DashboardPage: React.FC = () => {
             flexWrap: "wrap",
           }}
         >
-          <ToggleButtonGroup
-            color="primary"
-            value={viewMode}
-            exclusive
-            onChange={(_event, newMode) => {
-              if (newMode) setViewMode(newMode);
-            }}
-            aria-label="Visualização de escalas"
-            size="small"
-          >
-            <ToggleButton value="upcoming">{t("next")}</ToggleButton>
-            <ToggleButton value="past">{t("past")}</ToggleButton>
-          </ToggleButtonGroup>
+          {selectedTab === 0 && (
+            <ToggleButtonGroup
+              color="primary"
+              value={viewMode}
+              exclusive
+              onChange={(_event, newMode) => {
+                if (newMode) setViewMode(newMode);
+              }}
+              aria-label="Visualização de escalas"
+              size="small"
+            >
+              <ToggleButton value="upcoming">{t("next")}</ToggleButton>
+              <ToggleButton value="past">{t("past")}</ToggleButton>
+            </ToggleButtonGroup>
+          )}
 
           {isDirector && (
             <Button
@@ -212,7 +260,7 @@ const DashboardPage: React.FC = () => {
             </Button>
           )}
 
-          {isMemberOrLeader && (
+          {isMemberOrLeader && selectedTab === 0 && (
             <FormControlLabel
               control={
                 <Switch
@@ -226,30 +274,104 @@ const DashboardPage: React.FC = () => {
         </Box>
       </Box>
 
-      {schedulesToDisplay.map((schedule: Schedule) => {
-        const isUserInSchedule = user
-          ? schedule.membersStatus.some((ms) => ms.memberId === user.id)
-          : false;
-        const myStatus =
-          isUserInSchedule && user
-            ? schedule.membersStatus.find((ms) => ms.memberId === user.id)
-                ?.status
-            : undefined;
+      {isLeader ? (
+        <>
+          <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 0 }}>
+            <Tabs
+              value={selectedTab}
+              onChange={handleChangeTab}
+              aria-label="Painel do Líder"
+            >
+              <Tab
+                label={t("scheduleView")}
+                id="dashboard-tab-0"
+                aria-controls="dashboard-tabpanel-0"
+              />
+              <Tab
+                label={t("swapRequests")}
+                id="dashboard-tab-1"
+                aria-controls="dashboard-tabpanel-1"
+              />
+            </Tabs>
+          </Box>
 
-        return (
-          <ScheduleCard
-            key={schedule.id}
-            schedule={schedule}
-            onClick={() => setViewingSchedule(schedule)}
-            myStatus={myStatus}
-            onStatusClick={
-              isUserInSchedule
-                ? () => setStatusUpdateSchedule(schedule)
-                : undefined
-            }
-          />
-        );
-      })}
+          <TabPanel value={selectedTab} index={0}>
+            {schedulesToDisplay.length > 0 ? (
+              schedulesToDisplay.map((schedule: Schedule) => {
+                const isUserInSchedule = user
+                  ? schedule.membersStatus.some((ms) => ms.memberId === user.id)
+                  : false;
+                const myStatus =
+                  isUserInSchedule && user
+                    ? schedule.membersStatus.find(
+                        (ms) => ms.memberId === user.id
+                      )?.status
+                    : undefined;
+                const canRequestSwap = isLeader && viewMode === "upcoming";
+
+                return (
+                  <ScheduleCard
+                    key={schedule.id}
+                    schedule={schedule}
+                    onClick={() => setViewingSchedule(schedule)}
+                    myStatus={myStatus}
+                    onStatusClick={
+                      isUserInSchedule
+                        ? () => setStatusUpdateSchedule(schedule)
+                        : undefined
+                    }
+                    showRequestSwapButton={canRequestSwap}
+                    onRequestSwapClick={() =>
+                      handleOpenSwapRequestModal(schedule)
+                    }
+                  />
+                );
+              })
+            ) : (
+              <Typography sx={{ textAlign: "center", mt: 4 }}>
+                {t("noSchedulesFound")}
+              </Typography>
+            )}
+          </TabPanel>
+
+          <TabPanel value={selectedTab} index={1}>
+            <SwapRequestsList />
+          </TabPanel>
+        </>
+      ) : (
+        <Box sx={{ pt: 3 }}>
+          {schedulesToDisplay.length > 0 ? (
+            schedulesToDisplay.map((schedule: Schedule) => {
+              const isUserInSchedule = user
+                ? schedule.membersStatus.some((ms) => ms.memberId === user.id)
+                : false;
+              const myStatus =
+                isUserInSchedule && user
+                  ? schedule.membersStatus.find((ms) => ms.memberId === user.id)
+                      ?.status
+                  : undefined;
+              return (
+                <ScheduleCard
+                  key={schedule.id}
+                  schedule={schedule}
+                  onClick={() => setViewingSchedule(schedule)}
+                  myStatus={myStatus}
+                  onStatusClick={
+                    isUserInSchedule
+                      ? () => setStatusUpdateSchedule(schedule)
+                      : undefined
+                  }
+                  showRequestSwapButton={false}
+                />
+              );
+            })
+          ) : (
+            <Typography sx={{ textAlign: "center", mt: 4 }}>
+              {t("noSchedulesFound")}
+            </Typography>
+          )}
+        </Box>
+      )}
 
       <UpdateStatusModal
         schedule={statusUpdateSchedule}
@@ -290,7 +412,7 @@ const DashboardPage: React.FC = () => {
               songs={songs.filter((s) => viewingSchedule.songs.includes(s.id))}
               onClose={() => setViewingSchedule(null)}
               canEditSongs={user?.id === viewingSchedule.group?.leader_id}
-              canDeleteSchedule={user?.role === "worship_director"}
+              canDeleteSchedule={isDirector}
               onEditSongs={() => {
                 setEditingScheduleSongs(viewingSchedule);
                 setViewingSchedule(null);
@@ -304,6 +426,12 @@ const DashboardPage: React.FC = () => {
           </Box>
         </Modal>
       )}
+
+      <RequestSwapModal
+        open={swapRequestModalOpen}
+        onClose={handleCloseSwapRequestModal}
+        initiatingSchedule={initiatingSwapSchedule}
+      />
 
       {editingScheduleSongs && (
         <Modal
@@ -322,6 +450,8 @@ const DashboardPage: React.FC = () => {
           </Box>
         </Modal>
       )}
+
+      {/* TODO: Adicionar Modal para criar solicitação de troca (a ser aberto pelo onRequestSwapClick) */}
     </Box>
   );
 };

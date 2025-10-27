@@ -7,11 +7,13 @@ import {
   Box,
   Divider,
   Chip,
+  Button,
 } from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
@@ -22,6 +24,8 @@ interface ScheduleCardProps {
   "data-testid"?: string;
   myStatus?: ParticipationStatus;
   onStatusClick?: () => void;
+  showRequestSwapButton?: boolean;
+  onRequestSwapClick?: () => void;
 }
 
 const ScheduleCard: React.FC<ScheduleCardProps> = ({
@@ -30,6 +34,8 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
   "data-testid": dataTestId,
   myStatus,
   onStatusClick,
+  showRequestSwapButton,
+  onRequestSwapClick,
 }) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -90,6 +96,20 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
               {t("team")}: {groupName}
             </Typography>
           </Box>
+          {showRequestSwapButton && onRequestSwapClick && myStatus && (
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<SwapHorizIcon />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRequestSwapClick();
+              }}
+              sx={{ pointerEvents: "auto", mr: 2 }}
+            >
+              {t("requestSwap")}
+            </Button>
+          )}
           {myStatus && (
             <Chip
               label={myStatusMap[myStatus].label}
