@@ -81,7 +81,7 @@ export const useCreateSchedule = () => {
                 <p>Olá membro da equipe,</p>
                 <p>Uma nova escala foi adicionada para a sua equipe:</p>
                 <div style="background-color: #fff; padding: 15px; border-radius: 5px; border: 1px solid #eee; margin: 15px 0;">
-                  <p><strong>Equipa:</strong> ${group.name}</p>
+                  <p><strong>Grupo:</strong> ${group.name}</p>
                   <p><strong>Data:</strong> ${scheduleDateFormatted}</p>
                 </div>
                 <p>Por favor, aceda à plataforma para confirmar ou recusar a sua participação.</p>
