@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Worship Management <ipc@worshipmanagement.work.gd>', 
+        from: 'Worship Management <suporte@worshipmanagement.work.gd>', 
         to: finalTargetEmails, 
         subject: subject,
         html: htmlBody,

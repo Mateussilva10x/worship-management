@@ -23,7 +23,6 @@ import Alert from "@mui/material/Alert";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import { Box } from "@mui/material";
 import Footer from "./components/common/Footer";
-import OneSignalManager from "./components/OneSignalManager";
 import { supabase } from "./supabaseClient";
 import { useEffect } from "react";
 
@@ -54,7 +53,6 @@ function App() {
         sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
         <Router>
-          <OneSignalManager />
           <AuthEventHandler />
           <Box component="main" sx={{ flexGrow: 1 }}>
             <Routes>
