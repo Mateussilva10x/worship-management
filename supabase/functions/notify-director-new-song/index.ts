@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
           <p>Por favor, acesse à plataforma para revisar a música.</p>
           <br>
           <p>Que Deus abençoe!</p>
-          <p><strong>Worship Management</strong></p> 
+          <p><strong>Worship Management IPC</strong></p> 
         </div>
       </div>
     `; 

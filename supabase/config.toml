@@ -420,3 +420,14 @@ entrypoint = "./functions/notify-director-new-song/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/notify-director-new-song/*.html" ]
+
+[functions.notify-song-approved]
+enabled = true
+verify_jwt = true
+import_map = "./functions/notify-song-approved/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/notify-song-approved/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/notify-song-approved/*.html" ]
