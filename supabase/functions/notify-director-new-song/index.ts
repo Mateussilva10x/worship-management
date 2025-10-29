@@ -80,8 +80,7 @@ Deno.serve(async (req) => {
           <p>Uma nova música foi adicionada ao sistema e aguarda a sua revisão:</p>
           <div style="background-color: #fff; padding: 15px; border-radius: 5px; border: 1px solid #eee; margin: 15px 0;">
             <p><strong>Título:</strong> ${newSong.title}</p>
-            <p><strong>Tom:</strong> ${newSong.key || 'Não informado'}</p>
-            
+            <p><strong>Tom:</strong> ${newSong.key || 'Não informado'}</p>      
           </div>
           <p>Por favor, acesse à plataforma para revisar a música.</p>
           <br>
