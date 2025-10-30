@@ -95,7 +95,6 @@ Deno.serve(async (req) => {
     }
 
     
-    const initiatorName = initiatingData.initiating_leader?.name || 'Um líder';
     const initiatorScheduleDate = new Date(initiatingData.date).toLocaleDateString('pt-BR', { dateStyle: 'full' });
     const targetScheduleDate = new Date(targetData.date).toLocaleDateString('pt-BR', { dateStyle: 'full' });
 
@@ -106,7 +105,7 @@ Deno.serve(async (req) => {
         </div>
         <div style="padding: 20px; background-color: #fcf8e3; color: #333;">
           <p>Olá,</p>
-          <p>O líder <strong>${initiatorName}</strong> (Grupo: ${initiatingData.group.name}) solicitou uma troca de escala com o seu grupo.</p>
+          <p>O líder dp Grupo: ${initiatingData.group.name} solicitou uma troca de escala com o seu grupo.</p>
           <p>Abaixo estão os detalhes:</p>
           <div style="background-color: #fff; padding: 15px; border-radius: 5px; border: 1px solid #eee; margin: 15px 0;">
             <p><strong>A escala Deles:</strong> ${initiatingData.group.name}</p>

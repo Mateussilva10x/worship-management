@@ -307,7 +307,10 @@ const DashboardPage: React.FC = () => {
                         (ms) => ms.memberId === user.id
                       )?.status
                     : undefined;
-                const canRequestSwap = isLeader && viewMode === "upcoming";
+                const isLeaderOfThisSchedule =
+                  user?.id === schedule.group?.leader_id;
+                const canRequestSwap =
+                  isLeaderOfThisSchedule && viewMode === "upcoming";
 
                 return (
                   <ScheduleCard
