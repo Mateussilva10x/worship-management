@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Worship Management <suporte@worshipmanagement.work.gd>', 
+        from: 'Worship Management <lideranca@louvoripcatole.work.gd>', 
         to: targetEmails,
         subject: `Nova Música Aprovada: ${approvedSong.title}`,
         html: emailHtml,
