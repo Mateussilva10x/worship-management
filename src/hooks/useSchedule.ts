@@ -73,20 +73,25 @@ export const useCreateSchedule = () => {
           });
 
           const emailHtml = `
-            <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-              <div style="background-color: #2E7D32; color: white; padding: 20px; text-align: center;">
-                <h1 style="margin: 0;">Nova Escala Adicionada!</h1>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background-color: #f4f1e9;">
+              <div style="background-color: #388E3C; color: white; padding: 24px; text-align: center;">
+                <h1 style="margin: 0; font-size: 24px; line-height: 1.3;">📄 Nova Escala Disponível</h1>
               </div>
-              <div style="padding: 20px; background-color: #fcf8e3; color: #333;">
-                <p>Olá membro da equipe,</p>
-                <p>Uma nova escala foi adicionada para a sua equipe:</p>
-                <div style="background-color: #fff; padding: 15px; border-radius: 5px; border: 1px solid #eee; margin: 15px 0;">
-                  <p><strong>Grupo:</strong> ${group.name}</p>
-                  <p><strong>Data:</strong> ${scheduleDateFormatted}</p>
+              <div style="padding: 24px; color: #333; line-height: 1.6;">
+                <p style="font-size: 16px;">Olá, irmão(ã)!</p>
+                <p>Uma nova escala foi publicada.</p>
+                
+                <h2 style="font-size: 20px; color: #333; margin-top: 20px; margin-bottom: 10px;">Grupo: ${group.name}</h2> 
+                
+                <div style="background-color: #4CAF50; color: white; padding: 16px; border-radius: 8px; font-size: 14px;">
+                  <p style="margin: 5px 0;"><strong>📅 Data:</strong> ${scheduleDateFormatted}</p>
                 </div>
-                <p>Por favor, acesse à plataforma para confirmar ou recusar a sua participação.</p>
-                <br>
-                <p>Que Deus abençoe!</p>
+
+                <div style="background-color: #FFF9C4; border-left: 5px solid #FBC02D; padding: 10px 15px; margin-top: 20px; font-size: 14px;">
+                  <p style="margin: 0;"><strong>Importante:</strong> Por favor, confirme a sua presença ou avise com antecedência caso não possa comparecer.</p>
+                </div>
+                
+                <p style="margin-top: 25px;">Que Deus abençoe!</p>
                 <p><strong>Worship Management IPC</strong></p>
               </div>
             </div>
