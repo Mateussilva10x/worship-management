@@ -66,12 +66,10 @@ export const useCreateSchedule = () => {
       try {
         const targetMembers = group.members;
         if (targetMembers.length > 0) {
-          console.log(`[Resend] Preparando para enviar e-mail para ${targetMembers.length} membro(s).`);
-
           const scheduleDateFormatted = new Date(scheduleData.date).toLocaleDateString('pt-BR', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
           });
-
+          
           const emailHtml = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background-color: #f4f1e9;">
               <div style="background-color: #388E3C; color: white; padding: 24px; text-align: center;">
@@ -90,15 +88,12 @@ export const useCreateSchedule = () => {
                 <div style="background-color: #FFF9C4; border-left: 5px solid #FBC02D; padding: 10px 15px; margin-top: 20px; font-size: 14px;">
                   <p style="margin: 0;"><strong>Importante:</strong> Por favor, confirme a sua presença ou avise com antecedência caso não possa comparecer.</p>
                 </div>
-                
-                <p style="margin-top: 25px;">Que Deus abençoe!</p>
+                <p style="margin-top: 25px;">Que Deus Abençoe!</p>
                 <p><strong>Worship Management IPC</strong></p>
               </div>
             </div>
-          `;
-
-          
-          const { error: invokeError } = await supabase.functions.invoke('send-resend-notification', { 
+          `;  
+          const { error: invokeError } = await supabase.functions.invoke('send-resend-notification', {
             body: {
               targetUserIds: targetMembers,
               subject: `Nova Escala: ${group.name} - ${new Date(scheduleData.date).toLocaleDateString()}`,
@@ -106,17 +101,14 @@ export const useCreateSchedule = () => {
             },
           });
 
-          if (invokeError) {
-            throw invokeError;
-          }
-          console.log('[Resend] Função invocada com sucesso.');
+          if (invokeError) throw invokeError;
+          console.log('[Resend] Função invocada com sucesso (novo template).');
 
-        } else {
-          console.log('[Resend] Nenhum membro no grupo para notificar.');
         }
       } catch (error) {
-      console.error("[Resend] AVISO: A escala foi criada, mas a notificação por e-mail falhou:", error);
-    }
+        console.error("[Resend] AVISO: A escala foi criada, mas a notificação por e-mail falhou:", error);
+      }
+
       return newSchedule;
     },
     onSuccess: () => {
