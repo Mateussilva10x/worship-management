@@ -126,9 +126,9 @@ const RequestSwapModal: React.FC<RequestSwapModalProps> = ({
                 >
                   <ListItemText
                     primary={schedule.group?.name || "Grupo Desconhecido"}
-                    secondary={new Date(schedule.date).toLocaleDateString(
-                      i18n.language
-                    )}
+                    secondary={new Date(
+                      `${schedule.date}T12:00:00`
+                    ).toLocaleDateString(i18n.language)}
                   />
                 </ListItemButton>
               ))}
