@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
     const { targetRole, subject, htmlBody } = payload;
     console.log("[send-resend-notification] Payload recebido:", payload);
 
-    if (!subject || !htmlBody || !targetRole) {
+    if (!subject || !htmlBody || (!targetUserIds && !targetRole)) {
       throw new Error('Payload inválido. Campos obrigatórios em falta.');
     }
 
@@ -99,8 +99,16 @@ Deno.serve(async (req) => {
     
     console.log(`[send-resend-notification] A buscar e-mails para role: ${targetRole}`);
     let query = supabaseAdmin.from('profiles').select('email');
-    if (targetRole !== 'all') {
-      query = query.eq('role', targetRole);
+    if (targetUserIds && targetUserIds.length > 0) {
+        console.log(`... por IDs: ${targetUserIds.join(', ')}`);
+        query = query.in('id', targetUserIds);
+    } else if (targetRole) {
+        console.log(`... por Role: ${targetRole}`);
+        if (targetRole !== 'all') {
+            query = query.eq('role', targetRole);
+        }
+    } else {
+        throw new Error("Nenhum destinatário (targetUserIds ou targetRole) foi especificado.");
     }
     const { data: profiles, error: profileError } = await query;
 
