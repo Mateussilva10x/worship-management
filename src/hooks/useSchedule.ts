@@ -66,10 +66,11 @@ export const useCreateSchedule = () => {
       try {
         const targetMembers = group.members;
         if (targetMembers.length > 0) {
+
           const scheduleDateFormatted = new Date(scheduleData.date).toLocaleDateString('pt-BR', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
           });
-          
+
           const emailHtml = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background-color: #f4f1e9;">
               <div style="background-color: #388E3C; color: white; padding: 24px; text-align: center;">
@@ -77,7 +78,7 @@ export const useCreateSchedule = () => {
               </div>
               <div style="padding: 24px; color: #333; line-height: 1.6;">
                 <p style="font-size: 16px;">Olá, irmão(ã)!</p>
-                <p>Uma nova escala foi publicada.</p>
+                <p>Uma nova escala foi publicada para o seu Grupo.</p>
                 
                 <h2 style="font-size: 20px; color: #333; margin-top: 20px; margin-bottom: 10px;">Grupo: ${group.name}</h2> 
                 
@@ -88,11 +89,13 @@ export const useCreateSchedule = () => {
                 <div style="background-color: #FFF9C4; border-left: 5px solid #FBC02D; padding: 10px 15px; margin-top: 20px; font-size: 14px;">
                   <p style="margin: 0;"><strong>Importante:</strong> Por favor, confirme a sua presença ou avise com antecedência caso não possa comparecer.</p>
                 </div>
-                <p style="margin-top: 25px;">Que Deus Abençoe!</p>
+                
+                <p style="margin-top: 25px;">Que Deus abençoe!</p>
                 <p><strong>Worship Management IPC</strong></p>
               </div>
             </div>
-          `;  
+          `;
+
           const { error: invokeError } = await supabase.functions.invoke('send-resend-notification', {
             body: {
               targetUserIds: targetMembers,
@@ -102,7 +105,7 @@ export const useCreateSchedule = () => {
           });
 
           if (invokeError) throw invokeError;
-          console.log('[Resend] Função invocada com sucesso (novo template).');
+          console.log('[Resend] Função invocada com sucesso (template simples).');
 
         }
       } catch (error) {

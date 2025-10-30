@@ -86,19 +86,20 @@ Deno.serve(async (req) => {
 
   try {
     const payload: NotificationPayload = await req.json();
-    const { targetRole, subject, htmlBody } = payload;
+    const { targetUserIds, targetRole, subject, htmlBody } = payload;
     console.log("[send-resend-notification] Payload recebido:", payload);
 
     if (!subject || !htmlBody || (!targetUserIds && !targetRole)) {
-      throw new Error('Payload inválido. Campos obrigatórios em falta.');
+      throw new Error('Payload inválido. Campos obrigatórios em falta: (subject, htmlBody) e (targetUserIds ou targetRole).');
     }
 
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
     if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY não encontrada.');
 
     
-    console.log(`[send-resend-notification] A buscar e-mails para role: ${targetRole}`);
+    console.log(`[send-resend-notification] A buscar e-mails...`);
     let query = supabaseAdmin.from('profiles').select('email');
+
     if (targetUserIds && targetUserIds.length > 0) {
         console.log(`... por IDs: ${targetUserIds.join(', ')}`);
         query = query.in('id', targetUserIds);
@@ -110,8 +111,8 @@ Deno.serve(async (req) => {
     } else {
         throw new Error("Nenhum destinatário (targetUserIds ou targetRole) foi especificado.");
     }
+    
     const { data: profiles, error: profileError } = await query;
-
     if (profileError) throw profileError;
     const targetEmails = profiles.map(p => p.email).filter(Boolean);
     
