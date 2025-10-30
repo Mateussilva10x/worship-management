@@ -59,7 +59,7 @@ const RequestSwapModal: React.FC<RequestSwapModalProps> = ({
     return allSchedules
       .filter(
         (schedule) =>
-          new Date(schedule.date + "T00:00:00") >= today &&
+          new Date(schedule.date + "T12:00:00") >= today &&
           schedule.id !== initiatingSchedule.id &&
           schedule.group?.leader_id !== user.id
       )
@@ -104,9 +104,9 @@ const RequestSwapModal: React.FC<RequestSwapModalProps> = ({
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           Sua escala: {initiatingSchedule?.group?.name} (
           {initiatingSchedule
-            ? new Date(initiatingSchedule.date).toLocaleDateString(
-                i18n.language
-              )
+            ? new Date(
+                `${initiatingSchedule.date}T12:00:00`
+              ).toLocaleDateString(i18n.language)
             : ""}
           )
         </Typography>
