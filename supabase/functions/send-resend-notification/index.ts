@@ -31,7 +31,7 @@ async function sendEmailsInBatches(
     
     
     const batchData = batch.map(email => ({
-      from: 'Praise Schedule App <app@worshipmanagement.work.gd>', 
+      from: 'Worship Management <lideranca@louvoripcatole.work.gd>', 
       to: [email], 
       subject: subject,
       html: htmlBody,
