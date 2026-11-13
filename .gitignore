@@ -23,3 +23,6 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+# Dumps exportados do banco
+songs-dump-*.json
